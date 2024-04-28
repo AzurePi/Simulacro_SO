@@ -6,8 +6,7 @@ O projeto consiste na implementação de um simulador do núcleo de um SO, com u
  
 Implementar o "núcleo" de um SO, partindo da implementação das threads definidas a seguir. A chamada por uma delas será controlada através de duas funções que retornam valores inteiros, que correspondem ao código identificador de cada thread:
  
-*interruptControl*, acionada na ocorrência de eventos externos aos processos sendo executados, e
-*sysCall*, acionada na ocorrência de eventos gerados pelos processos executados.
+*interruptControl*, acionada na ocorrência de eventos externos aos processos sendo executados, e *sysCall*, acionada na ocorrência de eventos gerados pelos processos executados.
  
 A partir do inteiro obtido de uma dessas funções o núcleo ativa a thread correspondente, bem como o escalonamento do próximo processo usando o algoritmo SRTF.
 As origens possíveis para os eventos a serem tratados pelo núcleo, sendo que os números entre parenteses identificam cada evento, são:
@@ -26,7 +25,7 @@ As origens possíveis para os eventos a serem tratados pelo núcleo, sendo que o
 * *processCreate* (2) -- chamada para iniciar a criação de um processo no BCP*
 * *processFinish* (3) -- chamada para terminar a existência de um processo no BCP* 
 
-\* BCP (Bloco de Controle de Processos) é a estrutura que armazena os dados dos processos em execução 
+*BCP (Bloco de Controle de Processos) é a estrutura que armazena os dados dos processos em execução 
  
  
 ## Funcionamento do sistema
