@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "lista.h"
 
-void inserirLista(Lista *lista, Processo *programa) {
+void inserirLista(Lista *lista, BCP *programa) {
 
 }
 

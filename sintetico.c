@@ -6,7 +6,7 @@
 Lista *lerArquivoProgramas(char *filename) {
     FILE *file;
     Lista *listaProgramas = criarLista();
-    Processo *programa = malloc(sizeof(Processo));
+    BCP *programa = malloc(sizeof(BCP));
 
     file = fopen(filename, "r");
     if (!file) {
@@ -16,13 +16,13 @@ Lista *lerArquivoProgramas(char *filename) {
 
     while (lerSintetico(file, programa)) {
         inserirLista(listaProgramas, programa);
-        programa = malloc(sizeof(Processo));
+        programa = malloc(sizeof(BCP));
     }
 
     fclose(file)
 }
 
-int lerSintetico(FILE *file, Processo *p) {
+int lerSintetico(FILE *file, BCP *p) {
     char buffer[68];
 
     int i = fscanf(file, "%[68]s", buffer);
@@ -34,7 +34,7 @@ int lerSintetico(FILE *file, Processo *p) {
     return 1;
 }
 
-void escreverSintetico(Processo p, FILE *file) {
+void escreverSintetico(BCP p, FILE *file) {
     char buffer[68];
 
     sprintf(buffer, "%s,%d,%d", p.nome, p.mem_space, p.cpu_time);
