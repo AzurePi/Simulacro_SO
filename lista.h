@@ -7,6 +7,6 @@ typedef struct Lista Lista;
 
 Lista *criarLista();
 
-void inserirLista(Lista *lista, Processo *programa);
+void inserirLista(Lista *lista, BCP *programa);
 
 #endif //SIMULACRO_SO_LISTA_H

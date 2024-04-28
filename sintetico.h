@@ -1,14 +1,16 @@
 #ifndef SIMULACRO_SO_SINTETICO_H
 #define SIMULACRO_SO_SINTETICO_H
 
-typedef struct {
-    char nome[50];
-    int mem_space;
-    int cpu_time;
-    int estado; // (0: executando; 1: pronto; 2: bloqueado)
-} Processo;
+#include "lista.h"
 
-int lerSintetico(FILE *file, Processo *p);
-void escreverSintetico(Processo p, FILE *file);
+typedef struct {
+    char nome[50]; //nome do programa
+    int id_seg; //identificador do segmento
+    int prioridade_OG; //prioridade original do programa
+    int tamanho_seg; //tamanho do segmento (em kbytes)
+    Lista *semaforos; //lista de semáforos usados pelo programa
+} BCP;
+
+int lerBCP(FILE *file, BCP *p);
 
 #endif //SIMULACRO_SO_SINTETICO_H
