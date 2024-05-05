@@ -10,4 +10,6 @@ add_executable(Simulacro_SO
         sintetico.h
         main.c
         lista.c
-        lista.h)
+        lista.h
+        eventos.c
+        eventos.h)
