@@ -3,40 +3,40 @@
 #include <stdlib.h> //Para usar malloc, free, exit ...
 #include <string.h> //Para usar strcmp
 
-#define MAX 100 //estimativa do tamanho máximo da lista
+#define MAX 100 //estimativa do tamanho máximo da Lista
 
-// Implementação: lista sequencial
+// Implementação: Lista sequencial
 
 // Operações
 //-------------------------------------------
-bool Vazia(lista *L) {
+bool Vazia(Lista *L) {
 	//Retorna true (1) se vazia, false (0) caso contrário
 	return (L->nelem == 0);
 }
 
-bool Cheia(lista *L) {
+bool Cheia(Lista *L) {
 	//Retorna true (1) se cheia, false (0) caso contrário
 	return (L->nelem == MAX);
 }
 
-void Definir(lista *L) {
-	/*Cria uma lista vazia. Este procedimento deve ser chamado
-	para cada nova lista antes de qualquer outra operação.*/
+void Definir(Lista *L) {
+	/*Cria uma Lista vazia. Este procedimento deve ser chamado
+	para cada nova Lista antes de qualquer outra operação.*/
 	L->nelem = 0;
 	L->A[0].chave = 0;
 }
 
-void Apagar(lista *L) {
-	// Apaga "logicamente" uma lista
+void Apagar(Lista *L) {
+	// Apaga "logicamente" uma Lista
 	L->nelem = 0;
 }
 
-bool Inserir_posic(tipo_elem x, int p, lista *L) {
-	/*Insere x, que é um novo elemento, na posição p da lista
+bool Inserir_posic(Tipo_Elem x, int p, Lista *L) {
+	/*Insere x, que é um novo elemento, na posição p da Lista
 	Se L = a_1, a_2,... a_n então temos a_1, a_2, ...
 	a_{p-1}, x, a_{p+1}, ... an.
 	Devolve true se sucesso, false caso contrário (isto é: L não tem nenhuma
-	posição p ou lista cheia).
+	posição p ou Lista cheia).
 	Obs: Operação para LISTA NÃO-ORDENADA */
 
 	int q;
@@ -53,7 +53,7 @@ bool Inserir_posic(tipo_elem x, int p, lista *L) {
    	return true; //Inserção feita com sucesso
 }
 
-void Remover_posic(int *p, lista *L) {
+void Remover_posic(int *p, Lista *L) {
 	/*Só é chamada após a busca ter retornado a posição p
 	do elemento a ser removido*/
 
@@ -65,7 +65,7 @@ void Remover_posic(int *p, lista *L) {
 	L->nelem--;
 }
 
-void Impr_elem(tipo_elem t) {
+void Impr_elem(Tipo_Elem t) {
 	printf("chave: %d\n", t.chave);
 	printf("nome: %s\n", t.info.nome);
 	printf("idade: %d\n", t.info.idade);
@@ -73,7 +73,7 @@ void Impr_elem(tipo_elem t) {
 	//... (eventuais demais dados)
 }
 
-void Imprimir(lista *L) {
+void Imprimir(Lista *L) {
 	//Imprime os elementos em ordem
 
 	int i;
@@ -87,15 +87,15 @@ void Imprimir(lista *L) {
 	printf("\n--------------------\n");
 }
 
-int Tamanho(lista *L) {
-	// Retorna o tamanho da lista. Se L é vazia retorna 0
+int Tamanho(Lista *L) {
+	// Retorna o tamanho da Lista. Se L é vazia retorna 0
 	return L->nelem;
 }
 
 // Implementações para listas ordenadas
 //-------------------------------------------
-bool Buscar_ord(tipo_chave x, lista *L, int *p) {
-	/*Retorna true se x ocorre na lista e armazena seu índice no endereço p. Se x ocorre mais de
+bool Buscar_ord(Tipo_Chave x, Lista *L, int *p) {
+	/*Retorna true se x ocorre na Lista e armazena seu índice no endereço p. Se x ocorre mais de
 	uma vez, aramzena a posição da primeira ocorrência. Se x não ocorre, retorna false.
 	Para listas ORDENADAS*/
 
@@ -119,8 +119,8 @@ bool Buscar_ord(tipo_chave x, lista *L, int *p) {
   	return false;
 }
 
-bool Busca_bin(tipo_chave x, lista *L, int *p) {
-	/*Armazena em p a posição de x na lista ORDENADA e retorna true.
+bool Busca_bin(Tipo_Chave x, Lista *L, int *p) {
+	/*Armazena em p a posição de x na Lista ORDENADA e retorna true.
 	  Se x não ocorre, retorna false*/
 
 	int inf = 1;
@@ -142,7 +142,7 @@ bool Busca_bin(tipo_chave x, lista *L, int *p) {
 	return false;
 }
 
-bool Remover_ch(tipo_chave x, lista *L) {
+bool Remover_ch(Tipo_Chave x, Lista *L) {
 	/*Remoção dada a chave. Retorna true, se removeu, ou
 	false, caso contrário*/
 
@@ -158,8 +158,8 @@ bool Remover_ch(tipo_chave x, lista *L) {
   return removeu;
 }
 
-//Atualiza as chaves da lista, enumerando os elementos em ordem crescente
-void numerar(lista *L) {
+//Atualiza as chaves da Lista, enumerando os elementos em ordem crescente
+void numerar(Lista *L) {
 	int i;
 	
 	for (i = 0; i <= L->nelem; i++)
@@ -167,7 +167,7 @@ void numerar(lista *L) {
 }
 
 //Insere ordenado por nome
-bool Inserir_ord_Nome(tipo_elem x, lista *L) {
+bool Inserir_ord_Nome(Tipo_Elem x, Lista *L) {
 	if (Cheia(L))
 		return false;
 
@@ -181,7 +181,7 @@ bool Inserir_ord_Nome(tipo_elem x, lista *L) {
 }
 
 //Insere ordenado por chave
-bool Inserir_ord_ch(tipo_elem x, lista *L) {
+bool Inserir_ord_ch(Tipo_Elem x, Lista *L) {
 	if (Cheia(L) || Repetido(x.chave, L))
 		return false;
 
@@ -194,7 +194,7 @@ bool Inserir_ord_ch(tipo_elem x, lista *L) {
 	return true;
 }
 
-bool Buscar_Nome(char *nome, lista *L, int *p) {
+bool Buscar_Nome(char *nome, Lista *L, int *p) {
 	int i;
 	
 	for (i = 1; i <= L->nelem; i++) {
@@ -206,7 +206,7 @@ bool Buscar_Nome(char *nome, lista *L, int *p) {
 	return false;
 }
 
-bool Buscar_ord_Nome(char *nome, lista *L, int *p) {
+bool Buscar_ord_Nome(char *nome, Lista *L, int *p) {
 	int esq = 1, dir = L->nelem, meio;
 	
 	while (esq <= dir) {
@@ -224,7 +224,7 @@ bool Buscar_ord_Nome(char *nome, lista *L, int *p) {
 	return false;
 }
 
-bool Buscar(tipo_chave x, lista *L, int *p) {
+bool Buscar(Tipo_Chave x, Lista *L, int *p) {
 	/*Retorna true, se x ocorre na posição p. Se x ocorre mais de
 	uma vez, retorna a posição da primeira ocorrência. Se x não
 	ocorre, retorna false.
@@ -245,7 +245,7 @@ bool Buscar(tipo_chave x, lista *L, int *p) {
 	return false; // Retorna false se não encontrou
 }
 
-bool Repetido(tipo_chave chave, lista *L) {
+bool Repetido(Tipo_Chave chave, Lista *L) {
 	int i;
 	
 	for (i = 0; i <= L->nelem; i++) {

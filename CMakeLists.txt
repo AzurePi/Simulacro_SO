@@ -12,4 +12,6 @@ add_executable(Simulacro_SO
         lista.c
         lista.h
         eventos.c
-        eventos.h)
+        eventos.h
+        listaCircular.c
+        listaCircular.h)

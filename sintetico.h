@@ -8,7 +8,7 @@ typedef struct {
     int id_seg; //identificador do segmento
     int prioridade_OG; //prioridade original do programa
     int tamanho_seg; //tamanho do segmento (em kbytes)
-    Lista *semaforos; //lista de semáforos usados pelo programa
+    char *semaforos; //Lista de semáforos usados pelo programa
 } BCP;
 
 int lerBCP(FILE *file, BCP *p);

@@ -3,13 +3,13 @@
 
 #include <stdbool.h>
 
-// TAD: lista seq.
-#define MAX 100 //estimativa do tamanho máximo da lista
+// TAD: Lista seq.
+#define MAX 100 //estimativa do tamanho máximo da Lista
 
 // Estruturas e tipos empregados
 //-------------------------------------------
 //Tipo chave
-typedef int tipo_chave;
+typedef int Tipo_Chave;
 
 //Tipo registro
 typedef struct {
@@ -17,44 +17,44 @@ typedef struct {
 	int idade;
 	float media_final;
 	//... (caso tenha mais campos)
-} tipo_dado;
+} Tipo_Dado;
 
 //Tipo elemento (registro + chave)
 typedef struct {
-	tipo_chave chave;
-	tipo_dado info;
-} tipo_elem;
+	Tipo_Chave chave;
+	Tipo_Dado info;
+} Tipo_Elem;
 
-//Tipo lista (sequencial encadeada)
+//Tipo Lista (sequencial encadeada)
 typedef struct {
-	int nelem; //n�mero de elementos
-	tipo_elem A[MAX + 1];
-} lista;
+	int nelem; //número de elementos
+	Tipo_Elem A[MAX + 1];
+} Lista;
 //-------------------------------------------
 
 // Operações
 //-------------------------------------------
-bool Vazia(lista *L);
-bool Cheia(lista *L);
-void Definir(lista *L);
-void Apagar(lista *L);
-bool Inserir_posic(tipo_elem x, int p, lista *L);
-bool Busca_bin(tipo_chave x, lista *L, int *p); // Igual a 'Buscar_ord'
-void Remover_posic(int *p, lista *L);
-bool Remover_ch(tipo_chave x, lista *L);
-void Impr_elem(tipo_elem t);
-void Imprimir(lista *L);
-int Tamanho(lista *L);
+bool Vazia(Lista *L);
+bool Cheia(Lista *L);
+void Definir(Lista *L);
+void Apagar(Lista *L);
+bool Inserir_posic(Tipo_Elem x, int p, Lista *L);
+bool Busca_bin(Tipo_Chave x, Lista *L, int *p); // Igual a 'Buscar_ord'
+void Remover_posic(int *p, Lista *L);
+bool Remover_ch(Tipo_Chave x, Lista *L);
+void Impr_elem(Tipo_Elem t);
+void Imprimir(Lista *L);
+int Tamanho(Lista *L);
 
 // Implementadas por Lucas e Pedro:
 // -----------------------------------------
-bool Inserir_ord_Nome(tipo_elem x, lista *L); //Insere ordenado por nome
-bool Buscar_Nome(char *nome, lista *L, int *p);  //Busca sequencial por nome
-bool Buscar_ord_Nome(char *nome, lista *L, int *p); //Busca ordenada por nome
-bool Inserir_ord_ch(tipo_elem x, lista *L);   //Insere ordenado por chave
-bool Buscar(tipo_chave x, lista *L, int *p);  //Busca sequencial por chave
-bool Buscar_ord(tipo_chave x, lista *L, int *p); //Busca bin�ria por chave
-bool Repetido(tipo_chave chave, lista *L);
+bool Inserir_ord_Nome(Tipo_Elem x, Lista *L); //Insere ordenado por nome
+bool Buscar_Nome(char *nome, Lista *L, int *p);  //Busca sequencial por nome
+bool Buscar_ord_Nome(char *nome, Lista *L, int *p); //Busca ordenada por nome
+bool Inserir_ord_ch(Tipo_Elem x, Lista *L);   //Insere ordenado por chave
+bool Buscar(Tipo_Chave x, Lista *L, int *p);  //Busca sequencial por chave
+bool Buscar_ord(Tipo_Chave x, Lista *L, int *p); //Busca bin�ria por chave
+bool Repetido(Tipo_Chave chave, Lista *L);
 //-------------------------------------------
 
 

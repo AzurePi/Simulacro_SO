@@ -2,24 +2,30 @@
 #include <malloc.h>
 #include "sintetico.h"
 #include "lista.h"
+#include "listaCircular.h"
 
-lista *lerArquivoProgramas(char *filename) {
+Lista *criarLista();
+
+void lerArquivoProgramas(char *filename, Lista_Circ escalonador) {
     FILE *file;
-    lista *listaProgramas = criarLista();
     BCP *programa = malloc(sizeof(BCP));
 
     file = fopen(filename, "r");
     if (!file) {
         printf("ERRO: arquivo %s não pôde ser aberto", filename);
-        return NULL;
+        return;
     }
 
     while (lerBCP(file, programa)) {
-        inserirLista(listaProgramas, programa);
+        inserePrioridade(programa, escalonador);
         programa = malloc(sizeof(BCP));
     }
 
     fclose(file);
+}
+
+Lista *criarLista() {
+    return NULL;
 }
 
 int lerBCP(FILE *file, BCP *p) {
@@ -29,7 +35,6 @@ int lerBCP(FILE *file, BCP *p) {
     if (i == 0)
         return 0;
 
-    sscanf(buffer, "%[^,]s,%d,%d", p->nome, &p->mem_space, &p->cpu_time);
     return 1;
 }
 
