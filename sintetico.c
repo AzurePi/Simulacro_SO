@@ -3,9 +3,9 @@
 #include "sintetico.h"
 #include "lista.h"
 
-Lista *lerArquivoProgramas(char *filename) {
+lista *lerArquivoProgramas(char *filename) {
     FILE *file;
-    Lista *listaProgramas = criarLista();
+    lista *listaProgramas = criarLista();
     BCP *programa = malloc(sizeof(BCP));
 
     file = fopen(filename, "r");
@@ -19,7 +19,7 @@ Lista *lerArquivoProgramas(char *filename) {
         programa = malloc(sizeof(BCP));
     }
 
-    fclose(file)
+    fclose(file);
 }
 
 int lerBCP(FILE *file, BCP *p) {
@@ -30,7 +30,6 @@ int lerBCP(FILE *file, BCP *p) {
         return 0;
 
     sscanf(buffer, "%[^,]s,%d,%d", p->nome, &p->mem_space, &p->cpu_time);
-    p->estado = 1;
     return 1;
 }
 
