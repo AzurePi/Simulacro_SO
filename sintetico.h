@@ -1,16 +1,19 @@
 #ifndef SIMULACRO_SO_SINTETICO_H
 #define SIMULACRO_SO_SINTETICO_H
 
-#include "lista.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <string.h>
 
 typedef struct {
-    char nome[50]; //nome do programa
+    char nome[61]; //nome do programa
     int id_seg; //identificador do segmento
     int prioridade_OG; //prioridade original do programa
     int tamanho_seg; //tamanho do segmento (em kbytes)
     char *semaforos; //Lista de semáforos usados pelo programa
 } BCP;
 
-int lerBCP(FILE *file, BCP *p);
+BCP * BCP_From_Sintetico(FILE *programa);
 
 #endif //SIMULACRO_SO_SINTETICO_H
