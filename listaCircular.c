@@ -10,16 +10,23 @@ No_Pagina *criaNo() {
     return novoNo;
 }
 
-No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ lista) {
-    if (!lista.head) { // Se a Lista estiver vazia
-        lista.head = lista.tail = noAdiciona; // O nó adicionado é tanto a cabeça quanto a cauda
+Lista_Circ *criaLista() {
+    Lista_Circ *lista = malloc(sizeof(Lista_Circ));
+    lista->head = NULL;
+    lista->tail = NULL;
+    return lista;
+}
+
+No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista) {
+    if (!lista->head) { // Se a Lista estiver vazia
+        lista->head = lista->tail = noAdiciona; // O nó adicionado é tanto a cabeça quanto a cauda
         noAdiciona->prox = noAdiciona; // O próximo do nó aponta para ele mesmo, pois é o único nó na Lista
     } else { // Se a Lista não estiver vazia
-        lista.tail->prox = noAdiciona; // O próximo do último nó atual aponta para o nó adicionado
-        lista.tail = noAdiciona; // O nó adicionado agora é a cauda da Lista
-        noAdiciona->prox = lista.head; // O próximo do nó adicionado aponta para a cabeça da Lista, tornando-a circular
+        lista->tail->prox = noAdiciona; // O próximo do último nó atual aponta para o nó adicionado
+        lista->tail = noAdiciona; // O nó adicionado agora é a cauda da Lista
+        noAdiciona->prox = lista->head; // O próximo do nó adicionado aponta para a cabeça da Lista, tornando-a circular
     }
-    return lista.head; // Retorna a cabeça da Lista atualizada
+    return lista->head; // Retorna a cabeça da Lista atualizada
 }
 
 

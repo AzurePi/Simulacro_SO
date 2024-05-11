@@ -19,7 +19,9 @@ typedef struct lista {
 
 No_Pagina *criaNo();
 
-No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ lista);
+Lista_Circ *criaLista();
+
+No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista);
 
 //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem uso.
 No_Pagina *percorreLista(Lista_Circ lista);
