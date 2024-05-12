@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "eventos.h"
 
 void processInterrupt() {}
@@ -22,6 +23,6 @@ void fsRequest() {}
 
 void fsFinish() {}
 
-void processCreate() {}
+void processCreate(FILE *programa) {}
 
 void processFinish() {}
