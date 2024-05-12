@@ -19,6 +19,8 @@ BCP *BCP_From_Sintetico(FILE *programa) {
         return NULL;
     }
 
+    processo->estado = 0; //diz que o programa está pronto para ser executado
+
     char *semaforos = (char *) malloc(51 * sizeof(char));
     char caractere;
     int i = 0;
