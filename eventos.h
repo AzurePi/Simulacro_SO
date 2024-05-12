@@ -1,8 +1,6 @@
 #ifndef SIMULACRO_SO_EVENTOS_H
 #define SIMULACRO_SO_EVENTOS_H
 
-int relogio = 0;
-
 // interrupção gerada pela execução da função processCreate e pelo término de operações de E/S
 void processInterrupt();
 
