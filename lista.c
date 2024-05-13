@@ -1,4 +1,5 @@
 #include "lista.h"  //Carrega o arquivo .h criado
+#include "sintetico.h"
 #include <stdio.h>  //Para usar printf ,...
 #include <stdlib.h> //Para usar malloc, free, exit ...
 #include <string.h> //Para usar strcmp
@@ -31,7 +32,7 @@ void Apagar(Lista *L) {
 	L->nelem = 0;
 }
 
-bool Inserir_posic(Tipo_Elem x, int p, Lista *L) {
+bool Inserir(Comando *comando, Lista_Comandos *lista) {
 	/*Insere x, que é um novo elemento, na posição p da Lista
 	Se L = a_1, a_2,... a_n então temos a_1, a_2, ...
 	a_{p-1}, x, a_{p+1}, ... an.
@@ -42,14 +43,14 @@ bool Inserir_posic(Tipo_Elem x, int p, Lista *L) {
 	int q;
 
 	// Lista cheia ou posição não existe
-	if (Cheia(L) || p > L->nelem + 1 || p < 1)
+	if (Cheia(lista) || i > lista->nelem + 1 || i < 1)
 		return false; //Inserção falhou
 
-	for (q = L->nelem; q >= p; q--) //Copia vizinho p/ direita
-   		L->A[q + 1] = L->A[q];
-   		
-   	L->A[p] = x;
-   	L->nelem++;
+	for (q = lista->nelem; q >= i; q--) //Copia vizinho p/ direita
+   		lista->A[q + 1] = lista->A[q];
+
+    lista->A[i] = opcode;
+   	lista->nelem++;
    	return true; //Inserção feita com sucesso
 }
 

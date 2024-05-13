@@ -2,6 +2,7 @@
 #define SIMULACRO_SO_LISTA_H
 
 #include <stdbool.h>
+#include "sintetico.h"
 
 // TAD: Lista seq.
 #define MAX 100 //estimativa do tamanho máximo da Lista
@@ -38,7 +39,8 @@ bool Vazia(Lista *L);
 bool Cheia(Lista *L);
 void Definir(Lista *L);
 void Apagar(Lista *L);
-bool Inserir_posic(Tipo_Elem x, int p, Lista *L);
+
+bool Inserir(Comando *comando, Lista_Comandos *lista);
 bool Busca_bin(Tipo_Chave x, Lista *L, int *p); // Igual a 'Buscar_ord'
 void Remover_posic(int *p, Lista *L);
 bool Remover_ch(Tipo_Chave x, Lista *L);
