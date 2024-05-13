@@ -7,11 +7,9 @@
 #include <malloc.h>
 #include <string.h>
 
-#define MAX 100
-
 typedef struct comando {
-    int opcode;
-    int parametro;
+    int opcode; // 0 - exec; 1 - read; 2 - write; 3 - P(); 4 - V(); 5 - print
+    int parametro; //parâmetro do comando; tem um tratamento diferente, dependendo do opcode
     struct comando *prox;
 } Comando;
 
@@ -26,26 +24,26 @@ typedef struct {
     int prioridade_OG; //prioridade original do programa
     int tamanho_seg; //tamanho do segmento (em kbytes)
     int estado; //0 - pronto; 1 - executando; 2 - parado; 3 - terminado
-    char *semaforos; //Lista de semáforos usados pelo programa
-    Lista_Comandos *comandos;
+    char *semaforos; //Lista de semáforos usados pelo programa TODO: trocar o tipo para a struct de semáforo
+    Lista_Comandos *comandos; //Lista de comandos do programa
 } BCP;
 
+//Cria um BCP com base na leitura de um programa sintético
 BCP *BCP_From_Sintetico(FILE *programa);
 
-//Retorna true (1) se vazia, false (0) caso contrário.
-bool Vazia(Lista_Comandos *l);
+//Inicializa um novo Comando com base nos parâmetros
+Comando *novoComando(int opcode, int parametro);
 
-//Retorna true (1) se cheia, false (0) caso contrário.
-bool Cheia(Lista_Comandos *l);
+//Retorna true (1) se vazia, false (0) caso contrário.
+bool vaziaListaComandos(Lista_Comandos *l);
 
 //Inicializa uma Lista_Comandos vazia.
-void Definir(Lista_Comandos *l);
+Lista_Comandos * novaListaComandos();
 
 /*
 Insere um novo comando no final de uma Lista_Comandos.
 Devolve true se sucesso, false caso contrário.
 */
-bool Inserir(Comando *comando, Lista_Comandos *lista)
-
+void inserirComando(Comando *comando, Lista_Comandos *lista);
 
 #endif //SIMULACRO_SO_SINTETICO_H

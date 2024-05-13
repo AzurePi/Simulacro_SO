@@ -26,7 +26,7 @@ void fsRequest() {}
 
 void fsFinish() {}
 
-void * processCreate() {
+void *processCreate() {
     char filename[51];
     sem_wait(&sem_terminal);
     printf("Nome do programa: ");
@@ -34,9 +34,11 @@ void * processCreate() {
     sem_post(&sem_terminal);
 
     FILE *programa = fopen(filename, "r");
-    if (programa)
-        BCP_From_Sintetico(programa);
-    else
+    if (programa) {
+        BCP *processo = BCP_From_Sintetico(programa);
+        if (!processo)
+            printf("ERRO: não foi possível criar o processo");
+    } else
         printf("ERRO: %s não pode ser aberto\n", filename);
     fclose(programa);
 }

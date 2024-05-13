@@ -32,7 +32,7 @@ void Apagar(Lista *L) {
 	L->nelem = 0;
 }
 
-bool Inserir(Comando *comando, Lista_Comandos *lista) {
+void inserirComando(Comando *comando, Lista_Comandos *lista) {
 	/*Insere x, que é um novo elemento, na posição p da Lista
 	Se L = a_1, a_2,... a_n então temos a_1, a_2, ...
 	a_{p-1}, x, a_{p+1}, ... an.

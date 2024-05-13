@@ -40,7 +40,7 @@ bool Cheia(Lista *L);
 void Definir(Lista *L);
 void Apagar(Lista *L);
 
-bool Inserir(Comando *comando, Lista_Comandos *lista);
+void inserirComando(Comando *comando, Lista_Comandos *lista);
 bool Busca_bin(Tipo_Chave x, Lista *L, int *p); // Igual a 'Buscar_ord'
 void Remover_posic(int *p, Lista *L);
 bool Remover_ch(Tipo_Chave x, Lista *L);
