@@ -31,7 +31,7 @@ No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista) {
 
 
 No_Pagina *percorreLista(
-        Lista_Circ lista) { //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem uso, retorno a primeira página que eu encontrar.
+        Lista_Circ lista) { //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem_terminal uso, retorno a primeira página que eu encontrar.
     No_Pagina *aux = malloc(sizeof(No_Pagina));
 
     while (aux->prox != lista.head) {//Enquanto eu não chegar na cauda da Lista
@@ -42,10 +42,10 @@ No_Pagina *percorreLista(
         aux = aux->prox;
     }
 
-    //Se não tiver nenhum sem uso
+    //Se não tiver nenhum sem_terminal uso
     while (aux->prox != lista.head) {//Enquanto eu não chegar na cauda da Lista
-        if (aux->uso == 0) {//Procuro uma página sem uso para carregar as informações
-            if (aux->modificado == 0) {//E tbm sem modificação pra não ter escrever na memória
+        if (aux->uso == 0) {//Procuro uma página sem_terminal uso para carregar as informações
+            if (aux->modificado == 0) {//E tbm sem_terminal modificação pra não ter escrever na memória
                 return aux;//VER SE É ISSO
             }
         }
