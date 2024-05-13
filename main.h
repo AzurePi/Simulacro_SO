@@ -14,11 +14,13 @@
     #define CLEAR_SCREEN system("clear")
 #endif
 
+sem_t sem_terminal;
+
 void * menu();
 
-void informacaoProcesso();
+void * informacaoProcesso();
 
-void informacaoMemoria();
+void * informacaoMemoria();
 
 void * kernel();
 

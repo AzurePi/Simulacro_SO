@@ -35,7 +35,7 @@ void fsRequest();
 void fsFinish();
 
 // chamada para iniciar a criação de um processo no BCP
-void processCreate(FILE *programa);
+void * processCreate();
 
 // chamada para terminar a existência de um processo no BCP
 void processFinish();

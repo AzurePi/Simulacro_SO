@@ -6,8 +6,6 @@ BCP *rodando_agora = NULL;
 volatile long double relogio = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-sem_t sem;
-
 
 int main() {
     setlocale(LC_ALL, "PORTUGUESE");
@@ -19,7 +17,7 @@ int main() {
     pthread_t t_menu, t_kernel; //criamos uma thread para a exibição do menu, e outra para o processamento do simulador
 
     pthread_create(&t_menu, &atrib, menu, NULL);
-    pthread_create(&t_kernel, NULL, &kernel, NULL);
+    pthread_create(&t_kernel, &atrib, kernel, NULL);
     pthread_join(t_kernel, NULL);
     pthread_join(t_menu, NULL);
 
@@ -30,8 +28,14 @@ void *menu() {
     char op;
     char filename[101];
 
+    pthread_attr_t atrib;
+    pthread_attr_init(&atrib);
+    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_PROCESS);
+
+    pthread_t t_novo, t_info_proc, t_info_mem;
+
     do {
-        sem_wait(&sem);
+        sem_wait(&sem_terminal);
 
         CLEAR_SCREEN;
         printf("╔══════════════════════════════════════╗\n");
@@ -47,7 +51,7 @@ void *menu() {
         if (rodando_agora) printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
         else printf("nada\n");
 
-        sem_post(&sem);
+        sem_post(&sem_terminal);
 
         printf("Selecione a operação: ");
         scanf(" %c", &op);
@@ -58,17 +62,16 @@ void *menu() {
                 sleep(3);
                 break;
             case '1':
-                sem_wait(&sem);
-                printf("Nome do programa: ");
-                scanf(" %108[^\n]", filename);
-                sem_post(&sem);
-                processCreate(filename);
+                pthread_create(&t_novo, &atrib, processCreate, NULL);
+                pthread_join(t_novo, NULL);
                 break;
             case '2':
-                informacaoProcesso();
+                pthread_create(&t_info_proc, &atrib, informacaoProcesso, NULL);
+                pthread_join(t_info_proc, NULL);
                 break;
             case '3':
-                informacaoMemoria();
+                pthread_create(&t_info_mem, &atrib, informacaoMemoria, NULL);
+                pthread_join(t_info_mem, NULL);
                 break;
             default:
                 printf("Opção inválida!\n");
@@ -78,11 +81,11 @@ void *menu() {
     } while (op != '0');
 }
 
-void informacaoProcesso() {
+void * informacaoProcesso() {
 
 }
 
-void informacaoMemoria() {
+void * informacaoMemoria() {
 
 }
 
