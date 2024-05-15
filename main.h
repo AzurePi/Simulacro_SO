@@ -5,23 +5,23 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <pthread.h>
-#include "listaCircular.h"
+#include "memoria.h"
 #include "eventos.h"
 
 #ifdef _WIN32
-    #define CLEAR_SCREEN system("cls")
+#define CLEAR_SCREEN system("cls")
 #else
-    #define CLEAR_SCREEN system("clear")
+#define CLEAR_SCREEN system("clear")
 #endif
 
 sem_t sem_terminal;
 
-void * menu();
+void *menu();
 
-void * informacaoProcesso();
+void *informacaoProcesso();
 
-void * informacaoMemoria();
+void *informacaoMemoria();
 
-void * kernel();
+void *kernel();
 
 #endif //SIMULACRO_SO_MAIN_H

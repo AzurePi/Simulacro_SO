@@ -1,6 +1,5 @@
 #include "main.h"
 
-
 volatile int num_processos = 0;
 BCP *rodando_agora = NULL;
 volatile long double relogio = 0;
@@ -26,7 +25,6 @@ int main() {
 
 void *menu() {
     char op;
-    char filename[101];
 
     pthread_attr_t atrib;
     pthread_attr_init(&atrib);
@@ -48,8 +46,10 @@ void *menu() {
         printf("╚══════════════════════════════════════╝\n");
 
         printf("\n Processando agora: ");
-        if (rodando_agora) printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
-        else printf("nada\n");
+        if (rodando_agora)
+            printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
+        else
+            printf("nada\n");
 
         sem_post(&sem_terminal);
 
@@ -81,11 +81,11 @@ void *menu() {
     } while (op != '0');
 }
 
-void * informacaoProcesso() {
+void *informacaoProcesso() {
 
 }
 
-void * informacaoMemoria() {
+void *informacaoMemoria() {
 
 }
 
