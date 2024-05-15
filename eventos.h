@@ -30,10 +30,10 @@ typedef struct all_sem_li //lista de todos semaforos
 void processInterrupt();
 
 // tratamento de bloqueio de processo
-void semaphoreP(int v);
+void semaphoreP(int v); //TODO: trocar parâmetro para o tipo do semáforo
 
 // tratamento de desbloqueio de processo
-void semaphoreV(int v);
+void semaphoreV(int v); //TODO: trocar parâmetro para o tipo do semáforo
 
 // chamada de operação de E/S para disco
 void DiskRequest();
@@ -60,7 +60,7 @@ void fsRequest();
 void fsFinish();
 
 // chamada para iniciar a criação de um processo no BCP
-void processCreate();
+void *processCreate();
 
 // chamada para terminar a existência de um processo no BCP
 void processFinish();

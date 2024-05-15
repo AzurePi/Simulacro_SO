@@ -39,7 +39,7 @@ Um programa sintético é definido através de um arquivo (lido pelo SO) que é 
 - identificador do segmento (um inteiro)
 - prioridade original do programa (um inteiro)
 - tamanho do segmento (em kbytes)
-- lista de semáforos usados pelo programa (separados por espaços em branco)
+- Lista de semáforos usados pelo programa (separados por espaços em branco)
 
 A segunda parte contém uma sequência de comandos que serão virtualmente executados pelo SO. Os comandos inicialmente previstos são:
 - exec t (indicando que o programa executará por t unidades de tempo)

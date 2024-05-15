@@ -9,7 +9,7 @@ add_executable(Simulacro_SO
         sintetico.c
         sintetico.h
         main.c
-        lista.c
-        lista.h
         eventos.c
-        eventos.h)
+        eventos.h
+        listaCircular.c
+        listaCircular.h)
