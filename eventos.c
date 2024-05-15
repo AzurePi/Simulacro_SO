@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "eventos.h"
 
 void sem_queue(struct sem_li **pLi, BCP *pBcp);
@@ -13,7 +14,6 @@ void semaphoreP(semaphore_t *semaph, BCP *proc) {
     semaph->v--;
     pthread_mutex_unlock(&semaph->mutex_lock);
 }
-
 
 void semaphoreV(semaphore_t *semaph) {
     pthread_mutex_lock(&semaph->mutex_lock);
