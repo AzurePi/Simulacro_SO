@@ -4,6 +4,10 @@
 #include <pthread.h>
 #include "sintetico.h"
 
+// declaração avançada de BCP para evitar dependência circular
+struct bcp;
+typedef struct bcp BCP;
+
 typedef struct semaphore {
     pthread_mutex_t mutex_lock;
     char name; // nome do semáforo

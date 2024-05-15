@@ -4,9 +4,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <string.h>
 #include "semaforo.h"
+
+// declaração avançada de semaphore para evitar dependência circular
+struct semaphore;
+typedef struct semaphore semaphore_t;
 
 // Estado do processo
 typedef enum {
