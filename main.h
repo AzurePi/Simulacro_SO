@@ -14,8 +14,6 @@
 #define CLEAR_SCREEN system("clear")
 #endif
 
-sem_t sem_terminal;
-
 void *menu();
 
 void *informacaoProcesso();

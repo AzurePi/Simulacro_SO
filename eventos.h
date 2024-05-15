@@ -1,9 +1,10 @@
 #ifndef SIMULACRO_SO_EVENTOS_H
 #define SIMULACRO_SO_EVENTOS_H
 
-#include "sintetico.h"
+#include <stdio.h>
+#include <semaphore.h>
 #include "semaforo.h"
-
+#include "sintetico.h"
 
 // interrupção gerada pela execução da função processCreate e pelo término de operações de E/S
 void processInterrupt();
