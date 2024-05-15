@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include "listaCircular.h"
+#include "memoria.h"
 
 No_Pagina *criaNo() {
     No_Pagina *novoNo = malloc(sizeof(No_Pagina));

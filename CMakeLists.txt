@@ -11,5 +11,8 @@ add_executable(Simulacro_SO
         main.c
         eventos.c
         eventos.h
-        listaCircular.c
-        listaCircular.h)
+        memoria.c
+        memoria.h
+        semaforo.c
+        semaforo.h
+        semaforo.h)
