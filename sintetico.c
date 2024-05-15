@@ -58,21 +58,48 @@ BCP *BCP_From_Sintetico(FILE *programa) {
         OPCODE opcode;
         int parametro;
 
-        //se estamos lidando com as operações de semáforo, a string terá of formato "operação(parâmetro)"
+      //se estamos lidando com as operações de semáforo, a string terá of formato "operação(parâmetro)"
         if (buffer[0] == 'P' || buffer[0] == 'V') {
             sscanf(buffer, "%s(%s)", buffer_comando, buffer_parametro);
+            if(buffer_comando == 'P'){//Se for P
+                parametro = atoi(buffer_parametro);
+                opcode = P;
 
-            //TODO: comparar buffer_comando com as strings esperadas para determinar a operação sendo realizada (nesse caso, só P ou V)
-            //TODO: converter o parâmetro (um caractere) em um valor inteiro para ser o parâmetro (como o char já é um número, não deve ter nenhum problema)
+            }else if(buffer_comando == 'V'){
+                parametro = atoi(buffer_parametro);
+                opcode = V;
 
-        } else { //se estamos lidando com as demais operações, a string tera formato "operação parâmetro"
+            }
+             comando = novoComando(opcode,parametro);
+             inserirComando(comando,processo->comandos);
+        }else
+        { //se estamos lidando com as demais operações, a string tera formato "operação parâmetro"
             sscanf(buffer, "%s %s", buffer_comando, buffer_parametro);
 
-            //TODO: comparar buffer_comando com as strings esperadas para determinar a operação sendo realizada (todo o resto)
-            //TODO: transformar a string do parâmetro em um valor inteiro
-            //TODO: usar novoComando para criar um comando com o opcode e o parâmetro, e usar inserirComando para guardar isso no processo
+             if(strcmp(buffer_comando,"exec")==0){
+               
+                parametro = atoi(buffer_parametro);//Transforma string em número
+                opcode = EXEC;
+
+             }else if(strcmp(buffer_comando,"read"==0)){
+                parametro = atoi(buffer_parametro);//Transforma string em número
+                opcode = READ;
+
+             }else if(strcmp(buffer_comando,"write")==0){
+                parametro = atoi(buffer_parametro);//Transforma string em número
+                opcode = WRITE;
+
+             }else if(strcmp(buffer_comando,"print"==0)){
+                parametro = atoi(buffer_parametro);//Transforma string em número
+                opcode = PRINT;
+
+            }
+
+            
+            comando = novoComando(opcode,parametro);
+            inserirComando(comando,processo->comandos);
         }
-        //TODO: usar novoComando para criar um comando com o opcode e o parâmetro, e usar inserirComando para guardar isso no processo
+        
     }
 
     return processo;
