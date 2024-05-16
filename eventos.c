@@ -1,13 +1,8 @@
-#include <stdio.h>
-#include <semaphore.h>
 #include "eventos.h"
-#include "sintetico.h"
-#include "main.h"
-#include "semaforo.h"
 
 void processInterrupt() {};
 
-void semaphoreP(semaphore_t *semaph, BCP *proc) {
+void semaphoreP(Semaforo *semaph, BCP *proc) {
     pthread_mutex_lock(&semaph->mutex_lock);
     if (semaph->v < 0) {
         sem_queue(&semaph->waiting_list, proc);
@@ -17,7 +12,7 @@ void semaphoreP(semaphore_t *semaph, BCP *proc) {
     pthread_mutex_unlock(&semaph->mutex_lock);
 }
 
-void semaphoreV(semaphore_t *semaph) {
+void semaphoreV(Semaforo *semaph) {
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
     if (semaph->v <= 0) {

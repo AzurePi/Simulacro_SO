@@ -6,6 +6,7 @@
 #include <semaphore.h>
 #include "semaforo.h"
 #include "sintetico.h"
+#include "interface.h"
 
 // Variáveis Globais ---------------------------------------------------------------------------------------------------
 
@@ -17,10 +18,10 @@ volatile long double relogio = 0;
 void processInterrupt();
 
 // tratamento de bloqueio de processo
-void semaphoreP(semaphore_t *semaph, BCP *proc); //TODO: trocar parâmetro para o tipo do semáforo
+void semaphoreP(Semaforo *semaph, BCP *proc);
 
 // tratamento de desbloqueio de processo
-void semaphoreV(semaphore_t *semaph); //TODO: trocar parâmetro para o tipo do semáforo
+void semaphoreV(Semaforo *semaph);
 
 // chamada de operação de E/S para disco
 void DiskRequest();
