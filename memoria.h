@@ -1,5 +1,5 @@
-#ifndef SIMULACRO_SO_LISTACIRCULAR_H
-#define SIMULACRO_SO_LISTACIRCULAR_H
+#ifndef SIMULACRO_SO_MEMORIA_H
+#define SIMULACRO_SO_MEMORIA_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,4 +29,4 @@ No_Pagina *percorreLista(Lista_Circ lista);
 //Vai ser usado para o round-robin?
 No_Pagina *inserePrioridade(BCP *noAdiciona, Lista_Circ lista);
 
-#endif //SIMULACRO_SO_LISTACIRCULAR_H
+#endif //SIMULACRO_SO_MEMORIA_H

@@ -158,6 +158,8 @@ void fsRequest() {}
 void fsFinish() {}
 
 void *processCreate() {
+    processInterrupt();
+
     char filename[51];
     sem_wait(&sem_terminal);
     printf("Nome do programa: ");
@@ -172,6 +174,8 @@ void *processCreate() {
     } else
         printf("ERRO: %s não pode ser aberto\n", filename);
     fclose(programa);
+
+    //TODO: coloca no escalonamento
 }
 
 void processFinish() {}

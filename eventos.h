@@ -6,15 +6,10 @@
 
 int relogio = 0;
 
-//struct semaforo
-typedef struct semaphore {
-    pthread_mutex_t mutex_lock;
-    volatile int v; //valor do semaforo
-    char name;
-    int refcount; //conta o numero de processos que esta usando o semaforo
-    struct sem_li* waiting_list; // topo da lista de espera de processos do semaforo
-    struct semaphor* ne;
-} semaphore_t;
+#include <stdio.h>
+#include <semaphore.h>
+#include "semaforo.h"
+#include "sintetico.h"
 
 typedef struct sem_li //lista de processos esperando o semaforo
 {

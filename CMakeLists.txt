@@ -8,8 +8,11 @@ include_directories(.)
 add_executable(Simulacro_SO
         sintetico.c
         sintetico.h
-        main.c
         eventos.c
         eventos.h
-        listaCircular.c
-        listaCircular.h)
+        memoria.c
+        memoria.h
+        semaforo.c
+        semaforo.h
+        main.c
+)
