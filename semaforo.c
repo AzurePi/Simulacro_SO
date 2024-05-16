@@ -85,14 +85,14 @@ void sem_queue(Lista_Espera_BCP **list, BCP *proc) {
 }
 
 void showSemaphoreList() {
-    sem_wait(&sem);
+    sem_wait(&sem_terminal);
     CLEAR_SCREEN
     printf("lista de semáforos existentes:\n");
     Semaforo *aux = existing_semaphores.head;
     if (!aux) {
         printf("Nenhum.\n");
         sleep(3);
-        sem_post(&sem);
+        sem_post(&sem_terminal);
         return;
     }
     while (aux) {
@@ -100,5 +100,5 @@ void showSemaphoreList() {
         aux = aux->next;
     }
     sleep(3);
-    sem_post(&sem);
+    sem_post(&sem_terminal);
 }
