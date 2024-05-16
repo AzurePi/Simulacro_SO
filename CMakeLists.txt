@@ -15,4 +15,6 @@ add_executable(Simulacro_SO
         semaforo.c
         semaforo.h
         main.c
+        interface.c
+        interface.h
 )
