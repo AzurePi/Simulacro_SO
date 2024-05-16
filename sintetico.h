@@ -11,7 +11,7 @@
 
 // declaração avançada de semaphore para evitar dependência circular
 struct semaphore;
-typedef struct semaphore semaphore_t;
+typedef struct semaphore Semaforo;
 
 // Estado do processo
 typedef enum {
@@ -43,7 +43,7 @@ typedef struct bcp {
     int prioridade_OG; // prioridade original do programa
     int tamanho_seg; // tamanho do segmento (em kbytes)
     ESTADO estado; // PRONTO, EXECUTANDO, PARADO ou TERMINADO
-    semaphore_t *semaforos; // Lista de semáforos usados pelo programa
+    Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
     Lista_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
 } BCP;
@@ -66,8 +66,11 @@ bool vaziaListaComandos(Lista_Comandos *l);
 // Inicializa uma Lista_Comandos vazia.
 Lista_Comandos *novaListaComandos();
 
-// Insere um novo comando no final de uma Lista_Comandos. Devolve true se sucesso, false caso contrário.
+// Insere um novo comando no final de uma Lista_Comandos.
 void inserirComando(Comando *comando, Lista_Comandos *lista);
+
+// Insere um novo semáforo no final de uma Lista_Semaforos.
+void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);
 
 // muda o estado do processo para BLOQUEADO e o manda pro final da fila de escalonamento
 void proc_sleep(BCP *proc);

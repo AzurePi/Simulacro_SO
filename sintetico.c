@@ -37,7 +37,11 @@ BCP *BCP_From_Sintetico(FILE *programa) {
     }
     semaforos[i] = '\0'; //finaliza a string
 
-    //TODO: para cada semáforo guardado, cria um novo semáforo, coloca na lista de semáforos geral, e coloca na lista do BCP
+    // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
+    for (int j = 0; j < i; j++) {
+        Semaforo *t = createSemaphore(semaforos[j]);
+        inserirSemaforo(t, processo->semaforos);
+    }
 
     //lê a linha em branco
     fscanf(programa, "%*[^\n]s");
@@ -49,7 +53,6 @@ BCP *BCP_From_Sintetico(FILE *programa) {
         return NULL;
     }
 
-    //TODO: Heloísa faça daqui pra frente por favor <3
     char buffer[11];
 
     //lê cada comando como uma string e armazena no buffer
