@@ -55,51 +55,39 @@ BCP *BCP_From_Sintetico(FILE *programa) {
     //lê cada comando como uma string e armazena no buffer
     while (fscanf(programa, "%s", buffer)) {
         char buffer_comando[6], buffer_parametro[6];
-        OPCODE opcode;
+        OPCODE opcode = -1;
         int parametro;
 
-      //se estamos lidando com as operações de semáforo, a string terá of formato "operação(parâmetro)"
+        //se estamos lidando com as operações de semáforo, a string terá of formato "operação(parâmetro)"
         if (buffer[0] == 'P' || buffer[0] == 'V') {
             sscanf(buffer, "%s(%s)", buffer_comando, buffer_parametro);
-            if(buffer_comando == 'P'){//Se for P
-                parametro = atoi(buffer_parametro);
-                opcode = P;
 
-            }else if(buffer_comando == 'V'){
-                parametro = atoi(buffer_parametro);
+            if (buffer_comando[0] == 'P')
+                opcode = P;
+            else if (buffer_comando[0] == 'V')
                 opcode = V;
 
-            }
-             comando = novoComando(opcode,parametro);
-             inserirComando(comando,processo->comandos);
-        }else
-        { //se estamos lidando com as demais operações, a string tera formato "operação parâmetro"
+        } else { //se estamos lidando com as demais operações, a string terá formato "operação parâmetro"
             sscanf(buffer, "%s %s", buffer_comando, buffer_parametro);
 
-             if(strcmp(buffer_comando,"exec")==0){
-               
-                parametro = atoi(buffer_parametro);//Transforma string em número
+            if (strcmp(buffer_comando, "exec") == 0)
                 opcode = EXEC;
-
-             }else if(strcmp(buffer_comando,"read"==0)){
-                parametro = atoi(buffer_parametro);//Transforma string em número
+            else if (strcmp(buffer_comando, "read") == 0)
                 opcode = READ;
-
-             }else if(strcmp(buffer_comando,"write")==0){
-                parametro = atoi(buffer_parametro);//Transforma string em número
+            else if (strcmp(buffer_comando, "write") == 0)
                 opcode = WRITE;
-
-             }else if(strcmp(buffer_comando,"print"==0)){
-                parametro = atoi(buffer_parametro);//Transforma string em número
+            else if (strcmp(buffer_comando, "print") == 0)
                 opcode = PRINT;
-
-            }
-
-            
-            comando = novoComando(opcode,parametro);
-            inserirComando(comando,processo->comandos);
         }
-        
+
+        if (opcode == -1) {
+            printf("ERRO: comando não reconhecido no programa sintético");
+            return NULL;
+        }
+
+        parametro = atoi(buffer_parametro);
+        Comando *comando = novoComando(opcode, parametro);
+        inserirComando(comando, processo->comandos);
     }
 
     return processo;

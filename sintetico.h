@@ -7,6 +7,8 @@
 #include <string.h>
 #include "semaforo.h"
 
+// Declaração de Tipos -------------------------------------------------------------------------------------------------
+
 // declaração avançada de semaphore para evitar dependência circular
 struct semaphore;
 typedef struct semaphore semaphore_t;
@@ -34,6 +36,7 @@ typedef struct {
     int nElementos; // número de elementos da lista
 } Lista_Comandos;
 
+// Bloco de controle de processos
 typedef struct bcp {
     char nome[61]; // nome do programa
     int id_seg; // identificador do segmento
@@ -44,6 +47,12 @@ typedef struct bcp {
     Lista_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
 } BCP;
+
+// Variáveis Globais ---------------------------------------------------------------------------------------------------
+
+BCP *rodando_agora = NULL;
+
+// Funções -------------------------------------------------------------------------------------------------------------
 
 // Cria um BCP com base na leitura de um programa sintético
 BCP *BCP_From_Sintetico(FILE *programa);
@@ -57,10 +66,7 @@ bool vaziaListaComandos(Lista_Comandos *l);
 // Inicializa uma Lista_Comandos vazia.
 Lista_Comandos *novaListaComandos();
 
-/*
-    Insere um novo comando no final de uma Lista_Comandos.
-    Devolve true se sucesso, false caso contrário.
-*/
+// Insere um novo comando no final de uma Lista_Comandos. Devolve true se sucesso, false caso contrário.
 void inserirComando(Comando *comando, Lista_Comandos *lista);
 
 // muda o estado do processo para BLOQUEADO e o manda pro final da fila de escalonamento
