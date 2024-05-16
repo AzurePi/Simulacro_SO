@@ -2,6 +2,8 @@
 #define SIMULACRO_SO_EVENTOS_H
 #include <pthread.h>
 
+#include "sintetico.h"
+
 int relogio = 0;
 
 //struct semaforo
@@ -16,7 +18,7 @@ typedef struct semaphore {
 
 typedef struct sem_li //lista de processos esperando o semaforo
 {
-    BCPitem_t* proc;
+    BCP* proc;
     struct sem_li* next;
 } sem_list_item_t;
 
