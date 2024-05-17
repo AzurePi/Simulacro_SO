@@ -18,7 +18,7 @@ void semaphoreV(Semaforo *semaph) {
     semaph->v++;
     if (semaph->v <= 0 && semaph->waiting_list) {
         BCP *proc = semaph->waiting_list->proc;
-        semaph->waiting_list = semaph->waiting_list->next;
+        semaph->waiting_list = semaph->waiting_list->prox;
         process_wakeup(proc);
     }
     pthread_mutex_unlock(&semaph->mutex_lock);
@@ -54,9 +54,10 @@ void *processCreate() {
     if (programa) {
         BCP *processo = lerProgramaSintetico(programa);
         if (!processo)
-            printf("ERRO: não foi possível criar o processo");
-    } else
-        printf("ERRO: %s não pode ser aberto\n", filename);
+            printf("ERRO: não foi possível criar o processo com esse programa");
+    } else {
+        printf("ERRO: arquivo do programa sintético não pôde ser aberto");
+    }
     fclose(programa);
 
     //TODO: coloca no escalonamento

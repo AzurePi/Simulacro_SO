@@ -52,16 +52,29 @@ typedef struct bcp {
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
+//Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
+BCP *novoBCP();
+
+// Libera a memória alocada para um BCP
+void freeBCP(BCP *bcp);
+
+// Libera a memória de toda uma lista de BCPs
+void freeListaBCP(BCP *bcp);
+
 // Cria um BCP com base na leitura de um programa sintético
 BCP *lerProgramaSintetico(FILE *programa);
 
 // Inicializa um novo Comando com base nos parâmetros
 Comando *novoComando(OPCODE opcode, int parametro);
 
-// Retorna true (1) se vazia, false (0) caso contrário.
+// Libera a meória alocada para um comando
+void freeComando(Comando *comando);
 
 // Inicializa uma Lista_Comandos vazia.
 Lista_Comandos *novaListaComandos();
+
+// Libera a memória alocada para uma Lista_Comandos
+void freeListaComandos(Lista_Comandos *comandos);
 
 // Insere um novo comando no final de uma Lista_Comandos.
 void inserirComando(Comando *comando, Lista_Comandos *lista);

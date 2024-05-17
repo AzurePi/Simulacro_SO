@@ -2,6 +2,7 @@
 #define SIMULACRO_SO_SEMAFORO_H
 
 #include "globals.h"
+#include "sintetico.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@ typedef struct bcp BCP;
 // lista de processos esperando o semáforo
 typedef struct lista_espera_bcp {
     BCP *proc;
-    struct lista_espera_bcp *next;
+    struct lista_espera_bcp *prox;
 } Lista_Espera_BCP;
 
 typedef struct semaforo {
@@ -26,8 +27,8 @@ typedef struct semaforo {
     char name; // nome do semáforo
     volatile int v; // valor do semáforo
     int refcount; // conta o número de processos que estão usando o semáforo
-    Lista_Espera_BCP *waiting_list; // topo da lista de espera de processos do semáforo
-    struct semaforo *next;
+    BCP *waiting_list; // topo da lista de espera de processos do semáforo
+    struct semaforo *prox;
 } Semaforo;
 
 // lista de semáforos
@@ -54,5 +55,11 @@ Semaforo *retrieveSemaphore(char name);
 
 // Enfileira processos bloqueados por uma chamada falha à semaphoreP()
 void sem_queue(Lista_Espera_BCP **list, BCP *proc);
+
+// Libera a memória alocada para um semáforo
+void freeSemaforo(Semaforo *semaforo);
+
+// Libera a memória alocada para uma lista de semáforos
+void liberaListaSemaforo(Lista_Semaforos *semaforos);
 
 #endif //SIMULACRO_SO_SEMAFORO_H

@@ -1,18 +1,38 @@
 #include "include/sintetico.h"
 
-//TODO: debugar isso
-BCP *lerProgramaSintetico(FILE *programa) {
-    //se não há programa para ler, retorna NULL
-    if (!programa) {
-        printf("ERRO: arquivo do programa sintético não encontrado");
-        return NULL;
-    }
-
-    BCP *processo = malloc(sizeof(BCP));
-    if (!processo) {
+BCP *novoBCP() {
+    BCP *new = malloc(sizeof(BCP));
+    if (!new) {
         printf("ERRO: falha na alocação de memória do BCP");
         return NULL;
     }
+    new->estado = PRONTO; //diz que o programa está pronto para ser executado
+    new->semaforos = novaListaSemaforos();
+    new->comandos = novaListaComandos();
+    return new;
+}
+
+void freeBCP(BCP *bcp) {
+    liberaListaSemaforo(bcp->semaforos);
+    freeListaComandos(bcp->comandos);
+    free(bcp);
+}
+
+void freeListaBCP(BCP *bcp) {
+    BCP *temp;
+    while (bcp != NULL) {
+        temp = bcp;
+        bcp = bcp->prox;
+        freeBCP(temp);
+    }
+}
+
+//TODO: debugar isso
+BCP *lerProgramaSintetico(FILE *programa) {
+    if (!programa) return NULL; // se não há programa para ler, retorna NULL
+
+    BCP *processo = novoBCP();
+    if (!processo) return NULL; // se um novo BCP não pôde ser criado, retorna NULL
 
     // lê os campos no programa sintético; se houver erro na leitura, informa que há problema no arquivo
     if (!fscanf(programa, "%60s", processo->nome) ||
@@ -20,10 +40,9 @@ BCP *lerProgramaSintetico(FILE *programa) {
         !fscanf(programa, "%d", &processo->prioridade_OG) ||
         !fscanf(programa, "%d", &processo->tamanho_seg)) {
         printf("ERRO: programa sintético contém erro no cabeçalho");
+        freeBCP(processo);
         return NULL;
     }
-
-    processo->estado = 0; //diz que o programa está pronto para ser executado
 
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
@@ -48,9 +67,9 @@ BCP *lerProgramaSintetico(FILE *programa) {
     fscanf(programa, "%*[^\n]s");
 
     //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
-    processo->comandos = novaListaComandos();
     if (!processo->comandos) {
         printf("ERRO: falha na criação de lista de comandos para o programa");
+        freeBCP(processo);
         return NULL;
     }
 
@@ -86,6 +105,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
         if (opcode == -1) {
             printf("ERRO: comando não reconhecido no programa sintético");
+            freeBCP(processo);
             return NULL;
         }
 
@@ -93,7 +113,6 @@ BCP *lerProgramaSintetico(FILE *programa) {
         Comando *comando = novoComando(opcode, parametro);
         inserirComando(comando, processo->comandos);
     }
-
     return processo;
 }
 
@@ -106,12 +125,26 @@ Comando *novoComando(OPCODE opcode, int parametro) {
     return c;
 }
 
+void freeComando(Comando *comando) {
+    free(comando);
+}
+
 Lista_Comandos *novaListaComandos() {
-    Lista_Comandos *l = malloc(sizeof(Lista_Comandos));
-    if (!l) return NULL; // se a alocação de memória falhou
-    l->nElementos = 0;
-    l->head = NULL;
-    return l;
+    Lista_Comandos *new = malloc(sizeof(Lista_Comandos));
+    if (!new) return NULL; // se a alocação de memória falhou
+    new->nElementos = 0;
+    new->head = NULL;
+    return new;
+}
+
+void freeListaComandos(Lista_Comandos *comandos) {
+    Comando *temp;
+    while (comandos->head != NULL) {
+        temp = comandos->head;
+        comandos->head = comandos->head->prox;
+        freeComando(temp);
+    }
+    free(comandos);
 }
 
 void inserirComando(Comando *comando, Lista_Comandos *lista) {
@@ -125,7 +158,7 @@ void inserirComando(Comando *comando, Lista_Comandos *lista) {
 }
 
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
-
+    //TODO: fazer isso
 }
 
 void process_sleep(BCP *proc) {

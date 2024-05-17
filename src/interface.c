@@ -53,7 +53,7 @@ void *menu() {
                 break;
             default:
                 printf("Opção inválida!\n");
-                sleep(3);
+                sleep(2);
                 break;
         }
     } while (op != '0');
@@ -80,7 +80,7 @@ void showSemaphoreList() {
     }
     while (aux) {
         printf("%c | Contador: %d\n", aux->name, aux->refcount);
-        aux = aux->next;
+        aux = aux->prox;
     }
     sleep(3);
     sem_post(&sem_terminal);
