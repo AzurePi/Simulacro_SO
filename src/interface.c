@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "include/interface.h"
 
 void *menu() {
     char op;
@@ -22,7 +22,7 @@ void *menu() {
         printf("║ [0] Encerrar                         ║\n");
         printf("╚══════════════════════════════════════╝\n");
 
-        printf("\n Processando agora: ");
+        printf("\nProcessando agora: ");
         if (rodando_agora)
             printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
         else
@@ -31,7 +31,8 @@ void *menu() {
         sem_post(&sem_terminal);
 
         printf("Selecione a operação: ");
-        scanf(" %c", &op);
+        scanf("%c", &op);
+        limpar_buffer();
 
         switch (op) {
             case '0':
@@ -65,3 +66,28 @@ void *informacaoProcesso() {
 void *informacaoMemoria() {
 
 }
+
+void showSemaphoreList() {
+    sem_wait(&sem_terminal);
+    CLEAR_SCREEN
+    printf("lista de semáforos existentes:\n");
+    Semaforo *aux = semaforos_existentes->head;
+    if (!aux) {
+        printf("Nenhum.\n");
+        sleep(3);
+        sem_post(&sem_terminal);
+        return;
+    }
+    while (aux) {
+        printf("%c | Contador: %d\n", aux->name, aux->refcount);
+        aux = aux->next;
+    }
+    sleep(3);
+    sem_post(&sem_terminal);
+}
+
+void limpar_buffer() {
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+

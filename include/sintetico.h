@@ -1,21 +1,23 @@
 #ifndef SIMULACRO_SO_SINTETICO_H
 #define SIMULACRO_SO_SINTETICO_H
 
+#include "semaforo.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "semaforo.h"
 
 // Declaração de Tipos -------------------------------------------------------------------------------------------------
 
-// declaração avançada de semaphore para evitar dependência circular
-struct semaphore;
-typedef struct semaphore Semaforo;
+// declaração avançada de semaforo.h para evitar dependência circular
+struct semaforo;
+typedef struct semaforo Semaforo;
+typedef struct lista_semaforos Lista_Semaforos;
 
 // Estado do processo
 typedef enum {
-    PRONTO, EXECUTANDO, PARADO, TERMINADO
+    PRONTO, EXECUTANDO, BLOQUEADO, TERMINADO
 } ESTADO;
 
 // Operação a ser executada
@@ -42,26 +44,21 @@ typedef struct bcp {
     int id_seg; // identificador do segmento
     int prioridade_OG; // prioridade original do programa
     int tamanho_seg; // tamanho do segmento (em kbytes)
-    ESTADO estado; // PRONTO, EXECUTANDO, PARADO ou TERMINADO
+    ESTADO estado; // PRONTO, EXECUTANDO, BLOQUEADO ou TERMINADO
     Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
     Lista_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
 } BCP;
 
-// Variáveis Globais ---------------------------------------------------------------------------------------------------
-
-BCP *rodando_agora = NULL;
-
 // Funções -------------------------------------------------------------------------------------------------------------
 
 // Cria um BCP com base na leitura de um programa sintético
-BCP *BCP_From_Sintetico(FILE *programa);
+BCP *lerProgramaSintetico(FILE *programa);
 
 // Inicializa um novo Comando com base nos parâmetros
 Comando *novoComando(OPCODE opcode, int parametro);
 
 // Retorna true (1) se vazia, false (0) caso contrário.
-bool vaziaListaComandos(Lista_Comandos *l);
 
 // Inicializa uma Lista_Comandos vazia.
 Lista_Comandos *novaListaComandos();
@@ -72,10 +69,10 @@ void inserirComando(Comando *comando, Lista_Comandos *lista);
 // Insere um novo semáforo no final de uma Lista_Semaforos.
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);
 
-// muda o estado do processo para BLOQUEADO e o manda pro final da fila de escalonamento
-void proc_sleep(BCP *proc);
+// Muda o estado do processo para BLOQUEADO e o manda pro final da fila de escalonamento
+void process_sleep(BCP *proc);
 
-// muda o estado do processo para PRONTO
-void proc_wakeup(BCP *proc);
+// Muda o estado do processo para PRONTO
+void process_wakeup(BCP *proc);
 
 #endif //SIMULACRO_SO_SINTETICO_H

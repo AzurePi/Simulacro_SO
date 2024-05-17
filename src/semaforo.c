@@ -1,6 +1,6 @@
-#include "semaforo.h"
+#include "include/semaforo.h"
 
-Semaforo *createSemaphore(char name) {
+Semaforo *novoSemaforo(char name) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
         printf("ERRO: falha ao alocar memória para o semáforo");
@@ -13,19 +13,33 @@ Semaforo *createSemaphore(char name) {
     new->refcount = 1;
     new->waiting_list = NULL;
     new->next = NULL;
-    insert_semaphore(new);
+    insereSemaforo(new);
     return new;
 }
 
-void insert_semaphore(Semaforo *semaforo) {
-    if (existing_semaphores.head == NULL) {
-        existing_semaphores.head = semaforo;
+Lista_Semaforos *novaListaSemaforos() {
+    Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
+    if (!new) {
+        printf("ERRO: falha ao alocar memória para a lista de semáforos");
+        return NULL;
+    }
+    new->head = NULL;
+    return new;
+}
+
+void insereSemaforo(Semaforo *semaforo) {
+    if (semaforos_existentes == NULL) {
+        semaforos_existentes = novaListaSemaforos();
+    }
+
+    if (semaforos_existentes->head == NULL) {
+        semaforos_existentes->head = semaforo;
         return;
     }
 
     // percorremos a lista de semáforos existente até o final
     Semaforo *aux, *prev = NULL;
-    for (aux = existing_semaphores.head; aux != NULL; prev = aux, aux = aux->next) {
+    for (aux = semaforos_existentes->head; aux != NULL; prev = aux, aux = aux->next) {
         // se um semáforo com esse nome já existe, o apagamos e paramos
         if (semaforo->name == aux->name) {
             aux->refcount++;
@@ -39,23 +53,23 @@ void insert_semaphore(Semaforo *semaforo) {
     if (prev)
         prev->next = semaforo;
     else
-        existing_semaphores.head = semaforo;
+        semaforos_existentes->head = semaforo;
 }
 
-void removeSemaphore(Semaforo *semaforo) {
-    Semaforo *aux = existing_semaphores.head, *prev = NULL;
+void removeSemaforo(Semaforo *semaforo) {
+    Semaforo *aux = semaforos_existentes->head, *prev = NULL;
     for (; aux != NULL && aux != semaforo; prev = aux, aux = aux->next);
     if (aux) {
         if (prev)
             prev->next = aux->next;
         else //aux é a head atual
-            existing_semaphores.head = existing_semaphores.head->next;
+            semaforos_existentes->head = semaforos_existentes->head->next;
         free(aux);
     }
 }
 
 Semaforo *retrieveSemaphore(char name) {
-    Semaforo *aux = existing_semaphores.head;
+    Semaforo *aux = semaforos_existentes->head;
     while (aux) {
         if (aux->name == name)
             return aux;
@@ -84,21 +98,3 @@ void sem_queue(Lista_Espera_BCP **list, BCP *proc) {
         (*list) = new;
 }
 
-void showSemaphoreList() {
-    sem_wait(&sem_terminal);
-    CLEAR_SCREEN
-    printf("lista de semáforos existentes:\n");
-    Semaforo *aux = existing_semaphores.head;
-    if (!aux) {
-        printf("Nenhum.\n");
-        sleep(3);
-        sem_post(&sem_terminal);
-        return;
-    }
-    while (aux) {
-        printf("%c | Contador: %d\n", aux->name, aux->refcount);
-        aux = aux->next;
-    }
-    sleep(3);
-    sem_post(&sem_terminal);
-}

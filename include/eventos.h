@@ -1,16 +1,21 @@
 #ifndef SIMULACRO_SO_EVENTOS_H
 #define SIMULACRO_SO_EVENTOS_H
 
+#include "semaforo.h"
+#include "sintetico.h"
+#include "globals.h"
+
 #include <pthread.h>
 #include <stdio.h>
 #include <semaphore.h>
-#include "semaforo.h"
-#include "sintetico.h"
-#include "interface.h"
 
-// Variáveis Globais ---------------------------------------------------------------------------------------------------
+// declaração avançada de semaforo.h para evitar dependência circular
+struct semaforo;
+typedef struct semaforo Semaforo;
 
-volatile long double relogio = 0;
+// declaração avançada de BCP para evitar dependência circular
+struct bcp;
+typedef struct bcp BCP;
 
 // Funções -------------------------------------------------------------------------------------------------------------
 

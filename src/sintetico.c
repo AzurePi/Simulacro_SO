@@ -1,6 +1,7 @@
-#include "sintetico.h"
+#include "include/sintetico.h"
 
-BCP *BCP_From_Sintetico(FILE *programa) {
+//TODO: debugar isso
+BCP *lerProgramaSintetico(FILE *programa) {
     //se não há programa para ler, retorna NULL
     if (!programa) {
         printf("ERRO: arquivo do programa sintético não encontrado");
@@ -13,7 +14,7 @@ BCP *BCP_From_Sintetico(FILE *programa) {
         return NULL;
     }
 
-    // lê os campos do BCP no programa sintético; se houver erro na leitura, informa que há problema no arquivo
+    // lê os campos no programa sintético; se houver erro na leitura, informa que há problema no arquivo
     if (!fscanf(programa, "%60s", processo->nome) ||
         !fscanf(programa, "%d", &processo->id_seg) ||
         !fscanf(programa, "%d", &processo->prioridade_OG) ||
@@ -39,7 +40,7 @@ BCP *BCP_From_Sintetico(FILE *programa) {
 
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (int j = 0; j < i; j++) {
-        Semaforo *t = createSemaphore(semaforos[j]);
+        Semaforo *t = novoSemaforo(semaforos[j]);
         inserirSemaforo(t, processo->semaforos);
     }
 
@@ -105,10 +106,6 @@ Comando *novoComando(OPCODE opcode, int parametro) {
     return c;
 }
 
-bool vaziaListaComandos(Lista_Comandos *l) {
-    return (l->nElementos == 0);
-}
-
 Lista_Comandos *novaListaComandos() {
     Lista_Comandos *l = malloc(sizeof(Lista_Comandos));
     if (!l) return NULL; // se a alocação de memória falhou
@@ -127,13 +124,18 @@ void inserirComando(Comando *comando, Lista_Comandos *lista) {
     lista->nElementos++;
 }
 
-void proc_sleep(BCP *proc) {
-    if (!proc) return; // se o processo passado não existe
+void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
 
 }
 
-void proc_wakeup(BCP *proc) {
-    if (proc) {
-        proc->estado = PRONTO;
-    }
+void process_sleep(BCP *proc) {
+    if (!proc) return; // se o processo passado não existe
+    proc->estado = BLOQUEADO;
+
+    //TODO: mandar o processo para o final da lista
+}
+
+void process_wakeup(BCP *proc) {
+    if (!proc) return;
+    proc->estado = PRONTO;
 }

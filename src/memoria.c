@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "memoria.h"
+#include "include/memoria.h"
 
 No_Pagina *criaNo() {
     No_Pagina *novoNo = malloc(sizeof(No_Pagina));
