@@ -9,6 +9,7 @@ BCP *novoBCP() {
     new->estado = PRONTO; //diz que o programa está pronto para ser executado
     new->semaforos = novaListaSemaforos();
     new->comandos = novaListaComandos();
+    new->prox = NULL;
     return new;
 }
 
@@ -35,10 +36,10 @@ BCP *lerProgramaSintetico(FILE *programa) {
     if (!processo) return NULL; // se um novo BCP não pôde ser criado, retorna NULL
 
     // lê os campos no programa sintético; se houver erro na leitura, informa que há problema no arquivo
-    if (!fscanf(programa, "%60s", processo->nome) ||
-        !fscanf(programa, "%d", &processo->id_seg) ||
-        !fscanf(programa, "%d", &processo->prioridade_OG) ||
-        !fscanf(programa, "%d", &processo->tamanho_seg)) {
+    if (!fscanf(programa, "%60s\n", processo->nome) ||
+        !fscanf(programa, "%d\n", &processo->id_seg) ||
+        !fscanf(programa, "%d\n", &processo->prioridade_OG) ||
+        !fscanf(programa, "%d\n", &processo->tamanho_seg)) {
         printf("ERRO: programa sintético contém erro no cabeçalho");
         freeBCP(processo);
         return NULL;
@@ -63,8 +64,8 @@ BCP *lerProgramaSintetico(FILE *programa) {
         inserirSemaforo(t, processo->semaforos);
     }
 
-    //lê a linha em branco
-    fscanf(programa, "%*[^\n]s");
+    //lê uma linha em branco
+    while ((s = fgetc(programa)) != '\n' && s != EOF);
 
     //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
     if (!processo->comandos) {
@@ -76,7 +77,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     char buffer[11];
 
     //lê cada comando como uma string e armazena no buffer
-    while (fscanf(programa, "%s", buffer)) {
+    while (fscanf(programa, "%[^\n]s", buffer)) {
         char buffer_comando[6], buffer_parametro[6];
         OPCODE opcode = -1;
         int parametro;
@@ -117,12 +118,12 @@ BCP *lerProgramaSintetico(FILE *programa) {
 }
 
 Comando *novoComando(OPCODE opcode, int parametro) {
-    Comando *c = malloc(sizeof(Comando));
-    if (!c) return NULL; // se a alocação de memória falhou
-    c->opcode = opcode;
-    c->parametro = parametro;
-    c->prox = NULL;
-    return c;
+    Comando *new = malloc(sizeof(Comando));
+    if (!new) return NULL; // se a alocação de memória falhou
+    new->opcode = opcode;
+    new->parametro = parametro;
+    new->prox = NULL;
+    return new;
 }
 
 void freeComando(Comando *comando) {
@@ -150,7 +151,7 @@ void freeListaComandos(Lista_Comandos *comandos) {
 void inserirComando(Comando *comando, Lista_Comandos *lista) {
     if (!lista || !comando) return; // se os parâmetros são ponteiros nulos
 
-    Comando *aux = lista->head;
+    Comando *aux = lista->head; //TODO: aqui, lista pode ser NULL
     while (aux->prox != NULL)
         aux = aux->prox;
     aux->prox = comando;

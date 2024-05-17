@@ -5,7 +5,7 @@ void *menu() {
 
     pthread_attr_t atrib;
     pthread_attr_init(&atrib);
-    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_PROCESS);
+    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
 
     pthread_t t_novo, t_info_proc, t_info_mem;
 
@@ -37,7 +37,6 @@ void *menu() {
         switch (op) {
             case '0':
                 printf("Encerrando programa.");
-                sleep(3);
                 break;
             case '1':
                 pthread_create(&t_novo, &atrib, processCreate, NULL);
@@ -70,7 +69,7 @@ void *informacaoMemoria() {
 void showSemaphoreList() {
     sem_wait(&sem_terminal);
     CLEAR_SCREEN
-    printf("lista de semáforos existentes:\n");
+    printf("Lista de semáforos existentes:\n");
     Semaforo *aux = semaforos_existentes->head;
     if (!aux) {
         printf("Nenhum.\n");

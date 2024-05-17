@@ -6,7 +6,7 @@ void processInterrupt() {}
 void semaphoreP(Semaforo *semaph, BCP *proc) {
     pthread_mutex_lock(&semaph->mutex_lock);
     if (semaph->v < 0) {
-        sem_queue(&semaph->waiting_list, proc);
+        //sem_queue(&semaph->waiting_list, proc);
         process_sleep(proc);
     }
     semaph->v--;
@@ -17,7 +17,7 @@ void semaphoreV(Semaforo *semaph) {
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
     if (semaph->v <= 0 && semaph->waiting_list) {
-        BCP *proc = semaph->waiting_list->proc;
+        BCP *proc = semaph->waiting_list->prox;
         semaph->waiting_list = semaph->waiting_list->prox;
         process_wakeup(proc);
     }
@@ -45,7 +45,7 @@ void *processCreate() {
 
     char filename[201];
     sem_wait(&sem_terminal);
-    printf("Nome do programa: ");
+    printf("Caminho do programa: ");
     scanf(" %200[^\n]", filename);
     limpar_buffer();
     sem_post(&sem_terminal);
