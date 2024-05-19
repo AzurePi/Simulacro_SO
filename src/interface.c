@@ -2,15 +2,10 @@
 
 void *menu() {
     char op;
-
-    pthread_attr_t atrib;
-    pthread_attr_init(&atrib);
-    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
-
     pthread_t t_novo, t_info_proc, t_info_mem;
 
     do {
-        sem_wait(&sem_terminal);
+        sem_wait(&sem_terminal); // requer acesso ao terminal
 
         CLEAR_SCREEN
         printf("╔══════════════════════════════════════╗\n");
@@ -28,15 +23,17 @@ void *menu() {
         else
             printf("nada\n");
 
-        sem_post(&sem_terminal);
-
         printf("Selecione a operação: ");
         scanf("%c", &op);
         limpar_buffer();
 
+        sem_post(&sem_terminal); // libera acesso ao terminal
+
         switch (op) {
             case '0':
+                sem_wait(&sem_terminal);
                 printf("Encerrando programa.");
+                sem_post(&sem_terminal);
                 break;
             case '1':
                 pthread_create(&t_novo, &atrib, processCreate, NULL);
@@ -78,7 +75,7 @@ void showSemaphoreList() {
         return;
     }
     while (aux) {
-        printf("%c | Contador: %d\n", aux->name, aux->refcount);
+        printf("\t%c | Contador: %d\n", aux->name, aux->refcount);
         aux = aux->prox;
     }
     sleep(3);

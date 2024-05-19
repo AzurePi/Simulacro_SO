@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "include/memoria.h"
 
 No_Pagina *criaNo() {
@@ -17,10 +16,12 @@ Lista_Circ *criaLista() {
 }
 
 No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista) {
-    if (!lista->head) { // Se a Lista estiver vazia
+    // Se a Lista estiver vazia
+    if (!lista->head) {
         lista->head = lista->tail = noAdiciona; // O nó adicionado é tanto a cabeça quanto a cauda
         noAdiciona->prox = noAdiciona; // O próximo do nó aponta para ele mesmo, pois é o único nó na Lista
-    } else { // Se a Lista não estiver vazia
+    // Se a Lista não estiver vazia
+    } else {
         lista->tail->prox = noAdiciona; // O próximo do último nó atual aponta para o nó adicionado
         lista->tail = noAdiciona; // O nó adicionado agora é a cauda da Lista
         noAdiciona->prox = lista->head; // O próximo do nó adicionado aponta para a cabeça da Lista, tornando-a circular
@@ -28,32 +29,26 @@ No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista) {
     return lista->head; // Retorna a cabeça da Lista atualizada
 }
 
+//usa para buscar sem uso, retorno a primeira página que eu encontrar.
+No_Pagina *percorreLista(Lista_Circ lista) {
+    No_Pagina *aux = lista.head;
 
-No_Pagina *percorreLista(
-        Lista_Circ lista) { //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem_terminal uso, retorno a primeira página que eu encontrar.
-    No_Pagina *aux = malloc(sizeof(No_Pagina));
+    //Enquanto eu não chegar na cauda da Lista
+    while (aux->prox != lista.head) {
+        //Procuro uma página vazia para carregar as informações
+        if (aux->ocupado == 0)
+            return aux;
+        aux = aux->prox;
+    } //TODO: em algum momento aqui, temos que mudar as flags das páginas percorridas
 
-    while (aux->prox != lista.head) {//Enquanto eu não chegar na cauda da Lista
-        if (aux->ocupado == 0) {//Procuro uma página vazia para carregar as informações
+    //Se não tiver nenhum sem uso
 
-            return aux;//VER SE É ISSO
-        }
+    //Enquanto eu não chegar na cauda da Lista
+    while (aux->prox != lista.head) {
+        //Procuro uma página sem uso para carregar as informações e tbm sem modificação pra não ter escrever na memória
+        if (aux->uso == 0 && aux->modificado == 0)
+            return aux;
         aux = aux->prox;
     }
-
-    //Se não tiver nenhum sem_terminal uso
-    while (aux->prox != lista.head) {//Enquanto eu não chegar na cauda da Lista
-        if (aux->uso == 0) {//Procuro uma página sem_terminal uso para carregar as informações
-            if (aux->modificado == 0) {//E tbm sem_terminal modificação pra não ter escrever na memória
-                return aux;//VER SE É ISSO
-            }
-        }
-        aux = aux->prox;
-    }
-    return NULL;
-}
-
-
-No_Pagina *inserePrioridade(BCP *noAdiciona, Lista_Circ lista) {
     return NULL;
 }

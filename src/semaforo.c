@@ -3,7 +3,9 @@
 Semaforo *novoSemaforo(char name) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
+        sem_wait(&sem_terminal);
         printf("ERRO: falha ao alocar memória para o semáforo");
+        sem_post(&sem_terminal);
         return NULL;
     }
     pthread_mutex_init(&new->mutex_lock, NULL);
@@ -18,13 +20,17 @@ Semaforo *novoSemaforo(char name) {
 
 void freeSemaforo(Semaforo *semaforo) {
     freeListaBCP(semaforo->waiting_list);
+    pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
 
 Lista_Semaforos *novaListaSemaforos() {
     Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
     if (!new) {
+        sem_wait(&sem_terminal);
         printf("ERRO: falha ao alocar memória para a lista de semáforos");
+        sleep(2);
+        sem_post(&sem_terminal);
         return NULL;
     }
     new->head = NULL;
@@ -42,9 +48,8 @@ void liberaListaSemaforo(Lista_Semaforos *semaforos) {
 }
 
 void insereSemaforo(Semaforo *semaforo) {
-    if (semaforos_existentes == NULL) {
+    if (semaforos_existentes == NULL)
         semaforos_existentes = novaListaSemaforos();
-    }
 
     if (semaforos_existentes->head == NULL) {
         semaforos_existentes->head = semaforo;
@@ -89,8 +94,10 @@ Semaforo *retrieveSemaphore(char name) {
             return aux;
         aux = aux->prox;
     }
+    sem_wait(&sem_terminal);
     printf("ERRO: busca de semáforo não pode ser concluida.\n");
-    sleep(1);
+    sleep(2);
+    sem_post(&sem_terminal);
     return NULL;
 }
 

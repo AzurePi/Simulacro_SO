@@ -34,19 +34,19 @@ typedef struct comando {
 
 // Lista de comandos presentes num dado programa
 typedef struct {
-    Comando *head; // começo da lista
-    int nElementos; // número de elementos da lista
-} Lista_Comandos;
+    Comando *head; // começo da fila
+    Comando *tail; // fim da fila
+} Fila_Comandos;
 
 // Bloco de controle de processos
 typedef struct bcp {
     char nome[61]; // nome do programa
     int id_seg; // identificador do segmento
-    int prioridade_OG; // prioridade original do programa
+    int prioridade; // prioridade do programa
     int tamanho_seg; // tamanho do segmento (em kbytes)
     ESTADO estado; // PRONTO, EXECUTANDO, BLOQUEADO ou TERMINADO
     Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
-    Lista_Comandos *comandos; // Lista de comandos do programa
+    Fila_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
 } BCP;
 
@@ -70,14 +70,17 @@ Comando *novoComando(OPCODE opcode, int parametro);
 // Libera a meória alocada para um comando
 void freeComando(Comando *comando);
 
-// Inicializa uma Lista_Comandos vazia.
-Lista_Comandos *novaListaComandos();
+// Inicializa uma Fila_Comandos vazia.
+Fila_Comandos *novaFilaComandos();
 
-// Libera a memória alocada para uma Lista_Comandos
-void freeListaComandos(Lista_Comandos *comandos);
+// Libera a memória alocada para uma Fila_Comandos
+void freeListaComandos(Fila_Comandos *comandos);
 
-// Insere um novo comando no final de uma Lista_Comandos.
-void inserirComando(Comando *comando, Lista_Comandos *lista);
+// Insere um novo comando no final de uma Fila_Comandos.
+void inserirComando(Comando *comando, Fila_Comandos *fila);
+
+// Remove o último comando de uma Fila_Comandos.
+void removerComando(Fila_Comandos *fila);
 
 // Insere um novo semáforo no final de uma Lista_Semaforos.
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);

@@ -3,12 +3,15 @@
 BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
+        sem_wait(&sem_terminal);
         printf("ERRO: falha na alocação de memória do BCP");
+        sleep(2);
+        sem_post(&sem_terminal);
         return NULL;
     }
     new->estado = PRONTO; //diz que o programa está pronto para ser executado
     new->semaforos = novaListaSemaforos();
-    new->comandos = novaListaComandos();
+    new->comandos = novaFilaComandos();
     new->prox = NULL;
     return new;
 }
@@ -28,7 +31,6 @@ void freeListaBCP(BCP *bcp) {
     }
 }
 
-//TODO: debugar isso
 BCP *lerProgramaSintetico(FILE *programa) {
     if (!programa) return NULL; // se não há programa para ler, retorna NULL
 
@@ -38,9 +40,12 @@ BCP *lerProgramaSintetico(FILE *programa) {
     // lê os campos no programa sintético; se houver erro na leitura, informa que há problema no arquivo
     if (!fscanf(programa, "%60s\n", processo->nome) ||
         !fscanf(programa, "%d\n", &processo->id_seg) ||
-        !fscanf(programa, "%d\n", &processo->prioridade_OG) ||
+        !fscanf(programa, "%d\n", &processo->prioridade) ||
         !fscanf(programa, "%d\n", &processo->tamanho_seg)) {
+        sem_wait(&sem_terminal);
         printf("ERRO: programa sintético contém erro no cabeçalho");
+        sleep(2);
+        sem_post(&sem_terminal);
         freeBCP(processo);
         return NULL;
     }
@@ -69,7 +74,10 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
     //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
     if (!processo->comandos) {
+        sem_wait(&sem_terminal);
         printf("ERRO: falha na criação de lista de comandos para o programa");
+        sleep(2);
+        sem_post(&sem_terminal);
         freeBCP(processo);
         return NULL;
     }
@@ -77,40 +85,45 @@ BCP *lerProgramaSintetico(FILE *programa) {
     char buffer[11];
 
     //lê cada comando como uma string e armazena no buffer
-    while (fscanf(programa, "%[^\n]s", buffer)) {
-        char buffer_comando[6], buffer_parametro[6];
+    while (fscanf(programa, " %[^\n]", buffer) == 1) {
+        char buffer_operacao[6], buffer_parametro[10];
         OPCODE opcode = -1;
         int parametro;
 
-        //se estamos lidando com as operações de semáforo, a string terá of formato "operação(parâmetro)"
+        //se estamos lidando com as operações de semáforo, a string terá formato "operação(parâmetro)"
         if (buffer[0] == 'P' || buffer[0] == 'V') {
-            sscanf(buffer, "%s(%s)", buffer_comando, buffer_parametro);
+            sscanf(buffer, "%[^(](%[^)])", buffer_operacao, buffer_parametro);
 
-            if (buffer_comando[0] == 'P')
+            if (buffer_operacao[0] == 'P')
                 opcode = P;
-            else if (buffer_comando[0] == 'V')
+            else if (buffer_operacao[0] == 'V')
                 opcode = V;
 
+            parametro = (int) buffer_parametro[0];
         } else { //se estamos lidando com as demais operações, a string terá formato "operação parâmetro"
-            sscanf(buffer, "%s %s", buffer_comando, buffer_parametro);
+            sscanf(buffer, "%s %s", buffer_operacao, buffer_parametro);
 
-            if (strcmp(buffer_comando, "exec") == 0)
+            if (strcmp(buffer_operacao, "exec") == 0)
                 opcode = EXEC;
-            else if (strcmp(buffer_comando, "read") == 0)
+            else if (strcmp(buffer_operacao, "read") == 0)
                 opcode = READ;
-            else if (strcmp(buffer_comando, "write") == 0)
+            else if (strcmp(buffer_operacao, "write") == 0)
                 opcode = WRITE;
-            else if (strcmp(buffer_comando, "print") == 0)
+            else if (strcmp(buffer_operacao, "print") == 0)
                 opcode = PRINT;
+
+            parametro = atoi(buffer_parametro);
         }
 
         if (opcode == -1) {
+            sem_wait(&sem_terminal);
             printf("ERRO: comando não reconhecido no programa sintético");
+            sleep(2);
+            sem_post(&sem_terminal);
             freeBCP(processo);
             return NULL;
         }
 
-        parametro = atoi(buffer_parametro);
         Comando *comando = novoComando(opcode, parametro);
         inserirComando(comando, processo->comandos);
     }
@@ -130,15 +143,15 @@ void freeComando(Comando *comando) {
     free(comando);
 }
 
-Lista_Comandos *novaListaComandos() {
-    Lista_Comandos *new = malloc(sizeof(Lista_Comandos));
+Fila_Comandos *novaFilaComandos() {
+    Fila_Comandos *new = malloc(sizeof(Fila_Comandos));
     if (!new) return NULL; // se a alocação de memória falhou
-    new->nElementos = 0;
     new->head = NULL;
+    new->tail = NULL;
     return new;
 }
 
-void freeListaComandos(Lista_Comandos *comandos) {
+void freeListaComandos(Fila_Comandos *comandos) {
     Comando *temp;
     while (comandos->head != NULL) {
         temp = comandos->head;
@@ -148,18 +161,31 @@ void freeListaComandos(Lista_Comandos *comandos) {
     free(comandos);
 }
 
-void inserirComando(Comando *comando, Lista_Comandos *lista) {
-    if (!lista || !comando) return; // se os parâmetros são ponteiros nulos
+void inserirComando(Comando *comando, Fila_Comandos *fila) {
+    if (!fila || !comando) return; // se os parâmetros são ponteiros nulos
 
-    Comando *aux = lista->head; //TODO: aqui, lista pode ser NULL
-    while (aux->prox != NULL)
-        aux = aux->prox;
-    aux->prox = comando;
-    lista->nElementos++;
+    if (fila->head == NULL) {  // Se a fila está vazia
+        fila->head = comando;
+        fila->tail = comando;
+    } else {
+        fila->tail->prox = comando;
+        fila->tail = comando;
+    }
+}
+
+void removerComando(Fila_Comandos *fila) {
+    if (!fila) return; //se não há fila
+    if (!fila->head) return; // se a fila está vazia
+
+    Comando *aux = fila->head;
+    fila->head = fila->head->prox;
+    freeComando(aux);
 }
 
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
-    //TODO: fazer isso
+    if (!lista || !semaforo) return;
+    semaforo->prox = lista->head;
+    lista->head = semaforo;
 }
 
 void process_sleep(BCP *proc) {

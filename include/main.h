@@ -12,6 +12,6 @@
 #include <semaphore.h>
 #include <pthread.h>
 
-void *kernel();
+void *roundRobin();
 
 #endif //SIMULACRO_SO_MAIN_H

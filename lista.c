@@ -32,7 +32,7 @@ void Apagar(Lista *L) {
     L->nelem = 0;
 }
 
-void inserirComando(Comando *comando, Lista_Comandos *lista) {
+void inserirComando(Comando *comando, Fila_Comandos *fila) {
     /*Insere x, que é um novo elemento, na posição p da Lista
     Se L = a_1, a_2,... a_n então temos a_1, a_2, ...
     a_{p-1}, x, a_{p+1}, ... an.
@@ -43,14 +43,14 @@ void inserirComando(Comando *comando, Lista_Comandos *lista) {
     int q;
 
     // Lista cheia ou posição não existe
-    if (Cheia(lista) || i > lista->nelem + 1 || i < 1)
+    if (Cheia(fila) || i > fila->nelem + 1 || i < 1)
         return false; //Inserção falhou
 
-    for (q = lista->nelem; q >= i; q--) //Copia vizinho p/ direita
-        lista->A[q + 1] = lista->A[q];
+    for (q = fila->nelem; q >= i; q--) //Copia vizinho p/ direita
+        fila->A[q + 1] = fila->A[q];
 
-    lista->A[i] = opcode;
-    lista->nelem++;
+    fila->A[i] = opcode;
+    fila->nelem++;
     return true; //Inserção feita com sucesso
 }
 

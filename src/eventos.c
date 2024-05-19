@@ -1,7 +1,9 @@
 #include "include/eventos.h"
 #include "include/interface.h"
 
-void processInterrupt() {}
+void processInterrupt() {
+
+}
 
 void semaphoreP(Semaforo *semaph, BCP *proc) {
     pthread_mutex_lock(&semaph->mutex_lock);
@@ -46,21 +48,29 @@ void *processCreate() {
     char filename[201];
     sem_wait(&sem_terminal);
     printf("Caminho do programa: ");
-    scanf(" %200[^\n]", filename);
+    scanf("%200[^\n]", filename);
     limpar_buffer();
     sem_post(&sem_terminal);
 
     FILE *programa = fopen(filename, "r");
     if (programa) {
         BCP *processo = lerProgramaSintetico(programa);
-        if (!processo)
+        if (!processo) {
+            sem_wait(&sem_terminal);
             printf("ERRO: não foi possível criar o processo com esse programa");
+            sleep(2);
+            sem_post(&sem_terminal);
+        }
+
+        //TODO: coloca no escalonamento
+
     } else {
+        sem_wait(&sem_terminal);
         printf("ERRO: arquivo do programa sintético não pôde ser aberto");
+        sleep(2);
+        sem_post(&sem_terminal);
     }
     fclose(programa);
-
-    //TODO: coloca no escalonamento
 }
 
 void processFinish() {

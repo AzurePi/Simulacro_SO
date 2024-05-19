@@ -43,7 +43,7 @@ void Definir(Lista *L);
 
 void Apagar(Lista *L);
 
-void inserirComando(Comando *comando, Lista_Comandos *lista);
+void inserirComando(Comando *comando, Fila_Comandos *fila);
 
 bool Busca_bin(Tipo_Chave x, Lista *L, int *p); // Igual a 'Buscar_ord'
 void Remover_posic(int *p, Lista *L);

@@ -26,7 +26,4 @@ No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista);
 //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem_terminal uso.
 No_Pagina *percorreLista(Lista_Circ lista);
 
-//Vai ser usado para o round-robin?
-No_Pagina *inserePrioridade(BCP *noAdiciona, Lista_Circ lista);
-
 #endif //SIMULACRO_SO_MEMORIA_H
