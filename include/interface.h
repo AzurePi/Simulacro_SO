@@ -12,20 +12,27 @@
 #include <semaphore.h>
 #include <unistd.h>
 
+// Definições de Macros ------------------------------------------------------------------------------------------------
 #ifdef _WIN32
 #define CLEAR_SCREEN system("cls");
 #else
 #define CLEAR_SCREEN printf("\033[H\033[J"); fflush(stdout);
 #endif
 
+#define ERROR "\033[3;31""ERRO: "
+#define CLEAR "\033[0"
+
+
 // Funções -------------------------------------------------------------------------------------------------------------
 
+// Exibição do menu no terminal e acesso às operações do usuário
 void *menu();
 
-void *informacaoProcesso();
+void *informacaoProcessos();
 
 void *informacaoMemoria();
 
+// Exibe uma lista de todos os semáforos presentes
 void showSemaphoreList();
 
 void limpar_buffer();

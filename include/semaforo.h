@@ -3,6 +3,7 @@
 
 #include "globals.h"
 #include "sintetico.h"
+#include "interface.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -41,8 +42,14 @@ typedef struct lista_semaforos {
 // Cria um semáforo
 Semaforo *novoSemaforo(char name);
 
+// Libera a memória alocada para um semáforo
+void freeSemaforo(Semaforo *semaforo);
+
 // Inicializa uma lista de semáforos vazia
 Lista_Semaforos *novaListaSemaforos();
+
+// Libera a memória alocada para uma lista de semáforos
+void freeListaSemaforo(Lista_Semaforos *semaforos);
 
 // Insere um semáforo na lista global de todos os semáforos existentes
 void insereSemaforo(Semaforo *semaforo);
@@ -55,11 +62,5 @@ Semaforo *retrieveSemaphore(char name);
 
 // Enfileira processos bloqueados por uma chamada falha à semaphoreP()
 void sem_queue(Lista_Espera_BCP **list, BCP *proc);
-
-// Libera a memória alocada para um semáforo
-void freeSemaforo(Semaforo *semaforo);
-
-// Libera a memória alocada para uma lista de semáforos
-void liberaListaSemaforo(Lista_Semaforos *semaforos);
 
 #endif //SIMULACRO_SO_SEMAFORO_H

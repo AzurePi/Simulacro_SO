@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 
-#define QUANTUN 5000.0
+#define QUANTUM 5000.0
 
 // declarações avançadas para evitar declaração circular
 typedef struct bcp BCP;
@@ -19,6 +19,7 @@ extern volatile int num_processos;
 extern Lista_Semaforos *semaforos_existentes;
 extern sem_t sem_terminal;
 extern sem_t sem_CPU;
+extern sem_t sem_lista_processos;
 extern volatile long double relogio;
 extern pthread_attr_t atrib;
 

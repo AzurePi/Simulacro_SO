@@ -17,12 +17,6 @@ void *menu() {
         printf("║ [0] Encerrar                         ║\n");
         printf("╚══════════════════════════════════════╝\n");
 
-        printf("\nProcessando agora: ");
-        if (rodando_agora)
-            printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
-        else
-            printf("nada\n");
-
         printf("Selecione a operação: ");
         scanf("%c", &op);
         limpar_buffer();
@@ -40,7 +34,7 @@ void *menu() {
                 pthread_join(t_novo, NULL);
                 break;
             case '2':
-                pthread_create(&t_info_proc, &atrib, informacaoProcesso, NULL);
+                pthread_create(&t_info_proc, &atrib, informacaoProcessos, NULL);
                 pthread_join(t_info_proc, NULL);
                 break;
             case '3':
@@ -48,28 +42,45 @@ void *menu() {
                 pthread_join(t_info_mem, NULL);
                 break;
             default:
-                printf("Opção inválida!\n");
+                printf(ERROR"Opção inválida!\n");
                 sleep(2);
                 break;
         }
     } while (op != '0');
+    return NULL;
 }
 
-void *informacaoProcesso() {
+void *informacaoProcessos() {
+    sem_wait(&sem_terminal);
+    //TODO: informações dos processos na fila do escalonador
 
+
+    printf("\nProcessando agora: ");
+    if (rodando_agora)
+        printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
+    else
+        printf("nada\n");
+
+    sem_post(&sem_terminal);
+    return NULL;
 }
 
 void *informacaoMemoria() {
+    sem_wait(&sem_terminal);
+    //TODO: mostrar a proporção da memória sendo usada, quanto está livre, etc.
 
+    //TODO: em algum momento aqui, exibir a lista de semáforos
+
+    sem_post(&sem_terminal);
+    return NULL;
 }
 
 void showSemaphoreList() {
     sem_wait(&sem_terminal);
-    CLEAR_SCREEN
-    printf("Lista de semáforos existentes:\n");
+    printf("Semáforos existentes:\n");
     Semaforo *aux = semaforos_existentes->head;
     if (!aux) {
-        printf("Nenhum.\n");
+        printf("\tNenhum.\n");
         sleep(3);
         sem_post(&sem_terminal);
         return;
@@ -84,6 +95,6 @@ void showSemaphoreList() {
 
 void limpar_buffer() {
     char c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while ((c = (char) getchar()) != '\n' && c != EOF);
 }
 

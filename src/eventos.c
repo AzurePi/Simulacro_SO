@@ -1,5 +1,4 @@
 #include "include/eventos.h"
-#include "include/interface.h"
 
 void processInterrupt() {
 
@@ -34,9 +33,15 @@ void PrintRequest() {}
 
 void PrintFinish() {}
 
-void memLoadReq() {}
+//TODO; fazer isso
+void memLoadReq() {
 
-void memLoadFinish() {}
+}
+
+//TODO: fazer isso
+void memLoadFinish() {
+
+}
 
 void fsRequest() {}
 
@@ -57,7 +62,7 @@ void *processCreate() {
         BCP *processo = lerProgramaSintetico(programa);
         if (!processo) {
             sem_wait(&sem_terminal);
-            printf("ERRO: não foi possível criar o processo com esse programa");
+            printf(ERROR"não foi possível criar o processo com esse programa"CLEAR);
             sleep(2);
             sem_post(&sem_terminal);
         }
@@ -66,7 +71,7 @@ void *processCreate() {
 
     } else {
         sem_wait(&sem_terminal);
-        printf("ERRO: arquivo do programa sintético não pôde ser aberto");
+        printf(ERROR"arquivo do programa sintético não pôde ser aberto"CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
     }

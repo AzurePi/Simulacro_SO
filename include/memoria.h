@@ -21,7 +21,7 @@ No_Pagina *criaNo();
 
 Lista_Circ *criaLista();
 
-No_Pagina *insereNormal(No_Pagina *noAdiciona, Lista_Circ *lista);
+No_Pagina *inserePagina(No_Pagina *noAdiciona, Lista_Circ *lista);
 
 //Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem_terminal uso.
 No_Pagina *percorreLista(Lista_Circ lista);

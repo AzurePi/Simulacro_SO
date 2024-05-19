@@ -4,6 +4,7 @@
 #include "semaforo.h"
 #include "sintetico.h"
 #include "globals.h"
+#include "interface.h"
 
 #include <pthread.h>
 #include <stdio.h>

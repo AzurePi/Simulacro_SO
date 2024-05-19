@@ -4,7 +4,7 @@ BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
         sem_wait(&sem_terminal);
-        printf("ERRO: falha na alocação de memória do BCP");
+        printf(ERROR"falha na alocação de memória do BCP"CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         return NULL;
@@ -17,7 +17,7 @@ BCP *novoBCP() {
 }
 
 void freeBCP(BCP *bcp) {
-    liberaListaSemaforo(bcp->semaforos);
+    freeListaSemaforo(bcp->semaforos);
     freeListaComandos(bcp->comandos);
     free(bcp);
 }
@@ -43,7 +43,17 @@ BCP *lerProgramaSintetico(FILE *programa) {
         !fscanf(programa, "%d\n", &processo->prioridade) ||
         !fscanf(programa, "%d\n", &processo->tamanho_seg)) {
         sem_wait(&sem_terminal);
-        printf("ERRO: programa sintético contém erro no cabeçalho");
+        printf(ERROR"programa sintético contém erro no cabeçalho"CLEAR);
+        sleep(2);
+        sem_post(&sem_terminal);
+        freeBCP(processo);
+        return NULL;
+    }
+
+    // se a prioridade for menor do que 1, há um erro
+    if (processo->prioridade < 1) {
+        sem_wait(&sem_terminal);
+        printf(ERROR"prioridade do programa não pode ser um número menor que 1"CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         freeBCP(processo);
@@ -55,7 +65,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     int i = 0;
 
     //enquanto não chegamos no fim da linha e há caracteres para ler e não ultrapassamos o máximo de 10 semáforos
-    while ((s = fgetc(programa)) != '\n' && s != EOF && i < 10) {
+    while ((s = (char) fgetc(programa)) != '\n' && s != EOF && i < 10) {
         if (s != ' ') {
             semaforos[i] = s; //guardamos o s
             i++;
@@ -70,12 +80,12 @@ BCP *lerProgramaSintetico(FILE *programa) {
     }
 
     //lê uma linha em branco
-    while ((s = fgetc(programa)) != '\n' && s != EOF);
+    while ((s = (char) fgetc(programa)) != '\n' && s != EOF);
 
     //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
     if (!processo->comandos) {
         sem_wait(&sem_terminal);
-        printf("ERRO: falha na criação de lista de comandos para o programa");
+        printf(ERROR"falha na criação de lista de comandos para o programa"CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         freeBCP(processo);
@@ -117,7 +127,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
         if (opcode == -1) {
             sem_wait(&sem_terminal);
-            printf("ERRO: comando não reconhecido no programa sintético");
+            printf(ERROR"comando não reconhecido no programa sintético");
             sleep(2);
             sem_post(&sem_terminal);
             freeBCP(processo);
@@ -164,7 +174,7 @@ void freeListaComandos(Fila_Comandos *comandos) {
 void inserirComando(Comando *comando, Fila_Comandos *fila) {
     if (!fila || !comando) return; // se os parâmetros são ponteiros nulos
 
-    if (fila->head == NULL) {  // Se a fila está vazia
+    if (fila->head == NULL) {
         fila->head = comando;
         fila->tail = comando;
     } else {
