@@ -47,6 +47,7 @@ typedef struct bcp {
     Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
     Fila_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
+    Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
 } BCP;
 
 // Funções -------------------------------------------------------------------------------------------------------------
