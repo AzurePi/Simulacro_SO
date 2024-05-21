@@ -56,7 +56,6 @@ No_Pagina *percorreLista(Lista_Circ lista) {
 }
 
 */
-
 Memoria memoria_global; // Declaração global da estrutura que une a memória e as informações sobre as páginas ocupadas
 
 // Inicialização da memória e contagem de páginas ocupadas
@@ -91,7 +90,7 @@ int encontrar_pagina_para_substituir() {
 
 // Função para adicionar um processo à memória
 void adicionar_processo_na_memoria(BCP *processo) {
-    int num_paginas_necessarias = (processo->tamanho_kb + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA; // Tamanho em páginas do processo
+    int num_paginas_necessarias = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA; // Tamanho em páginas do processo
 
     for (int i = 0; i < num_paginas_necessarias; i++) {
         int pagina_para_substituir = encontrar_pagina_para_substituir();
