@@ -16,16 +16,18 @@ void *roundRobin() {
             temp = temp->prox;
         }
 
+        sem_post(&sem_lista_processos);
+
         // se não encontramos um processo para executar, é porque todos os processos terminaram
         if (!executar) {
-            sem_post(&sem_lista_processos);
             sem_post(&sem_CPU);
             break;
         }
 
         executar->estado = EXECUTANDO;
         rodando_agora = executar;
-        sem_post(&sem_lista_processos);
+
+        // TODO: requisição da memória para o processo a ser executado
 
         // determinamos o quantum desse processo, proporcional a sua prioridade
         long double quantum = QUANTUM / executar->prioridade;
@@ -33,7 +35,9 @@ void *roundRobin() {
 
         // processamento dos comandos do processo sendo executado
         Comando *atual = executar->comandos->head;
-        while (atual) {
+        bool interromper = false;
+
+        while (atual && tempo_executado < quantum && !interromper) {
             long double t; // tempo que esse comando leva para ser executado
 
             // dependendo da operação, o t é contado de uma forma diferente
@@ -59,28 +63,58 @@ void *roundRobin() {
             if (atual->opcode == EXEC && t > (quantum - tempo_executado))
                 t = quantum - tempo_executado;
 
-            // atualiza o relógio com a execução
+            // atualiza o relógio com o tempo do processamento
             relogio += t;
             tempo_executado += t;
 
-            // se o comando atual é EXEC, pode ser que o processo não tenha sido executado por inteiro
-            if (atual->opcode == EXEC) {
-                atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
-                if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
+            // processa o comando
+            switch (atual->opcode) {
+                case EXEC: // pode ser que o processo não seja executado por inteiro
+                    atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
+                    if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
+                        Comando *aux = atual;
+                        atual = atual->prox;
+                        freeComando(aux);
+                    }
+                    break;
+                case READ: //por enquanto, nada além de liberar o comando
+                {
                     Comando *aux = atual;
                     atual = atual->prox;
                     freeComando(aux);
-                } else {
-                    //libera a CPU e volta ao estado de PRONTO
-                    executar->estado = PRONTO;
-                    sem_post(&sem_CPU);
-                    break; // interrompemos a execução
                 }
-            } else {
-                // descarta o comando atual após sua execução
-                Comando *aux = atual;
-                atual = atual->prox;
-                freeComando(aux);
+                    break;
+                case WRITE: //por enquanto, nada além de liberar o comando
+                {
+                    Comando *aux = atual;
+                    atual = atual->prox;
+                    freeComando(aux);
+                }
+                    break;
+                case P: {
+                    Semaforo *sem = retrieveSemaphore((char) atual->parametro);
+                    semaphoreP(sem, executar);
+                    Comando *aux = atual;
+                    atual = atual->prox;
+                    freeComando(aux);
+                }
+                    break;
+                case V: {
+                    Semaforo *sem;
+                    sem = retrieveSemaphore((char) atual->parametro);
+                    semaphoreV(sem);
+                    Comando *aux = atual;
+                    atual = atual->prox;
+                    freeComando(aux);
+                }
+                    break;
+                case PRINT: //por enquanto, nada além de liberar o comando
+                {
+                    Comando *aux = atual;
+                    atual = atual->prox;
+                    freeComando(aux);
+                }
+                    break;
             }
 
             // atualiza a cabeça da lista de comandos do processo
@@ -89,8 +123,8 @@ void *roundRobin() {
             // verifica se o quantum foi excedido
             if (tempo_executado >= quantum) {
                 executar->estado = PRONTO;
-                sem_post(&sem_CPU);
-                break; // interrompemos a execução
+                interromper = true; // interrompe o processamento dos comandos
+                sem_post(&sem_CPU); // libera a CPU
             }
         }
 
@@ -98,7 +132,7 @@ void *roundRobin() {
         if (executar->comandos->head == NULL)
             executar->estado = TERMINADO;
 
-        sem_post(&sem_CPU);
+        sem_post(&sem_CPU); // libera a CPU
     }
     return NULL;
 }

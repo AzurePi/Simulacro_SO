@@ -1,6 +1,6 @@
 #include "include/eventos.h"
 
-void inserirBCP(BCP *pBcp);
+void inserirBCP(BCP *bcp);
 
 void processInterrupt() {
 
@@ -55,7 +55,7 @@ void *processCreate() {
     char filename[201];
     sem_wait(&sem_terminal);
     printf("Caminho do programa: ");
-    scanf("%200[^\n]", filename);
+    scanf("%200[^\n]s", filename);
     limpar_buffer();
     sem_post(&sem_terminal);
 
@@ -82,7 +82,14 @@ void *processCreate() {
     fclose(programa);
 }
 
-void inserirBCP(BCP *pBcp) {
+void inserirBCP(BCP *bcp) {
+    if (!lista_processos) {
+        lista_processos = bcp;
+        return;
+    }
+
+
+
 
 }
 

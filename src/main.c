@@ -21,6 +21,7 @@ int main() {
     pthread_create(&t_menu, &atrib, menu, NULL);
     pthread_join(t_menu, NULL);
 
+    processCreate();
     roundRobin();
 
     // destruímos atributos de thread e semáforo inicializados

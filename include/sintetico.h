@@ -2,6 +2,7 @@
 #define SIMULACRO_SO_SINTETICO_H
 
 #include "semaforo.h"
+#include "memoria.h"
 
 #include <stdbool.h>
 #include <stdio.h>

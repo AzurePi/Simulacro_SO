@@ -38,6 +38,7 @@ Lista_Semaforos *novaListaSemaforos() {
 }
 
 void freeListaSemaforo(Lista_Semaforos *semaforos) {
+    if (!semaforos) return;
     Semaforo *temp;
     while (semaforos->head != NULL) {
         temp = semaforos->head;

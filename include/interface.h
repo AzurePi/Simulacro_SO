@@ -19,8 +19,12 @@
 #define CLEAR_SCREEN printf("\033[H\033[J"); fflush(stdout);
 #endif
 
-#define ERROR "\033[3;31""ERRO: "
-#define CLEAR "\033[0"
+#define ERROR "\033[3;31m" "ERRO: "
+#define CLEAR "\033[0m"
+#define BOLD "\033[1m"
+#define NOT_BOLD "\033[22m"
+#define UNDERLINE "\033[4m"
+#define NOT_UNDERLINE "\033[24m"
 
 
 // Funções -------------------------------------------------------------------------------------------------------------
