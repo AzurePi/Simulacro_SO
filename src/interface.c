@@ -2,17 +2,18 @@
 
 void *menu() {
     char op;
-    pthread_t t_novo, t_info_proc, t_info_mem;
+    pthread_t t_processo, t_info_proc, t_info_mem;
 
     do {
         sem_wait(&sem_terminal); // requer acesso ao terminal
 
         CLEAR_SCREEN
+        printf("\n");
         printf("╔══════════════════════════════════════╗\n");
         printf("║   Simulador de Sistema Operacional   ║\n");
         printf("╟──────────────────────────────────────╢\n");
         printf("║ [1] Novo processo                    ║\n");
-        printf("║ [2] Ver informações de um processo   ║\n");
+        printf("║ [2] Ver informações dos processos    ║\n");
         printf("║ [3] Ver informações da memória       ║\n");
         printf("║ [0] Encerrar                         ║\n");
         printf("╚══════════════════════════════════════╝\n");
@@ -30,19 +31,19 @@ void *menu() {
                 sem_post(&sem_terminal);
                 break;
             case '1':
-                pthread_create(&t_novo, &atrib, processCreate, NULL);
-                pthread_join(t_novo, NULL);
+                pthread_create(&t_processo, &atrib, processCreate, NULL);
+                pthread_detach(t_processo);
                 break;
             case '2':
                 pthread_create(&t_info_proc, &atrib, informacaoProcessos, NULL);
-                pthread_join(t_info_proc, NULL);
+                pthread_detach(t_info_proc);
                 break;
             case '3':
                 pthread_create(&t_info_mem, &atrib, informacaoMemoria, NULL);
-                pthread_join(t_info_mem, NULL);
+                pthread_detach(t_info_mem);
                 break;
             default:
-                printf(ERROR"Opção inválida!\n");
+                printf(ERROR "Opção inválida!" CLEAR);
                 sleep(2);
                 break;
         }
@@ -67,6 +68,8 @@ void *informacaoProcessos() {
 
 void *informacaoMemoria() {
     sem_wait(&sem_terminal);
+
+    printf("");
     //TODO: mostrar a proporção da memória sendo usada, quanto está livre, etc.
 
     //TODO: em algum momento aqui, exibir a lista de semáforos

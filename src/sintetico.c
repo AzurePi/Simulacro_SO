@@ -4,7 +4,7 @@ BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
         sem_wait(&sem_terminal);
-        printf(ERROR"falha na alocação de memória do BCP"CLEAR);
+        printf(ERROR "falha na alocação de memória do BCP" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         return NULL;
@@ -43,7 +43,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
         !fscanf(programa, "%d\n", &processo->prioridade) ||
         !fscanf(programa, "%d\n", &processo->tamanho_seg)) {
         sem_wait(&sem_terminal);
-        printf(ERROR"programa sintético contém erro no cabeçalho"CLEAR);
+        printf(ERROR "programa sintético contém erro no cabeçalho" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         freeBCP(processo);
@@ -53,7 +53,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     // se a prioridade for menor do que 1, há um erro
     if (processo->prioridade < 1) {
         sem_wait(&sem_terminal);
-        printf(ERROR"prioridade do programa não pode ser um número menor que 1"CLEAR);
+        printf(ERROR "prioridade do programa não pode ser um número menor que 1" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         freeBCP(processo);
@@ -85,7 +85,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
     if (!processo->comandos) {
         sem_wait(&sem_terminal);
-        printf(ERROR"falha na criação de lista de comandos para o programa"CLEAR);
+        printf(ERROR "falha na criação de lista de comandos para o programa" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         freeBCP(processo);
@@ -127,7 +127,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
         if (opcode == -1) {
             sem_wait(&sem_terminal);
-            printf(ERROR"comando não reconhecido no programa sintético");
+            printf(ERROR "comando não reconhecido no programa sintético" CLEAR);
             sleep(2);
             sem_post(&sem_terminal);
             freeBCP(processo);

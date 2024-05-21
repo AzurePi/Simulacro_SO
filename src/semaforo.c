@@ -4,7 +4,7 @@ Semaforo *novoSemaforo(char name) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
         sem_wait(&sem_terminal);
-        printf(ERROR"falha ao alocar memória para o semáforo"CLEAR);
+        printf(ERROR "falha ao alocar memória para o semáforo" CLEAR);
         sem_post(&sem_terminal);
         return NULL;
     }
@@ -28,7 +28,7 @@ Lista_Semaforos *novaListaSemaforos() {
     Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
     if (!new) {
         sem_wait(&sem_terminal);
-        printf(ERROR"falha ao alocar memória para a lista de semáforos"CLEAR);
+        printf(ERROR "falha ao alocar memória para a lista de semáforos" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
         return NULL;
@@ -95,7 +95,7 @@ Semaforo *retrieveSemaphore(char name) {
         aux = aux->prox;
     }
     sem_wait(&sem_terminal);
-    printf(ERROR"busca de semáforo não pode ser concluida."CLEAR);
+    printf(ERROR "busca de semáforo não pode ser concluida." CLEAR);
     sleep(2);
     sem_post(&sem_terminal);
     return NULL;

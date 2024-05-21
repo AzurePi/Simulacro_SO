@@ -11,7 +11,6 @@
 // Declaração de Tipos -------------------------------------------------------------------------------------------------
 
 // declaração avançada de semaforo.h para evitar dependência circular
-struct semaforo;
 typedef struct semaforo Semaforo;
 typedef struct lista_semaforos Lista_Semaforos;
 

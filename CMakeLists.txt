@@ -16,6 +16,7 @@ set(SOURCES
         ${SOURCE_DIR}/memoria.c
         ${SOURCE_DIR}/semaforo.c
         ${SOURCE_DIR}/sintetico.c
+        ${SOURCE_DIR}/cpu.c
 )
 
 add_executable(Simulacro_SO ${SOURCES})

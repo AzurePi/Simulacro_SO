@@ -26,11 +26,13 @@ typedef struct Pagina {
     int segunda_chance; // 1 se a página tiver uma segunda chance, 0 caso contrário
 } Pagina;
 
-typedef struct BCP {
+/*
+typedef struct bcp {
     int id_processo;
     int tamanho_kb;
     Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
 } BCP;
+*/
 
 typedef struct Memoria {
     Pagina *memoria;

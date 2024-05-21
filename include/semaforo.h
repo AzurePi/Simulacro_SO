@@ -14,7 +14,6 @@
 // Declaração de Tipos -------------------------------------------------------------------------------------------------
 
 // declaração avançada de BCP para evitar dependência circular
-struct bcp;
 typedef struct bcp BCP;
 
 // lista de processos esperando o semáforo

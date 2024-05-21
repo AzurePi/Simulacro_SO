@@ -1,5 +1,7 @@
 #include "include/eventos.h"
 
+void inserirBCP(BCP *pBcp);
+
 void processInterrupt() {
 
 }
@@ -62,20 +64,26 @@ void *processCreate() {
         BCP *processo = lerProgramaSintetico(programa);
         if (!processo) {
             sem_wait(&sem_terminal);
-            printf(ERROR"não foi possível criar o processo com esse programa"CLEAR);
+            printf(ERROR "não foi possível criar o processo com esse programa" CLEAR);
             sleep(2);
             sem_post(&sem_terminal);
         }
+
+        inserirBCP(processo);
 
         //TODO: coloca no escalonamento
 
     } else {
         sem_wait(&sem_terminal);
-        printf(ERROR"arquivo do programa sintético não pôde ser aberto"CLEAR);
+        printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
         sleep(2);
         sem_post(&sem_terminal);
     }
     fclose(programa);
+}
+
+void inserirBCP(BCP *pBcp) {
+
 }
 
 void processFinish() {

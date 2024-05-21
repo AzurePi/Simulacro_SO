@@ -4,6 +4,7 @@
 #include "semaforo.h"
 #include "interface.h"
 #include "globals.h"
+#include "cpu.h"
 
 #include <malloc.h>
 #include <stdbool.h>
@@ -11,7 +12,5 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <pthread.h>
-
-void *roundRobin();
 
 #endif //SIMULACRO_SO_MAIN_H
