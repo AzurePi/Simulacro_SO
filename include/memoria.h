@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include "sintetico.h"
 
+#define TAMANHO_PAGINA 4096 // 4 KB por página
+#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
+#define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
+
 typedef struct no {
     char uso; //Um char com valor 0 para sem_terminal uso e 1 para em uso - ver se pode substituir
     char modificado; // 0 para não modificado e 1 para modificado
@@ -16,6 +20,23 @@ typedef struct lista {
     No_Pagina *head;
     No_Pagina *tail;
 } Lista_Circ;
+
+typedef struct Pagina {
+    int numero_pagina;
+    int segunda_chance; // 1 se a página tiver uma segunda chance, 0 caso contrário
+} Pagina;
+
+typedef struct BCP {
+    int id_processo;
+    int tamanho_kb;
+    Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
+} BCP;
+
+typedef struct Memoria {
+    Pagina *memoria;
+    int paginas_ocupadas;
+} Memoria;
+
 
 No_Pagina *criaNo();
 
