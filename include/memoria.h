@@ -1,16 +1,16 @@
 #ifndef SIMULACRO_SO_MEMORIA_H
 #define SIMULACRO_SO_MEMORIA_H
 
+#include "sintetico.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "sintetico.h"
 
 #define TAMANHO_PAGINA 4096 // 4 KB por página
 #define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
 #define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
 typedef struct no {
-    char uso; //Um char com valor 0 para sem_terminal uso e 1 para em uso - ver se pode substituir
+    char uso; //Um char com valor 0 para sem uso e 1 para em uso - ver se pode substituir
     char modificado; // 0 para não modificado e 1 para modificado
     char ocupado; //0 para livre e 1 para página preenchida
     struct no *prox;
@@ -46,7 +46,7 @@ Lista_Circ *criaLista();
 
 No_Pagina *inserePagina(No_Pagina *noAdiciona, Lista_Circ *lista);
 
-//Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem_terminal uso.
+//Tomar cuidado pq quando chegar na tail, volta pra cabeça - usa pra buscar sem uso.
 No_Pagina *percorreLista(Lista_Circ lista);
 
 #endif //SIMULACRO_SO_MEMORIA_H
