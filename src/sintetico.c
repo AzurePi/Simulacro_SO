@@ -62,7 +62,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
-    int i = 0;
+    char i = 0; // contador de tamanaho pequeno
 
     //enquanto não chegamos no fim da linha e há caracteres para ler e não ultrapassamos o máximo de 10 semáforos
     while ((s = (char) fgetc(programa)) != '\n' && s != EOF && i < 10) {
@@ -74,7 +74,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     semaforos[i] = '\0'; //finaliza a string
 
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
-    for (int j = 0; j < i; j++) {
+    for (char j = 0; j < i; j++) {
         Semaforo *t = novoSemaforo(semaforos[j]);
         inserirSemaforo(t, processo->semaforos);
     }
