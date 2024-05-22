@@ -28,7 +28,7 @@ No_Pagina *inserePagina(No_Pagina *noAdiciona, Lista_Circ *lista) {
         lista->tail = noAdiciona; // o nó adicionado agora é a cauda da Lista
         noAdiciona->prox = lista->head; // o próximo do nó adicionado aponta para a cabeça da Lista, tornando-a circular
     }
-    return lista->head; // retorna a cabeça da Lista atualizada TODO: talvez nem precise desse retorno, mas vamos ver
+    return lista->head; // retorna a cabeça da Lista atualizada
 }
 
 // Usa para buscar sem uso, retorno a primeira página que eu encontrar.
@@ -41,7 +41,7 @@ No_Pagina *percorreLista(Lista_Circ lista) {
         if (aux->ocupado == 0)
             return aux;
         aux = aux->prox;
-    } //TODO: em algum momento aqui, temos que mudar as flags das páginas percorridas
+    }
 
     // se não tiver nenhum sem uso
 
@@ -56,29 +56,27 @@ No_Pagina *percorreLista(Lista_Circ lista) {
 }
 
 */
-Memoria memoria_global; // Declaração global da estrutura que une a memória e as informações sobre as páginas ocupadas
 
-// Inicialização da memória e contagem de páginas ocupadas
-void inicializar_memoria() {
-    memoria_global.memoria = (Pagina *)malloc(NUMERO_PAGINAS * sizeof(Pagina));
+
+void inicializarMemoria() {
+    RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
-        memoria_global.memoria[i].numero_pagina = i;
-        memoria_global.memoria[i].segunda_chance = 0;
+        RAM->memoria[i]->numero_pagina = i;
+        RAM->memoria[i]->segunda_chance = 0;
     }
-    memoria_global.paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
+    RAM->n_paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
 }
 
-// Função para encontrar a próxima página a ser substituída usando o algoritmo FIFO com Segunda Chance
-int encontrar_pagina_para_substituir() {
+int encontrarPaginaParaSubstituir() {
     static int ponteiro = 0; // Apontador circular
 
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
-        if (memoria_global.memoria[ponteiro].segunda_chance == 0) {
+        if (RAM->memoria[ponteiro]->segunda_chance == 0) {
             int pagina_para_substituir = ponteiro;
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
             return pagina_para_substituir;
         } else {
-            memoria_global.memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
+            RAM->memoria[ponteiro]->segunda_chance = 0; // Remove a segunda chance
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
         }
     }
@@ -88,47 +86,43 @@ int encontrar_pagina_para_substituir() {
     return pagina_para_substituir;
 }
 
-// Função para adicionar um processo à memória
-void adicionar_processo_na_memoria(BCP *processo) {
-    int num_paginas_necessarias = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA; // Tamanho em páginas do processo
+void adicionarProcessoNaMemoria(BCP *processo) {
+    int n_paginas_necessarias = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA;
 
-    for (int i = 0; i < num_paginas_necessarias; i++) {
-        int pagina_para_substituir = encontrar_pagina_para_substituir();
-        memoria_global.memoria[pagina_para_substituir].segunda_chance = 1;
+    for (int i = 0; i < n_paginas_necessarias; i++) {
+        int para_substituir = encontrarPaginaParaSubstituir();
+        RAM->memoria[para_substituir].segunda_chance = 1;
 
-        processo->paginas_usadas[i] = &memoria_global.memoria[pagina_para_substituir]; // Atribui a referência da página ao BCP
+        processo->paginas_usadas[i] = &RAM->memoria[para_substituir]; // Atribui a referência da página ao BCP
 
-        memoria_global.paginas_ocupadas++; // Incrementa o contador de páginas ocupadas
+        RAM->n_paginas_ocupadas++; // Incrementa o contador de páginas ocupadas
 
-        printf("Processo %d, Página %d carregada na posição %d da memória\n", processo->id_processo, i, pagina_para_substituir);
+        //printf("Processo %d, Página %d carregada na posição %d da memória\n", processo->id_seg, i, para_substituir);
     }
 }
 
-// Função para calcular e exibir a taxa de ocupação da memória
-void exibir_taxa_ocupacao() {
-    double taxa_ocupacao = ((double)memoria_global.paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
+void exibirTaxaOcupacao() {
+    double taxa_ocupacao = (RAM->n_paginas_ocupadas / (double) NUMERO_PAGINAS) * 100.0;
     printf("Taxa de ocupação da memória: %.2f%%\n", taxa_ocupacao);
 }
 
-// Função para carregar páginas necessárias para um processo na memória
-void carregar_paginas_necessarias(BCP *processo) {
-    for (int i = 0; i < processo->paginas_necessarias; i++) {
+void carregarPaginasNecessarias(BCP *processo) {
+    for (int i = 0; i < processo->paginas_usadas; i++) {
         if (processo->paginas_usadas[i] == NULL) {
-            int pagina_para_substituir = encontrar_pagina_para_substituir();
-            memoria_global.memoria[pagina_para_substituir].segunda_chance = 1;
-            processo->paginas_usadas[i] = &memoria_global.memoria[pagina_para_substituir];
-            memoria_global.paginas_ocupadas++;
-            printf("Processo %d, Página %d carregada na posição %d da memória\n", processo->id_processo, i, pagina_para_substituir);
+            int pagina_para_substituir = encontrarPaginaParaSubstituir();
+            RAM.memoria[pagina_para_substituir].segunda_chance = 1;
+            processo->paginas_usadas[i] = &RAM.memoria[pagina_para_substituir];
+            RAM.paginas_ocupadas++;
+            printf("Processo %d, Página %d carregada na posição %d da memória\n", processo->id_seg, i,
+                   pagina_para_substituir);
         }
     }
 }
 
-// Função para verificar se todas as páginas necessárias para um processo estão carregadas na memória
-int verificar_paginas_carregadas(BCP *processo) {
-    for (int i = 0; i < processo->paginas_necessarias; i++) {
-        if (processo->paginas_usadas[i] == NULL) {
-            return 0; // Página não carregada encontrada
-        }
+bool verificarPaginasCarregadas(BCP *processo) {
+    for (int i = 0; i < processo->paginas_usadas; i++) {
+        if (processo->paginas_usadas[i] == NULL)
+            return false; // Página não carregada encontrada
     }
-    return 1; // Todas as páginas carregadas
+    return true; // Todas as páginas carregadas
 }
