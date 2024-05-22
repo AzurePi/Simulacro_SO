@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <malloc.h>
 
+#define QUANTUM 5000.0
+
 void *roundRobin();
 
 #endif //SIMULACRO_SO_CPU_H

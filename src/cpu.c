@@ -9,7 +9,7 @@ void *roundRobin() {
         sem_wait(&sem_lista_processos); // bloqueia o acesso a lista de processos
 
         // econtrar o próximo processo pronto com a maior prioridade
-        BCP *temp = lista_processos;
+        BCP *temp = head_lista_processos;
         while (temp) {
             if (temp->estado == PRONTO && (executar == NULL || temp->prioridade > executar->prioridade))
                 executar = temp;
@@ -72,47 +72,41 @@ void *roundRobin() {
                 case EXEC: // pode ser que o processo não seja executado por inteiro
                     atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
                     if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
-                        Comando *aux = atual;
-                        atual = atual->prox;
-                        freeComando(aux);
+                        atual = atual->prox; // passamos para o próximo comando da lista
+                        removerComando(executar->comandos); // remove o comando da lista de comandos
                     }
                     break;
                 case READ: //por enquanto, nada além de liberar o comando
                 {
-                    Comando *aux = atual;
-                    atual = atual->prox;
-                    freeComando(aux);
+                    atual = atual->prox; // passamos para o próximo comando da lista
+                    removerComando(executar->comandos); // remove o comando da lista de comandos
                 }
                     break;
                 case WRITE: //por enquanto, nada além de liberar o comando
                 {
-                    Comando *aux = atual;
-                    atual = atual->prox;
-                    freeComando(aux);
+                    atual = atual->prox; // passamos para o próximo comando da lista
+                    removerComando(executar->comandos); // remove o comando da lista de comandos
                 }
                     break;
                 case P: {
                     Semaforo *sem = retrieveSemaphore((char) atual->parametro);
                     semaphoreP(sem, executar);
-                    Comando *aux = atual;
-                    atual = atual->prox;
-                    freeComando(aux);
+                    atual = atual->prox; // passamos para o próximo comando da lista
+                    removerComando(executar->comandos); // remove o comando da lista de comandos
                 }
                     break;
                 case V: {
                     Semaforo *sem;
                     sem = retrieveSemaphore((char) atual->parametro);
                     semaphoreV(sem);
-                    Comando *aux = atual;
-                    atual = atual->prox;
-                    freeComando(aux);
+                    atual = atual->prox; // passamos para o próximo comando da lista
+                    removerComando(executar->comandos); // remove o comando da lista de comandos
                 }
                     break;
                 case PRINT: //por enquanto, nada além de liberar o comando
                 {
-                    Comando *aux = atual;
-                    atual = atual->prox;
-                    freeComando(aux);
+                    atual = atual->prox; // passamos para o próximo comando da lista
+                    removerComando(executar->comandos);
                 }
                     break;
             }
@@ -130,7 +124,7 @@ void *roundRobin() {
 
         // verifica se todos os comandos já foram executados
         if (executar->comandos->head == NULL)
-            executar->estado = TERMINADO;
+            processFinish(executar);
 
         sem_post(&sem_CPU); // libera a CPU
     }
