@@ -1,5 +1,30 @@
 #include "include/semaforo.h"
 
+Espera_BCP *novaEsperaBCP() {
+    Espera_BCP *new = malloc(sizeof(Espera_BCP));
+    if (!new) return NULL;
+    new->bcp = NULL;
+    new->prox = NULL;
+    return new;
+}
+
+Lista_Espera_BCP *novaListaEsperaBCP() {
+    Lista_Espera_BCP *new = malloc(sizeof(Lista_Espera_BCP));
+    if (!new) return NULL;
+    new->head = novaEsperaBCP();
+    if (!new->head) {
+        free(new);
+        return NULL;
+    }
+    new->tail = novaEsperaBCP();
+    if (!new->tail) {
+        free(new->head);
+        free(new);
+        return NULL;
+    }
+    return new;
+}
+
 Semaforo *novoSemaforo(char name) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
@@ -12,14 +37,18 @@ Semaforo *novoSemaforo(char name) {
     new->name = name;
     new->v = 0;
     new->refcount = 1;
-    new->waiting_list = NULL;
+    new->waiting_list = novaListaEsperaBCP();
+    if (!new->waiting_list) {
+        free(new);
+        return NULL;
+    }
     new->prox = NULL;
     insereSemaforo(new);
     return new;
 }
 
 void freeSemaforo(Semaforo *semaforo) {
-    freeListaBCP(semaforo->waiting_list);
+    freeListaEsperaBCP(semaforo->waiting_list);
     pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
@@ -35,17 +64,6 @@ Lista_Semaforos *novaListaSemaforos() {
     }
     new->head = NULL;
     return new;
-}
-
-void freeListaSemaforo(Lista_Semaforos *semaforos) {
-    if (!semaforos) return;
-    Semaforo *temp;
-    while (semaforos->head != NULL) {
-        temp = semaforos->head;
-        semaforos->head = semaforos->head->prox;
-        freeSemaforo(temp);
-    }
-    free(semaforos);
 }
 
 void insereSemaforo(Semaforo *semaforo) {
@@ -76,16 +94,15 @@ void insereSemaforo(Semaforo *semaforo) {
         semaforos_existentes->head = semaforo;
 }
 
-void removeSemaforo(Semaforo *semaforo) {
-    Semaforo *aux = semaforos_existentes->head, *prev = NULL;
-    for (; aux != NULL && aux != semaforo; prev = aux, aux = aux->prox);
-    if (aux) {
-        if (prev)
-            prev->prox = aux->prox;
-        else //aux é a head atual
-            semaforos_existentes->head = semaforos_existentes->head->prox;
-        free(aux);
+void freeListaSemaforo(Lista_Semaforos *semaforos) {
+    if (!semaforos) return;
+    Semaforo *temp;
+    while (semaforos->head != NULL) {
+        temp = semaforos->head;
+        semaforos->head = semaforos->head->prox;
+        freeSemaforo(temp);
     }
+    free(semaforos);
 }
 
 Semaforo *retrieveSemaphore(char name) {
@@ -102,21 +119,33 @@ Semaforo *retrieveSemaphore(char name) {
     return NULL;
 }
 
-void sem_queue(Lista_Espera_BCP **list, BCP *proc) {
-    Lista_Espera_BCP *new = malloc(sizeof(Lista_Espera_BCP));
-    new->prox = NULL;
-    new->proc = proc;
-
-    if (*list == NULL) {
-        *list = new;
-        return;
+void removeSemaforo(Semaforo *semaforo) {
+    Semaforo *aux = semaforos_existentes->head, *prev = NULL;
+    for (; aux != NULL && aux != semaforo; prev = aux, aux = aux->prox);
+    if (aux) {
+        if (prev)
+            prev->prox = aux->prox;
+        else //aux é a head atual
+            semaforos_existentes->head = semaforos_existentes->head->prox;
+        free(aux);
     }
-    Lista_Espera_BCP *aux, *prev = NULL;
-    for (aux = *list; aux; prev = aux, aux = aux->prox);
-    new->prox = aux;
-    if (prev)
-        prev->prox = new;
-    else
-        (*list) = new;
+}
+
+void sem_queue(Lista_Espera_BCP *espera, BCP *bcp) {
+    if (!espera || !bcp) return; // se os parâmetros são ponteiros nulos
+
+    Espera_BCP *new = malloc((sizeof(Espera_BCP)));
+    if (!new) return;
+
+    new->bcp = bcp;
+    new->prox = NULL;
+
+    if (espera->head == NULL) {
+        espera->head = new;
+        espera->tail = new;
+    } else {
+        espera->tail->prox = new;
+        espera->tail = new;
+    }
 }
 

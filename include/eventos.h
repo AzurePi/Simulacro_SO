@@ -10,12 +10,8 @@
 #include <stdio.h>
 #include <semaphore.h>
 
-// declaração avançada de semaforo.h para evitar dependência circular
-struct semaforo;
+// declaração avançada para evitar dependência circular
 typedef struct semaforo Semaforo;
-
-// declaração avançada de BCP para evitar dependência circular
-struct bcp;
 typedef struct bcp BCP;
 
 // Funções -------------------------------------------------------------------------------------------------------------
@@ -57,6 +53,6 @@ void fsFinish();
 void *processCreate();
 
 // chamada para terminar a existência de um processo no BCP
-void processFinish();
+void processFinish(BCP *bcp);
 
 #endif //SIMULACRO_SO_EVENTOS_H

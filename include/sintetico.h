@@ -3,6 +3,7 @@
 
 #include "semaforo.h"
 #include "memoria.h"
+#include "interface.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -14,6 +15,7 @@
 // declaração avançada de semaforo.h para evitar dependência circular
 typedef struct semaforo Semaforo;
 typedef struct lista_semaforos Lista_Semaforos;
+typedef struct pagina Pagina;
 
 // Estado do processo
 typedef enum {
@@ -56,11 +58,22 @@ typedef struct bcp {
 //Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
 BCP *novoBCP();
 
+void inserirBCP(BCP *new);
+
 // Libera a memória alocada para um BCP
 void freeBCP(BCP *bcp);
 
 // Libera a memória de toda uma lista de BCPs
 void freeListaBCP(BCP *bcp);
+
+// Lê o cabeçalho de um programa sintético
+bool lerCabecalho(FILE *programa, BCP *bcp);
+
+// Lê a linha que contém os semáforos de um programa sintético
+void lerSemaforos(FILE *programa, BCP *processo);
+
+//lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
+bool lerComandos(FILE *programa, BCP *processo);
 
 // Cria um BCP com base na leitura de um programa sintético
 BCP *lerProgramaSintetico(FILE *programa);
@@ -75,18 +88,18 @@ void freeComando(Comando *comando);
 Fila_Comandos *novaFilaComandos();
 
 // Libera a memória alocada para uma Fila_Comandos
-void freeListaComandos(Fila_Comandos *comandos);
+void freeFilaComandos(Fila_Comandos *comandos);
 
 // Insere um novo comando no final de uma Fila_Comandos.
 void inserirComando(Comando *comando, Fila_Comandos *fila);
 
-// Remove o último comando de uma Fila_Comandos.
+// Remove o comando no começo de uma Fila_Comandos.
 void removerComando(Fila_Comandos *fila);
 
 // Insere um novo semáforo no final de uma Lista_Semaforos.
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);
 
-// Muda o estado do processo para BLOQUEADO e o manda pro final da fila de escalonamento
+// Muda o estado do processo para BLOQUEADO e o manda para o final da fila de escalonamento
 void process_sleep(BCP *proc);
 
 // Muda o estado do processo para PRONTO

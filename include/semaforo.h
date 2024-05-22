@@ -17,9 +17,14 @@
 typedef struct bcp BCP;
 
 // lista de processos esperando o semáforo
+typedef struct espera_bcp {
+    BCP *bcp;
+    struct espera_bcp *prox;
+} Espera_BCP;
+
 typedef struct lista_espera_bcp {
-    BCP *proc;
-    struct lista_espera_bcp *prox;
+    Espera_BCP *head;
+    Espera_BCP *tail;
 } Lista_Espera_BCP;
 
 typedef struct semaforo {
@@ -27,7 +32,7 @@ typedef struct semaforo {
     char name; // nome do semáforo
     volatile int v; // valor do semáforo
     int refcount; // conta o número de processos que estão usando o semáforo
-    BCP *waiting_list; // topo da lista de espera de processos do semáforo
+    Lista_Espera_BCP *waiting_list; // topo da lista de espera de processos do semáforo
     struct semaforo *prox;
 } Semaforo;
 
@@ -38,6 +43,12 @@ typedef struct lista_semaforos {
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
+// Cria uma struct de espera de BCP
+Espera_BCP *novaEsperaBCP();
+
+// Cria uma lista de espera de BCP
+Lista_Espera_BCP *novaListaEsperaBCP();
+
 // Cria um semáforo
 Semaforo *novoSemaforo(char name);
 
@@ -47,19 +58,19 @@ void freeSemaforo(Semaforo *semaforo);
 // Inicializa uma lista de semáforos vazia
 Lista_Semaforos *novaListaSemaforos();
 
-// Libera a memória alocada para uma lista de semáforos
-void freeListaSemaforo(Lista_Semaforos *semaforos);
-
 // Insere um semáforo na lista global de todos os semáforos existentes
 void insereSemaforo(Semaforo *semaforo);
 
-// Remove um semáforo da lista global de todos os semáforos existentes
-void removeSemaforo(Semaforo *semaforo);
+// Libera a memória alocada para uma lista de semáforos
+void freeListaSemaforo(Lista_Semaforos *semaforos);
 
 // Retorna um semáforo a partir de seu identificador
 Semaforo *retrieveSemaphore(char name);
 
+// Remove um semáforo da lista global de todos os semáforos existentes
+void removeSemaforo(Semaforo *semaforo);
+
 // Enfileira processos bloqueados por uma chamada falha à semaphoreP()
-void sem_queue(Lista_Espera_BCP **list, BCP *proc);
+void sem_queue(Lista_Espera_BCP *list, BCP *bcp);
 
 #endif //SIMULACRO_SO_SEMAFORO_H

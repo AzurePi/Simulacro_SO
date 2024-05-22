@@ -4,10 +4,11 @@ int main() {
     setlocale(LC_ALL, "PORTUGUESE");
 
     // inicialização das variáveis globais
-    lista_processos = NULL;
+    head_lista_processos = NULL;
     rodando_agora = NULL;
     num_processos = 0;
     semaforos_existentes = novaListaSemaforos();
+    RAM = inicializarMemoria();
     sem_init(&sem_terminal, false, 1);
     sem_init(&sem_CPU, false, 1);
     sem_init(&sem_lista_processos, false, 1);
@@ -31,10 +32,9 @@ int main() {
     sem_destroy(&sem_lista_processos);
 
     // liberamos as memórias alocadas
-    freeListaBCP(lista_processos);
+    freeListaBCP(head_lista_processos);
     freeBCP(rodando_agora);
     freeListaSemaforo(semaforos_existentes);
 
     return 0;
 }
-

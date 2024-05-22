@@ -1,27 +1,31 @@
 #include "include/eventos.h"
 
-void inserirBCP(BCP *bcp);
-
 void processInterrupt() {
-
+    // TODO: fazer algo aqui
 }
 
 void semaphoreP(Semaforo *semaph, BCP *proc) {
     pthread_mutex_lock(&semaph->mutex_lock);
-    if (semaph->v < 0) {
-        //sem_queue(&semaph->waiting_list, proc);
+    semaph->v--;
+    if (semaph->v <= 0) {
+        sem_queue(semaph->waiting_list, proc);
         process_sleep(proc);
     }
-    semaph->v--;
     pthread_mutex_unlock(&semaph->mutex_lock);
 }
 
 void semaphoreV(Semaforo *semaph) {
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
-    if (semaph->v <= 0 && semaph->waiting_list) {
-        BCP *proc = semaph->waiting_list->prox;
-        semaph->waiting_list = semaph->waiting_list->prox;
+    if (semaph->v <= 0 && semaph->waiting_list->head != NULL) {
+        Espera_BCP *acordar = semaph->waiting_list->head;
+        BCP *proc = acordar->bcp;
+        semaph->waiting_list->head = acordar->prox;
+
+        if (semaph->waiting_list->head == NULL)
+            semaph->waiting_list->tail = NULL;
+
+        free(acordar);
         process_wakeup(proc);
     }
     pthread_mutex_unlock(&semaph->mutex_lock);
@@ -35,14 +39,12 @@ void PrintRequest() {}
 
 void PrintFinish() {}
 
-//TODO; fazer isso
 void memLoadReq() {
-
+//TODO; fazer isso
 }
 
-//TODO: fazer isso
 void memLoadFinish() {
-
+//TODO: fazer isso
 }
 
 void fsRequest() {}
@@ -68,11 +70,8 @@ void *processCreate() {
             sleep(2);
             sem_post(&sem_terminal);
         }
-
-        inserirBCP(processo);
-
-        //TODO: coloca no escalonamento
-
+        inserirBCP(processo); // insere o BCP na lista do escalonador
+        // TODO: fazer os lances de memória
     } else {
         sem_wait(&sem_terminal);
         printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
@@ -82,17 +81,7 @@ void *processCreate() {
     fclose(programa);
 }
 
-void inserirBCP(BCP *bcp) {
-    if (!lista_processos) {
-        lista_processos = bcp;
-        return;
-    }
-
-
-
-
-}
-
-void processFinish() {
-
+void processFinish(BCP *bcp) {
+    bcp->estado = TERMINADO;
+    //TODO; mais coisa aqui
 }
