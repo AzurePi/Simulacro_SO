@@ -39,6 +39,10 @@ void *informacaoMemoria();
 // Exibe uma lista de todos os semáforos presentes
 void showSemaphoreList();
 
+// Imprime uma mensagem de erro advinda da criação de um BCP
+BCP *mensagemErroBCP(const char *mensagem, BCP *processo);
+
+// Limpa o buffer de entrada do terminal
 void limpar_buffer();
 
 #endif //SIMULACRO_SO_INTERFACE_H

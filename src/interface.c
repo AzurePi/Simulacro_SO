@@ -57,17 +57,43 @@ void *menu() {
 }
 
 void *informacaoProcessos() {
-    sem_wait(&sem_terminal);
-    //TODO: informações dos processos na fila do escalonador
+    sem_wait(&sem_terminal); // bloqueia acesso ao terminal
+    sem_wait(&sem_lista_processos); // bloqueia acesso à lista de processos
 
+    BCP *atual = head_lista_processos;
 
-    printf("\nProcessando agora: ");
-    if (rodando_agora)
-        printf("%s (%d)\n", rodando_agora->nome, rodando_agora->id_seg);
-    else
-        printf("nada\n");
+    if (!atual) {
+        printf("Ainda não há processos no sistema.");
+    } else {
+        while (atual != NULL) {
+            char estado[11];
+            switch (atual->estado) {
+                case PRONTO:
+                    strcpy(estado, "PRONTO");
+                    break;
+                case EXECUTANDO:
+                    strcpy(estado, "EXECUTANDO");
+                    break;
+                case BLOQUEADO:
+                    strcpy(estado, "BLOQUEADO");
+                    break;
+                case TERMINADO:
+                    strcpy(estado, "TERMINADO");
+                    break;
+            }
 
-    sem_post(&sem_terminal);
+            printf("%s (%d), Prioridade: %d    " BOLD "%s" NOT_BOLD "\n", atual->nome, atual->id_seg, atual->prioridade,
+                   estado);
+            atual = atual->prox;
+        }
+    }
+    sem_post(&sem_lista_processos); // libera acesso à lista de processos
+
+    printf("\nAperte qualquer tecla para retornar");
+    scanf("%*s");
+    limpar_buffer();
+
+    sem_post(&sem_terminal); // libera acesso ao terminal
     return NULL;
 }
 
@@ -77,12 +103,14 @@ void *informacaoMemoria() {
     printf("");
     //TODO: mostrar a proporção da memória sendo usada, quanto está livre, etc.
 
-    //TODO: em algum momento aqui, exibir a lista de semáforos
+    showSemaphoreList();
+
 
     sem_post(&sem_terminal);
     return NULL;
 }
 
+//TODO: verificar formatação
 void showSemaphoreList() {
     sem_wait(&sem_terminal);
     printf("Semáforos existentes:\n");
@@ -101,8 +129,16 @@ void showSemaphoreList() {
     sem_post(&sem_terminal);
 }
 
+BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
+    sem_wait(&sem_terminal);
+    printf(ERROR "%s" CLEAR, mensagem);
+    sleep(2);
+    sem_post(&sem_terminal);
+    freeBCP(processo);
+    return NULL;
+}
+
 void limpar_buffer() {
     char c;
     while ((c = (char) getchar()) != '\n' && c != EOF);
 }
-
