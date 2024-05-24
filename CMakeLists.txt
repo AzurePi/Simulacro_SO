@@ -9,14 +9,14 @@ include_directories(.)
 set(SOURCE_DIR "src")
 
 set(SOURCES
+        ${SOURCE_DIR}/cpu.c
         ${SOURCE_DIR}/eventos.c
         ${SOURCE_DIR}/globals.c
         ${SOURCE_DIR}/interface.c
         ${SOURCE_DIR}/main.c
         ${SOURCE_DIR}/memoria.c
+        ${SOURCE_DIR}/processo.c
         ${SOURCE_DIR}/semaforo.c
-        ${SOURCE_DIR}/sintetico.c
-        ${SOURCE_DIR}/cpu.c
 )
 
 add_executable(Simulacro_SO ${SOURCES})

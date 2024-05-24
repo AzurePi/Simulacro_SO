@@ -8,9 +8,10 @@ int main() {
     rodando_agora = NULL;
     num_processos = 0;
     semaforos_existentes = novaListaSemaforos();
-    RAM = inicializarMemoria();
+    inicializarRAM();
     sem_init(&sem_terminal, false, 1);
     sem_init(&sem_CPU, false, 1);
+    sem_init(&sem_RAM, false, 1);
     sem_init(&sem_lista_processos, false, 1);
     relogio = 0.0;
     pthread_attr_init(&atrib);
@@ -22,6 +23,7 @@ int main() {
     pthread_create(&t_menu, &atrib, menu, NULL);
     pthread_join(t_menu, NULL);
 
+    //TODO: testar isso
     processCreate();
     roundRobin();
 
@@ -29,6 +31,7 @@ int main() {
     pthread_attr_destroy(&atrib);
     sem_destroy(&sem_terminal);
     sem_destroy(&sem_CPU);
+    sem_destroy(&sem_RAM);
     sem_destroy(&sem_lista_processos);
 
     // liberamos as memórias alocadas

@@ -2,7 +2,7 @@
 #define SIMULACRO_SO_SEMAFORO_H
 
 #include "globals.h"
-#include "sintetico.h"
+#include "processo.h"
 #include "interface.h"
 
 #include <malloc.h>
@@ -18,7 +18,7 @@ typedef struct bcp BCP;
 
 // lista de processos esperando o semáforo
 typedef struct espera_bcp {
-    BCP *bcp;
+    BCP *processo;
     struct espera_bcp *prox;
 } Espera_BCP;
 
@@ -29,7 +29,7 @@ typedef struct lista_espera_bcp {
 
 typedef struct semaforo {
     pthread_mutex_t mutex_lock;
-    char name; // nome do semáforo
+    char nome; // nome do semáforo
     volatile int v; // valor do semáforo
     int refcount; // conta o número de processos que estão usando o semáforo
     Lista_Espera_BCP *waiting_list; // topo da lista de espera de processos do semáforo
@@ -49,8 +49,8 @@ Espera_BCP *novaEsperaBCP();
 // Cria uma lista de espera de BCP
 Lista_Espera_BCP *novaListaEsperaBCP();
 
-// Cria um semáforo
-Semaforo *novoSemaforo(char name);
+// Cria um semáforo, inicializado com v = 0
+Semaforo *novoSemaforo(char nome);
 
 // Libera a memória alocada para um semáforo
 void freeSemaforo(Semaforo *semaforo);
@@ -65,12 +65,12 @@ void insereSemaforo(Semaforo *semaforo);
 void freeListaSemaforo(Lista_Semaforos *semaforos);
 
 // Retorna um semáforo a partir de seu identificador
-Semaforo *retrieveSemaphore(char name);
+Semaforo *retrieveSemaforo(char nome);
 
 // Remove um semáforo da lista global de todos os semáforos existentes
 void removeSemaforo(Semaforo *semaforo);
 
 // Enfileira processos bloqueados por uma chamada falha à semaphoreP()
-void sem_queue(Lista_Espera_BCP *list, BCP *bcp);
+void sem_queue(Lista_Espera_BCP *lista, BCP *processo);
 
 #endif //SIMULACRO_SO_SEMAFORO_H

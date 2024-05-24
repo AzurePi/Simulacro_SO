@@ -3,7 +3,7 @@
 Espera_BCP *novaEsperaBCP() {
     Espera_BCP *new = malloc(sizeof(Espera_BCP));
     if (!new) return NULL;
-    new->bcp = NULL;
+    new->processo = NULL;
     new->prox = NULL;
     return new;
 }
@@ -25,7 +25,7 @@ Lista_Espera_BCP *novaListaEsperaBCP() {
     return new;
 }
 
-Semaforo *novoSemaforo(char name) {
+Semaforo *novoSemaforo(char nome) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
         sem_wait(&sem_terminal);
@@ -34,7 +34,7 @@ Semaforo *novoSemaforo(char name) {
         return NULL;
     }
     pthread_mutex_init(&new->mutex_lock, NULL);
-    new->name = name;
+    new->nome = nome;
     new->v = 0;
     new->refcount = 1;
     new->waiting_list = novaListaEsperaBCP();
@@ -79,7 +79,7 @@ void insereSemaforo(Semaforo *semaforo) {
     Semaforo *aux, *prev = NULL;
     for (aux = semaforos_existentes->head; aux != NULL; prev = aux, aux = aux->prox) {
         // se um semáforo com esse nome já existe, o apagamos e paramos
-        if (semaforo->name == aux->name) {
+        if (semaforo->nome == aux->nome) {
             aux->refcount++;
             free(semaforo);
             return;
@@ -105,10 +105,10 @@ void freeListaSemaforo(Lista_Semaforos *semaforos) {
     free(semaforos);
 }
 
-Semaforo *retrieveSemaphore(char name) {
+Semaforo *retrieveSemaforo(char nome) {
     Semaforo *aux = semaforos_existentes->head;
     while (aux) {
-        if (aux->name == name)
+        if (aux->nome == nome)
             return aux;
         aux = aux->prox;
     }
@@ -131,21 +131,21 @@ void removeSemaforo(Semaforo *semaforo) {
     }
 }
 
-void sem_queue(Lista_Espera_BCP *espera, BCP *bcp) {
-    if (!espera || !bcp) return; // se os parâmetros são ponteiros nulos
+void sem_queue(Lista_Espera_BCP *lista, BCP *processo) {
+    if (!lista || !processo) return; // se os parâmetros são ponteiros nulos
 
     Espera_BCP *new = malloc((sizeof(Espera_BCP)));
     if (!new) return;
 
-    new->bcp = bcp;
+    new->processo = processo;
     new->prox = NULL;
 
-    if (espera->head == NULL) {
-        espera->head = new;
-        espera->tail = new;
+    if (lista->head == NULL) {
+        lista->head = new;
+        lista->tail = new;
     } else {
-        espera->tail->prox = new;
-        espera->tail = new;
+        lista->tail->prox = new;
+        lista->tail = new;
     }
 }
 

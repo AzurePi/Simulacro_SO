@@ -88,6 +88,9 @@ void *informacaoProcessos() {
         }
     }
     sem_post(&sem_lista_processos); // libera acesso à lista de processos
+    sem_post(&sem_terminal);
+
+    showSemaphoreList();
 
     printf("\nAperte qualquer tecla para retornar");
     scanf("%*s");
@@ -100,32 +103,30 @@ void *informacaoProcessos() {
 void *informacaoMemoria() {
     sem_wait(&sem_terminal);
 
-    printf("");
-    //TODO: mostrar a proporção da memória sendo usada, quanto está livre, etc.
+    double taxa_ocupacao = ((double) RAM->n_paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
+    printf("Taxa de ocupação da memória: %.2f%% (%d/%d)  \n", taxa_ocupacao, RAM->n_paginas_ocupadas, NUMERO_PAGINAS);
 
-    showSemaphoreList();
-
+    printf("\nAperte qualquer tecla para retornar");
+    scanf("%*s");
+    limpar_buffer();
 
     sem_post(&sem_terminal);
     return NULL;
 }
 
-//TODO: verificar formatação
 void showSemaphoreList() {
     sem_wait(&sem_terminal);
-    printf("Semáforos existentes:\n");
+    printf("Lista de Semáforos sendo utilizados: ");
     Semaforo *aux = semaforos_existentes->head;
     if (!aux) {
         printf("\tNenhum.\n");
-        sleep(3);
         sem_post(&sem_terminal);
         return;
     }
     while (aux) {
-        printf("\t%c | Contador: %d\n", aux->name, aux->refcount);
+        printf("\t%c | Contador: %d\n", aux->nome, aux->refcount);
         aux = aux->prox;
     }
-    sleep(3);
     sem_post(&sem_terminal);
 }
 

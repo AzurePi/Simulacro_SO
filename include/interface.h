@@ -3,14 +3,15 @@
 
 #include "eventos.h"
 #include "semaforo.h"
-#include "sintetico.h"
+#include "processo.h"
 #include "globals.h"
+#include "memoria.h"
 
 #include <stdio.h>
-#include <malloc.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
 #ifdef _WIN32
@@ -26,14 +27,21 @@
 #define UNDERLINE "\033[4m"
 #define NOT_UNDERLINE "\033[24m"
 
+// repetição dos macros de memoria.h
+#define TAMANHO_PAGINA 4096 // 4 KB por página
+#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
+#define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
+
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
 // Exibição do menu no terminal e acesso às operações do usuário
 void *menu();
 
+// Exibe uma lista de todos os processos no sistema
 void *informacaoProcessos();
 
+// Calcula e exibir a taxa de ocupação da memória
 void *informacaoMemoria();
 
 // Exibe uma lista de todos os semáforos presentes

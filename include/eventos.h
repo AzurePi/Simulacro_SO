@@ -1,14 +1,16 @@
 #ifndef SIMULACRO_SO_EVENTOS_H
 #define SIMULACRO_SO_EVENTOS_H
 
+#include "memoria.h"
 #include "semaforo.h"
-#include "sintetico.h"
+#include "processo.h"
 #include "globals.h"
 #include "interface.h"
 
 #include <pthread.h>
 #include <stdio.h>
 #include <semaphore.h>
+#include <stdlib.h>
 
 // declaração avançada para evitar dependência circular
 typedef struct semaforo Semaforo;
@@ -16,7 +18,7 @@ typedef struct bcp BCP;
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-// interrupção gerada pela execução da função processCreate e pelo término de operações de E/S
+// interrupção gerada pelo final do quantum-time de um processo
 void processInterrupt();
 
 // tratamento de bloqueio de processo
@@ -38,7 +40,7 @@ void PrintRequest();
 void PrintFinish();
 
 // chamada de operação de carregamento na memória
-void memLoadReq();
+void memLoadReq(BCP *processo);
 
 // sinalização de final de carregamento
 void memLoadFinish();

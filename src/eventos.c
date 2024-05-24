@@ -1,7 +1,25 @@
 #include "include/eventos.h"
 
 void processInterrupt() {
-    // TODO: fazer algo aqui
+    // Bloqueia o acesso à lista de processos e à CPU
+    sem_wait(&sem_lista_processos);
+    sem_wait(&sem_CPU);
+
+    // se há um processo rodando atualmente
+    if (rodando_agora) {
+        // atualiza o estado do processo para PRONTO
+        rodando_agora->estado = PRONTO;
+
+        // insere o processo de volta na lista de processos
+        inserirBCP(rodando_agora);
+
+        // libera a referência ao processo rodando agora
+        rodando_agora = NULL;
+    }
+
+    // Libera os semáforos
+    sem_post(&sem_lista_processos);
+    sem_post(&sem_CPU);
 }
 
 void semaphoreP(Semaforo *semaph, BCP *proc) {
@@ -19,7 +37,7 @@ void semaphoreV(Semaforo *semaph) {
     semaph->v++;
     if (semaph->v <= 0 && semaph->waiting_list->head != NULL) {
         Espera_BCP *acordar = semaph->waiting_list->head;
-        BCP *proc = acordar->bcp;
+        BCP *proc = acordar->processo;
         semaph->waiting_list->head = acordar->prox;
 
         if (semaph->waiting_list->head == NULL)
@@ -39,8 +57,11 @@ void PrintRequest() {}
 
 void PrintFinish() {}
 
-void memLoadReq() {
-//TODO; fazer isso
+void memLoadReq(BCP *processo) {
+    if (!verificarPaginasCarregadas(processo)) {
+        carregarPaginasNecessarias(processo);
+    }
+    //TODO: ver se tem mais coisa pra fazer
 }
 
 void memLoadFinish() {
@@ -71,7 +92,6 @@ void *processCreate() {
             sem_post(&sem_terminal);
         }
         inserirBCP(processo); // insere o BCP na lista do escalonador
-        // TODO: fazer os lances de memória
     } else {
         sem_wait(&sem_terminal);
         printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
@@ -83,5 +103,5 @@ void *processCreate() {
 
 void processFinish(BCP *bcp) {
     bcp->estado = TERMINADO;
-    //TODO; mais coisa aqui
+    rodando_agora = NULL;
 }

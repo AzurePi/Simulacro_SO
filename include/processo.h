@@ -1,5 +1,5 @@
-#ifndef SIMULACRO_SO_SINTETICO_H
-#define SIMULACRO_SO_SINTETICO_H
+#ifndef SIMULACRO_SO_PROCESSO_H
+#define SIMULACRO_SO_PROCESSO_H
 
 #include "semaforo.h"
 #include "memoria.h"
@@ -46,34 +46,39 @@ typedef struct bcp {
     int id_seg; // identificador do segmento
     int prioridade; // prioridade do programa
     int tamanho_seg; // tamanho do segmento (em kbytes)
+    int n_paginas_usadas; // número de páginas necessárias na memória
+    Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
     ESTADO estado; // PRONTO, EXECUTANDO, BLOQUEADO ou TERMINADO
     Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
     Fila_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
-    Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
 } BCP;
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-//Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
+// Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
 BCP *novoBCP();
 
+// Insere um BCP ordenadamente na lista global
 void inserirBCP(BCP *new);
 
 // Libera a memória alocada para um BCP
 void freeBCP(BCP *bcp);
 
 // Libera a memória de toda uma lista de BCPs
-void freeListaBCP(BCP *bcp);
+void freeListaBCP(BCP *bcp_head);
+
+// BUsca o próximo BCP que pode ser executado na lista; remove-o da lista
+BCP *buscaBCPExecutar();
 
 // Lê o cabeçalho de um programa sintético
 bool lerCabecalho(FILE *programa, BCP *bcp);
 
 // Lê a linha que contém os semáforos de um programa sintético
-void lerSemaforos(FILE *programa, BCP *processo);
+void lerSemaforos(FILE *programa, BCP *bcp);
 
 //lê cada um dos comandos do processo; guarda ele em uma lista em que cada elemento tem um código de operação e um parâmetro
-bool lerComandos(FILE *programa, BCP *processo);
+bool lerComandos(FILE *programa, BCP *bcp);
 
 // Cria um BCP com base na leitura de um programa sintético
 BCP *lerProgramaSintetico(FILE *programa);
@@ -100,9 +105,9 @@ void removerComando(Fila_Comandos *fila);
 void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);
 
 // Muda o estado do processo para BLOQUEADO e o manda para o final da fila de escalonamento
-void process_sleep(BCP *proc);
+void process_sleep(BCP *processo);
 
 // Muda o estado do processo para PRONTO
-void process_wakeup(BCP *proc);
+void process_wakeup(BCP *processo);
 
-#endif //SIMULACRO_SO_SINTETICO_H
+#endif //SIMULACRO_SO_PROCESSO_H

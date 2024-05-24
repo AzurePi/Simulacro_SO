@@ -1,4 +1,4 @@
-#include "include/sintetico.h"
+#include "include/processo.h"
 
 BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
@@ -24,12 +24,12 @@ void freeBCP(BCP *bcp) {
     free(bcp);
 }
 
-void freeListaBCP(BCP *bcp) {
-    if (!bcp) return;
+void freeListaBCP(BCP *bcp_head) {
+    if (!bcp_head) return;
     BCP *temp;
-    while (bcp != NULL) {
-        temp = bcp;
-        bcp = bcp->prox;
+    while (bcp_head != NULL) {
+        temp = bcp_head;
+        bcp_head = bcp_head->prox;
         freeBCP(temp);
     }
 }
@@ -43,7 +43,7 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
     return false; // toda a leitura funcionou
 }
 
-void lerSemaforos(FILE *programa, BCP *processo) {
+void lerSemaforos(FILE *programa, BCP *bcp) {
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
     char i = 0; // contador de tamanaho pequeno
@@ -58,11 +58,11 @@ void lerSemaforos(FILE *programa, BCP *processo) {
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (char j = 0; j < i; j++) {
         Semaforo *t = novoSemaforo(semaforos[j]);
-        inserirSemaforo(t, processo->semaforos);
+        inserirSemaforo(t, bcp->semaforos);
     }
 }
 
-bool lerComandos(FILE *programa, BCP *processo) {
+bool lerComandos(FILE *programa, BCP *bcp) {
     char buffer[11];
 
     //lê cada comando como uma string e armazena no buffer
@@ -91,7 +91,8 @@ bool lerComandos(FILE *programa, BCP *processo) {
             return false;
 
         Comando *comando = novoComando(opcode, parametro);
-        inserirComando(comando, processo->comandos);
+        if (!comando) return false;
+        inserirComando(comando, bcp->comandos);
     }
     return true;
 }
@@ -179,16 +180,17 @@ void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
     lista->head = semaforo;
 }
 
-void process_sleep(BCP *proc) {
-    if (!proc) return; // se o processo passado não existe
-    proc->estado = BLOQUEADO;
+void process_sleep(BCP *processo) {
+    if (!processo) return; // se o processo passado não existe
+    processo->estado = BLOQUEADO;
 
     //TODO: mandar o processo para o final da lista
 }
 
-void process_wakeup(BCP *proc) {
-    if (!proc) return;
-    proc->estado = PRONTO;
+void process_wakeup(BCP *processo) {
+    if (!processo) return;
+    processo->estado = PRONTO;
+    inserirBCP(processo);
 }
 
 void inserirBCP(BCP *new) {
@@ -204,4 +206,34 @@ void inserirBCP(BCP *new) {
 
     new->prox = atual->prox;
     atual->prox = novoBCP();
+}
+
+BCP *buscaBCPExecutar() {
+    sem_wait(&sem_lista_processos); // bloqueia o acesso a lista de processos
+
+    BCP *anterior = NULL;
+    BCP *aux = head_lista_processos;
+    BCP *executar = NULL;
+    BCP *anterior_executar = NULL;
+
+    while (aux) {
+        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade)) {
+            executar = aux;
+            anterior_executar = anterior;
+        }
+        anterior = aux;
+        aux = aux->prox;
+    }
+
+    // Remover o processo executar da lista
+    if (executar) {
+        if (anterior_executar)
+            anterior_executar->prox = executar->prox;
+        else
+            head_lista_processos = executar->prox;
+    }
+
+    sem_post(&sem_lista_processos);
+
+    return executar;
 }

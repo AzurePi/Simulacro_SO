@@ -9,6 +9,7 @@
 // declarações avançadas para evitar declaração circular
 typedef struct bcp BCP;
 typedef struct lista_semaforos Lista_Semaforos;
+typedef struct memoria Memoria;
 
 // variáveis globais
 extern BCP *head_lista_processos;
@@ -18,6 +19,7 @@ extern Lista_Semaforos *semaforos_existentes;
 extern Memoria *RAM;
 extern sem_t sem_terminal;
 extern sem_t sem_CPU;
+extern sem_t sem_RAM;
 extern sem_t sem_lista_processos;
 extern volatile long double relogio;
 extern pthread_attr_t atrib;
