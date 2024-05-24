@@ -24,7 +24,7 @@ Lista_Espera_BCP *novaListaEsperaBCP() {
     }
     return new;
 }
-
+// TODO: verificar se o semáforo existe; não faz sentido sempre criar um novo
 Semaforo *novoSemaforo(char nome) {
     Semaforo *new = malloc(sizeof(Semaforo));
     if (!new) {
@@ -48,7 +48,7 @@ Semaforo *novoSemaforo(char nome) {
 }
 
 void freeSemaforo(Semaforo *semaforo) {
-    freeListaEsperaBCP(semaforo->waiting_list);
+    // freeListaEsperaBCP(semaforo->waiting_list);
     pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
@@ -136,7 +136,7 @@ void sem_queue(Lista_Espera_BCP *lista, BCP *processo) {
 
     Espera_BCP *new = malloc((sizeof(Espera_BCP)));
     if (!new) return;
-
+    //TODO: falta colocar o processo aqui!
     new->processo = processo;
     new->prox = NULL;
 

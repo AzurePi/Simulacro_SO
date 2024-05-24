@@ -24,4 +24,6 @@ extern sem_t sem_lista_processos;
 extern volatile long double relogio;
 extern pthread_attr_t atrib;
 
+extern pthread_mutex_t mutex_terminal;
+
 #endif //SIMULACRO_SO_GLOBALS_H

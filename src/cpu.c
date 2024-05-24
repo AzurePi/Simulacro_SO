@@ -37,7 +37,7 @@ void processarComandos(BCP *processo) {
     long double tempo_executado = 0; // o tempo que o processo já está executando
     bool interromper = false; // controla a interrupção do laço
     Comando *atual = processo->comandos->head;
-
+    //TODO: e se o semáforo tiver bloqueado?
     while (atual && tempo_executado < quantum && !interromper) {
         long double t; // tempo que esse comando leva para ser executado
 
@@ -113,10 +113,11 @@ void processarComandos(BCP *processo) {
         }
 
         // atualiza a cabeça da lista de comandos do processo
-        processo->comandos->head = atual;
+        //processo->comandos->head = atual;
 
         // verifica se o quantum foi excedido
         if (tempo_executado >= quantum) {
+            sem_post(&sem_CPU);
             processInterrupt();
             interromper = true;
         }

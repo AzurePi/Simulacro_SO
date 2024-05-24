@@ -11,3 +11,5 @@ sem_t sem_RAM;
 sem_t sem_lista_processos;
 volatile long double relogio;
 pthread_attr_t atrib;
+
+pthread_mutex_t mutex_terminal;

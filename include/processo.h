@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define TAMANHO_PAGINA 4096 // 4 KB por página
+#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
+#define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
+
 // Declaração de Tipos -------------------------------------------------------------------------------------------------
 
 // declaração avançada de semaforo.h para evitar dependência circular

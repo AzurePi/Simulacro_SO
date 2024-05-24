@@ -9,16 +9,15 @@ BCP *novoBCP() {
         sem_post(&sem_terminal);
         return NULL;
     }
-    new->estado = PRONTO; //diz que o programa está pronto para ser executado
     new->semaforos = novaListaSemaforos();
     if (!new->semaforos) return NULL;
     new->comandos = novaFilaComandos();
     if (!new->comandos) return NULL;
-    new->prox = NULL;
     return new;
 }
 
 void freeBCP(BCP *bcp) {
+    if (!bcp) return;
     freeListaSemaforo(bcp->semaforos);
     freeFilaComandos(bcp->comandos);
     free(bcp);
@@ -39,8 +38,8 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
         fscanf(programa, "%d\n", &bcp->id_seg) != 1 ||
         fscanf(programa, "%d\n", &bcp->prioridade) != 1 ||
         fscanf(programa, "%d\n", &bcp->tamanho_seg) != 1)
-        return true; // alguma parte da leitura falhou
-    return false; // toda a leitura funcionou
+        return false; // alguma parte da leitura falhou
+    return true; // toda a leitura funcionou
 }
 
 void lerSemaforos(FILE *programa, BCP *bcp) {
@@ -83,6 +82,9 @@ bool lerComandos(FILE *programa, BCP *bcp) {
             else if (strcmp(buffer_operacao, "read") == 0) opcode = READ;
             else if (strcmp(buffer_operacao, "write") == 0) opcode = WRITE;
             else if (strcmp(buffer_operacao, "print") == 0) opcode = PRINT;
+            else
+                return false;
+
 
             parametro = atoi(buffer_parametro);
         }
@@ -111,12 +113,16 @@ BCP *lerProgramaSintetico(FILE *programa) {
     if (processo->prioridade < 1)
         return mensagemErroBCP("prioridade do programa não pode ser um número menor que 1", processo);
 
+    // calcula o número de páginas da memória que precisam ser utilizadas para esse processo
+    processo->n_paginas_usadas = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA;
+
     // lê a linha que contém os semáforos
     lerSemaforos(programa, processo);
 
     // ignora uma linha em branco
     while (fgetc(programa) != '\n' && !feof(programa));
-    lerComandos(programa, processo);
+    if (!lerComandos(programa, processo))
+        return mensagemErroBCP("programa sintético contém erro nos comandos", processo);
 
     return processo;
 }

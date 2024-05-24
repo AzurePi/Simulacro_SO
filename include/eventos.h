@@ -6,6 +6,7 @@
 #include "processo.h"
 #include "globals.h"
 #include "interface.h"
+#include "cpu.h"
 
 #include <pthread.h>
 #include <stdio.h>

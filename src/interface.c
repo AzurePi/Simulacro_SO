@@ -5,7 +5,8 @@ void *menu() {
     pthread_t t_processo, t_info_proc, t_info_mem;
 
     do {
-        sem_wait(&sem_terminal); // requer acesso ao terminal
+        //sem_wait(&sem_terminal); // requer acesso ao terminal
+        pthread_mutex_lock(&mutex_terminal);
 
         CLEAR_SCREEN
         printf("╔════════════════════════════════════════╗\n");
@@ -27,29 +28,34 @@ void *menu() {
         scanf("%c", &op);
         limpar_buffer();
 
-        sem_post(&sem_terminal); // libera acesso ao terminal
-
         switch (op) {
             case '0':
-                sem_wait(&sem_terminal);
-                printf("Encerrando programa.");
-                sem_post(&sem_terminal);
+                printf("Encerrando programa.\n");
+                pthread_mutex_unlock(&mutex_terminal);
+                // sem_post(&sem_terminal);
                 break;
             case '1':
+                pthread_mutex_unlock(&mutex_terminal);
                 pthread_create(&t_processo, &atrib, processCreate, NULL);
                 pthread_detach(t_processo);
+                sleep(1);
                 break;
             case '2':
+                pthread_mutex_unlock(&mutex_terminal);
                 pthread_create(&t_info_proc, &atrib, informacaoProcessos, NULL);
                 pthread_detach(t_info_proc);
+                sleep(1);
                 break;
             case '3':
+                pthread_mutex_unlock(&mutex_terminal);
                 pthread_create(&t_info_mem, &atrib, informacaoMemoria, NULL);
                 pthread_detach(t_info_mem);
+                sleep(1);
                 break;
             default:
                 printf(ERROR "Opção inválida!" CLEAR);
                 sleep(2);
+                pthread_mutex_unlock(&mutex_terminal);
                 break;
         }
     } while (op != '0');
@@ -57,13 +63,13 @@ void *menu() {
 }
 
 void *informacaoProcessos() {
-    sem_wait(&sem_terminal); // bloqueia acesso ao terminal
+    pthread_mutex_lock(&mutex_terminal); // bloqueia acesso ao terminal
     sem_wait(&sem_lista_processos); // bloqueia acesso à lista de processos
 
     BCP *atual = head_lista_processos;
 
     if (!atual) {
-        printf("Ainda não há processos no sistema.");
+        printf("Ainda não há processos no sistema.\n");
     } else {
         while (atual != NULL) {
             char estado[11];
@@ -88,29 +94,28 @@ void *informacaoProcessos() {
         }
     }
     sem_post(&sem_lista_processos); // libera acesso à lista de processos
-    sem_post(&sem_terminal);
 
     showSemaphoreList();
 
-    printf("\nAperte qualquer tecla para retornar");
-    scanf("%*s");
+    printf("\n\tAperte qualquer tecla para retornar");
+    getchar();
     limpar_buffer();
 
-    sem_post(&sem_terminal); // libera acesso ao terminal
+    pthread_mutex_unlock(&mutex_terminal); // libera acesso ao terminal
     return NULL;
 }
 
 void *informacaoMemoria() {
-    sem_wait(&sem_terminal);
+    pthread_mutex_lock(&mutex_terminal);
 
     double taxa_ocupacao = ((double) RAM->n_paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
-    printf("Taxa de ocupação da memória: %.2f%% (%d/%d)  \n", taxa_ocupacao, RAM->n_paginas_ocupadas, NUMERO_PAGINAS);
+    printf("\nTaxa de ocupação da memória: %.2f%% (%d/%d)\n", taxa_ocupacao, RAM->n_paginas_ocupadas, NUMERO_PAGINAS);
 
-    printf("\nAperte qualquer tecla para retornar");
-    scanf("%*s");
+    printf("\n\tAperte qualquer tecla para retornar"); //TODO: ajeitar isso
+    getchar();
     limpar_buffer();
 
-    sem_post(&sem_terminal);
+    pthread_mutex_unlock(&mutex_terminal);
     return NULL;
 }
 
@@ -131,15 +136,14 @@ void showSemaphoreList() {
 }
 
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
-    sem_wait(&sem_terminal);
-    printf(ERROR "%s" CLEAR, mensagem);
+    pthread_mutex_lock(&mutex_terminal);
+    printf(ERROR "%s" CLEAR "\n", mensagem);
     sleep(2);
-    sem_post(&sem_terminal);
+    pthread_mutex_unlock(&mutex_terminal);
     freeBCP(processo);
     return NULL;
 }
 
 void limpar_buffer() {
-    char c;
-    while ((c = (char) getchar()) != '\n' && c != EOF);
+    while (getchar() != '\n');
 }

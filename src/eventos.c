@@ -3,7 +3,7 @@
 void processInterrupt() {
     // Bloqueia o acesso à lista de processos e à CPU
     sem_wait(&sem_lista_processos);
-    sem_wait(&sem_CPU);
+    sem_wait(&sem_CPU); //TODO: problemas nesse semáforo!
 
     // se há um processo rodando atualmente
     if (rodando_agora) {
@@ -58,9 +58,8 @@ void PrintRequest() {}
 void PrintFinish() {}
 
 void memLoadReq(BCP *processo) {
-    if (!verificarPaginasCarregadas(processo)) {
-        carregarPaginasNecessarias(processo);
-    }
+    carregarPaginasNecessarias(processo);
+
     //TODO: ver se tem mais coisa pra fazer
 }
 
@@ -76,29 +75,34 @@ void *processCreate() {
     processInterrupt();
 
     char filename[201];
-    sem_wait(&sem_terminal);
+
+    pthread_mutex_lock(&mutex_terminal);
     printf("Caminho do programa: ");
     scanf("%200[^\n]s", filename);
     limpar_buffer();
-    sem_post(&sem_terminal);
+    pthread_mutex_unlock(&mutex_terminal);
 
     FILE *programa = fopen(filename, "r");
     if (programa) {
         BCP *processo = lerProgramaSintetico(programa);
         if (!processo) {
-            sem_wait(&sem_terminal);
+            pthread_mutex_lock(&mutex_terminal);
             printf(ERROR "não foi possível criar o processo com esse programa" CLEAR);
             sleep(2);
-            sem_post(&sem_terminal);
+            pthread_mutex_unlock(&mutex_terminal);
         }
         inserirBCP(processo); // insere o BCP na lista do escalonador
     } else {
-        sem_wait(&sem_terminal);
+        pthread_mutex_lock(&mutex_terminal);
         printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
         sleep(2);
-        sem_post(&sem_terminal);
+        pthread_mutex_unlock(&mutex_terminal);
     }
     fclose(programa);
+
+    roundRobin();
+
+    pthread_exit(NULL);
 }
 
 void processFinish(BCP *bcp) {

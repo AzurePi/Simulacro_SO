@@ -2,7 +2,7 @@
 
 void inicializarRAM() {
     if (RAM) return; // se a RAM já foi inicializada, retorna
-    RAM = malloc(sizeof (Memoria));
+    RAM = malloc(sizeof(Memoria));
     RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
         //RAM->memoria[i].numero_pagina = i;
@@ -31,14 +31,34 @@ void adicionarProcessoNaMemoria(BCP *processo) {
     }
 }
 
+void carregarPaginasNecessarias(BCP *processo) {
+    if (verificarPaginasCarregadas(processo)) return;
+
+    for (int i = 0; i < processo->n_paginas_usadas; i++) {
+        if (processo->paginas_usadas[i] == NULL) {
+            int para_substituir = paginaParaSubstituir();
+            sem_wait(&sem_RAM);
+            RAM->memoria[para_substituir].segunda_chance = true;
+            processo->paginas_usadas[i] = &RAM->memoria[para_substituir];
+
+            if (RAM->memoria[para_substituir].vazia) {
+                RAM->n_paginas_ocupadas++;
+                RAM->memoria[para_substituir].vazia = false;
+            }
+            sem_post(&sem_RAM);
+        }
+    }
+}
+
 int paginaParaSubstituir() {
     static int ponteiro = 0; // Apontador circular
 
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
         sem_wait(&sem_RAM);
-        if (RAM->memoria[ponteiro].segunda_chance == 0) {
+        if (RAM->memoria[ponteiro].segunda_chance == false) {
             int pagina_para_substituir = ponteiro;
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
+            sem_post(&sem_RAM);
             return pagina_para_substituir;
         } else {
             RAM->memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
@@ -50,23 +70,6 @@ int paginaParaSubstituir() {
     int pagina_para_substituir = ponteiro;
     ponteiro = (ponteiro + 1) % NUMERO_PAGINAS;
     return pagina_para_substituir;
-}
-
-void carregarPaginasNecessarias(BCP *processo) {
-    for (int i = 0; i < processo->n_paginas_usadas; i++) {
-        if (processo->paginas_usadas[i] == NULL) {
-            int para_substituir = paginaParaSubstituir();
-            sem_wait(&sem_RAM);
-            RAM->memoria[para_substituir].segunda_chance = 1;
-            processo->paginas_usadas[i] = &RAM->memoria[para_substituir];
-
-            if (RAM->memoria[para_substituir].vazia) {
-                RAM->n_paginas_ocupadas++;
-                RAM->memoria[para_substituir].vazia = false;
-            }
-            sem_post(&sem_RAM);
-        }
-    }
 }
 
 bool verificarPaginasCarregadas(BCP *processo) {

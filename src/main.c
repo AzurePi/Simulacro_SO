@@ -17,15 +17,13 @@ int main() {
     pthread_attr_init(&atrib);
     pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
 
+    pthread_mutex_init(&mutex_terminal, NULL);
+
     // criamos uma thread para a exibição do menu
     pthread_t t_menu;
 
     pthread_create(&t_menu, &atrib, menu, NULL);
     pthread_join(t_menu, NULL);
-
-    //TODO: testar isso
-    processCreate();
-    roundRobin();
 
     // destruímos atributos de thread e semáforo inicializados
     pthread_attr_destroy(&atrib);
