@@ -5,14 +5,14 @@ void processarComandos(BCP *processo);
 void *roundRobin() {
     BCP *executar;
     do {
-        sem_wait(&sem_CPU); //dizemos que a CPU está sendo utilizada
+        pthread_mutex_lock(&mutex_CPU); //dizemos que a CPU está sendo utilizada
 
         // econtrar o próximo processo pronto com a maior prioridade
         executar = buscaBCPExecutar();
 
         // se não encontramos um processo para executar, é porque todos os processos terminaram
         if (!executar) {
-            sem_post(&sem_CPU); // liberamos a CPU
+            pthread_mutex_unlock(&mutex_CPU);
         } else { //se tem um processo para executar
             executar->estado = EXECUTANDO;
             rodando_agora = executar;
@@ -26,7 +26,7 @@ void *roundRobin() {
             if (executar->comandos->head == NULL)
                 processFinish(executar); // finaliza o processo
 
-            sem_post(&sem_CPU); // libera a CPU
+            pthread_mutex_unlock(&mutex_CPU); // libera a CPU
         }
     } while (executar);
     return NULL;
@@ -35,26 +35,30 @@ void *roundRobin() {
 void processarComandos(BCP *processo) {
     long double quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
     long double tempo_executado = 0; // o tempo que o processo já está executando
-    bool interromper = false; // controla a interrupção do laço
     Comando *atual = processo->comandos->head;
-    //TODO: e se o semáforo tiver bloqueado?
-    while (atual && tempo_executado < quantum && !interromper) {
+
+    while (atual && tempo_executado < quantum) {
         long double t; // tempo que esse comando leva para ser executado
 
         // dependendo da operação, o t é contado de uma forma diferente
+        /* consideramos, por enquanto, que a leitura/escrita no disco e escrita no terminal são instantâneos
+         * posteriormente, esse t será influenciado por DiskRequest(), DiskFinish(), PrintRequest() e PrintFinish()
+         */
         switch (atual->opcode) {
             case EXEC:
                 t = atual->parametro;
+                break;
+            case READ:
+                t = 0;
+                break;
+            case WRITE:
+                t = 0;
                 break;
             case P:
             case V:
                 t = 200;
                 break;
             default:
-                /*
-                 * consideramos, por enquanto, que a leitura/escrita no disco e escrita no terminal são instantâneos
-                 * posteriormente, esse t será influenciado por DiskRequest(), DiskFinish(), PrintRequest() e PrintFinish()
-                 */
                 t = 0;
                 break;
         }
@@ -91,14 +95,17 @@ void processarComandos(BCP *processo) {
                 break;
             case P: {
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
-                semaphoreP(sem, processo);
-                atual = atual->prox; // passamos para o próximo comando da lista
+                if (semaphoreP(sem, processo)) // se o semáforo permite a execução
+                    atual = atual->prox; // passamos para o próximo comando
+                else { // se o semáforo bloqueou a execução
+                    process_sleep(processo); // o processo é bloqueado
+                    atual = NULL; // interrompemos a execução
+                }
                 removerComando(processo->comandos); // remove o comando da lista de comandos
             }
                 break;
             case V: {
-                Semaforo *sem;
-                sem = retrieveSemaforo((char) atual->parametro);
+                Semaforo *sem = retrieveSemaforo((char) atual->parametro);
                 semaphoreV(sem);
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
@@ -111,16 +118,7 @@ void processarComandos(BCP *processo) {
             }
                 break;
         }
-
-        // atualiza a cabeça da lista de comandos do processo
-        //processo->comandos->head = atual;
-
-        // verifica se o quantum foi excedido
-        if (tempo_executado >= quantum) {
-            sem_post(&sem_CPU);
-            processInterrupt();
-            interromper = true;
-        }
     }
+    processInterrupt();
 }
 

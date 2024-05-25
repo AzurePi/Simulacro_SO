@@ -23,7 +23,8 @@
 #define ERROR "\033[3;31m" "ERRO: "
 #define CLEAR "\033[0m"
 #define BOLD "\033[1m"
-#define NOT_BOLD "\033[22m"
+#define FAINT "\033[2m"
+#define NOT_BOLD_NOR_FAINT "\033[22m"
 #define UNDERLINE "\033[4m"
 #define NOT_UNDERLINE "\033[24m"
 

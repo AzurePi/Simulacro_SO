@@ -23,7 +23,7 @@ typedef struct bcp BCP;
 void processInterrupt();
 
 // tratamento de bloqueio de processo
-void semaphoreP(Semaforo *semaph, BCP *proc);
+bool semaphoreP(Semaforo *semaph, BCP *proc);
 
 // tratamento de desbloqueio de processo
 void semaphoreV(Semaforo *semaph);

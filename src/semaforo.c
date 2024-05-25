@@ -24,13 +24,19 @@ Lista_Espera_BCP *novaListaEsperaBCP() {
     }
     return new;
 }
-// TODO: verificar se o semáforo existe; não faz sentido sempre criar um novo
+
 Semaforo *novoSemaforo(char nome) {
-    Semaforo *new = malloc(sizeof(Semaforo));
+    Semaforo *new = retrieveSemaforo(nome); // se o semáforo já existe
+    if (new) {
+        new->refcount++; // aumentamos a contagem de referências
+        return new;
+    }
+
+    new = malloc(sizeof(Semaforo)); // criamos um semáforo novo
     if (!new) {
-        sem_wait(&sem_terminal);
+        pthread_mutex_lock(&mutex_terminal);
         printf(ERROR "falha ao alocar memória para o semáforo" CLEAR);
-        sem_post(&sem_terminal);
+        pthread_mutex_unlock(&mutex_terminal);
         return NULL;
     }
     pthread_mutex_init(&new->mutex_lock, NULL);
@@ -48,7 +54,7 @@ Semaforo *novoSemaforo(char nome) {
 }
 
 void freeSemaforo(Semaforo *semaforo) {
-    // freeListaEsperaBCP(semaforo->waiting_list);
+    // freeListaEsperaBCP(semaforo->waiting_list); //TODO
     pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
@@ -56,10 +62,10 @@ void freeSemaforo(Semaforo *semaforo) {
 Lista_Semaforos *novaListaSemaforos() {
     Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
     if (!new) {
-        sem_wait(&sem_terminal);
+        pthread_mutex_lock(&mutex_terminal);
         printf(ERROR "falha ao alocar memória para a lista de semáforos" CLEAR);
         sleep(2);
-        sem_post(&sem_terminal);
+        pthread_mutex_unlock(&mutex_terminal);
         return NULL;
     }
     new->head = NULL;
@@ -112,10 +118,10 @@ Semaforo *retrieveSemaforo(char nome) {
             return aux;
         aux = aux->prox;
     }
-    sem_wait(&sem_terminal);
+    pthread_mutex_lock(&mutex_terminal);
     printf(ERROR "busca de semáforo não pode ser concluida." CLEAR);
     sleep(2);
-    sem_post(&sem_terminal);
+    pthread_mutex_unlock(&mutex_terminal);
     return NULL;
 }
 
@@ -136,7 +142,7 @@ void sem_queue(Lista_Espera_BCP *lista, BCP *processo) {
 
     Espera_BCP *new = malloc((sizeof(Espera_BCP)));
     if (!new) return;
-    //TODO: falta colocar o processo aqui!
+
     new->processo = processo;
     new->prox = NULL;
 
@@ -148,4 +154,3 @@ void sem_queue(Lista_Espera_BCP *lista, BCP *processo) {
         lista->tail = new;
     }
 }
-

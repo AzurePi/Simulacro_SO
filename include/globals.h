@@ -14,16 +14,13 @@ typedef struct memoria Memoria;
 // variáveis globais
 extern BCP *head_lista_processos;
 extern BCP *rodando_agora;
-extern volatile int num_processos;
 extern Lista_Semaforos *semaforos_existentes;
 extern Memoria *RAM;
-extern sem_t sem_terminal;
-extern sem_t sem_CPU;
-extern sem_t sem_RAM;
-extern sem_t sem_lista_processos;
+extern pthread_mutex_t mutex_terminal;
+extern pthread_mutex_t mutex_CPU;
+extern pthread_mutex_t mutex_RAM;
+extern pthread_mutex_t mutex_lista_processos;
 extern volatile long double relogio;
 extern pthread_attr_t atrib;
-
-extern pthread_mutex_t mutex_terminal;
 
 #endif //SIMULACRO_SO_GLOBALS_H

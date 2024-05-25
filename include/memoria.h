@@ -19,9 +19,8 @@
 typedef struct bcp BCP;
 
 typedef struct pagina {
-    //int numero_pagina;
-    bool vazia;
-    bool segunda_chance; // 1 se a página tiver uma segunda chance, 0 caso contrário
+    bool segunda_chance; // se a página tem ou não uma segunda chance no algoritmo de swapping de páginas
+    BCP *conteudo; // referência ao processo cujo conteúdo está na página
 } Pagina;
 
 typedef struct memoria {
@@ -31,13 +30,13 @@ typedef struct memoria {
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-// Inicialização da memória e contagem de páginas ocupadas
+// Inicializa a variável global da memória do simulador
 void inicializarRAM();
 
-// Adiciona um processo à memória
-void adicionarProcessoNaMemoria(BCP *processo);
+// Libera a variável global da memória do simulador
+void freeRAM();
 
-// Encontrar a próxima página a ser substituída usando o algoritmo FIFO com Segunda Chance
+// Encontra a próxima página a ser substituída usando o algoritmo FIFO com Segunda Chance
 int paginaParaSubstituir();
 
 // Carrega páginas necessárias para um processo na memória

@@ -3,10 +3,10 @@
 BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
-        sem_wait(&sem_terminal);
+        pthread_mutex_lock(&mutex_terminal);
         printf(ERROR "falha na alocação de memória do BCP" CLEAR);
         sleep(2);
-        sem_post(&sem_terminal);
+        pthread_mutex_unlock(&mutex_terminal);
         return NULL;
     }
     new->semaforos = novaListaSemaforos();
@@ -84,7 +84,6 @@ bool lerComandos(FILE *programa, BCP *bcp) {
             else if (strcmp(buffer_operacao, "print") == 0) opcode = PRINT;
             else
                 return false;
-
 
             parametro = atoi(buffer_parametro);
         }
@@ -215,7 +214,7 @@ void inserirBCP(BCP *new) {
 }
 
 BCP *buscaBCPExecutar() {
-    sem_wait(&sem_lista_processos); // bloqueia o acesso a lista de processos
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso a lista de processos
 
     BCP *anterior = NULL;
     BCP *aux = head_lista_processos;
@@ -239,7 +238,7 @@ BCP *buscaBCPExecutar() {
             head_lista_processos = executar->prox;
     }
 
-    sem_post(&sem_lista_processos);
+    pthread_mutex_lock(&mutex_lista_processos);
 
     return executar;
 }

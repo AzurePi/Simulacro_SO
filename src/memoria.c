@@ -5,30 +5,16 @@ void inicializarRAM() {
     RAM = malloc(sizeof(Memoria));
     RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
-        //RAM->memoria[i].numero_pagina = i;
-        RAM->memoria[i].vazia = true; // a página está vazia
         RAM->memoria[i].segunda_chance = 0; // inicializa todas como podendo ser trocadas
+        RAM->memoria[i].conteudo = NULL; // essa página não aponta para ninguém
     }
     RAM->n_paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
 }
 
-void adicionarProcessoNaMemoria(BCP *processo) {
-    int n_paginas_necessarias = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA;
-    processo->n_paginas_usadas = n_paginas_necessarias;
-
-    for (int i = 0; i < n_paginas_necessarias; i++) {
-        int para_substituir = paginaParaSubstituir();
-        sem_wait(&sem_RAM);
-        RAM->memoria[para_substituir].segunda_chance = 1;
-
-        processo->paginas_usadas[i] = &RAM->memoria[para_substituir]; // Atribui a referência da página ao BCP
-
-        if (RAM->memoria[para_substituir].vazia) {
-            RAM->n_paginas_ocupadas++;
-            RAM->memoria[para_substituir].vazia = false;
-        }
-        sem_post(&sem_RAM);
-    }
+void freeRAM() {
+    if (!RAM) return;
+    free(RAM->memoria);
+    free(RAM);
 }
 
 void carregarPaginasNecessarias(BCP *processo) {
@@ -37,15 +23,28 @@ void carregarPaginasNecessarias(BCP *processo) {
     for (int i = 0; i < processo->n_paginas_usadas; i++) {
         if (processo->paginas_usadas[i] == NULL) {
             int para_substituir = paginaParaSubstituir();
-            sem_wait(&sem_RAM);
-            RAM->memoria[para_substituir].segunda_chance = true;
-            processo->paginas_usadas[i] = &RAM->memoria[para_substituir];
 
-            if (RAM->memoria[para_substituir].vazia) {
-                RAM->n_paginas_ocupadas++;
-                RAM->memoria[para_substituir].vazia = false;
+            pthread_mutex_lock(&mutex_RAM);
+            Pagina *pagina = &RAM->memoria[para_substituir];
+            pagina->segunda_chance = true;
+
+            if (pagina->conteudo == NULL) //se a página estava vaia
+                RAM->n_paginas_ocupadas++; // aumentamos o número de páginas ocupadas na memória
+            else { // se não, remove a referência do processo que utilizava a página sendo substituída
+                BCP *conteudo_velho = pagina->conteudo;
+
+                for (int j = 0; j < conteudo_velho->n_paginas_usadas; j++) {
+                    if (conteudo_velho->paginas_usadas[j] == pagina) {
+                        conteudo_velho->paginas_usadas[j] = NULL;
+                        break;
+                    }
+                }
             }
-            sem_post(&sem_RAM);
+
+            processo->paginas_usadas[i] = pagina;
+            pagina->conteudo = processo;
+
+            pthread_mutex_unlock(&mutex_RAM);
         }
     }
 }
@@ -53,19 +52,20 @@ void carregarPaginasNecessarias(BCP *processo) {
 int paginaParaSubstituir() {
     static int ponteiro = 0; // Apontador circular
 
+    pthread_mutex_lock(&mutex_RAM);
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
-        sem_wait(&sem_RAM);
         if (RAM->memoria[ponteiro].segunda_chance == false) {
             int pagina_para_substituir = ponteiro;
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
-            sem_post(&sem_RAM);
+            pthread_mutex_unlock(&mutex_RAM);
             return pagina_para_substituir;
         } else {
             RAM->memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
         }
-        sem_post(&sem_RAM);
     }
+    pthread_mutex_unlock(&mutex_RAM);
+
     // Caso todas as páginas tenham segunda chance, substitui a primeira página examinada
     int pagina_para_substituir = ponteiro;
     ponteiro = (ponteiro + 1) % NUMERO_PAGINAS;

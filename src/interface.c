@@ -5,12 +5,11 @@ void *menu() {
     pthread_t t_processo, t_info_proc, t_info_mem;
 
     do {
-        //sem_wait(&sem_terminal); // requer acesso ao terminal
-        pthread_mutex_lock(&mutex_terminal);
+        pthread_mutex_lock(&mutex_terminal); // bloqueia o acesso ao terminal
 
         CLEAR_SCREEN
         printf("╔════════════════════════════════════════╗\n");
-        printf("║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD NOT_UNDERLINE"    ║\n");
+        printf("║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE"    ║\n");
         printf("╟────────────────────────────────────────╢\n");
         printf("║ [1] Novo processo                      ║\n");
         printf("║ [2] Ver informações dos processos      ║\n");
@@ -32,7 +31,6 @@ void *menu() {
             case '0':
                 printf("Encerrando programa.\n");
                 pthread_mutex_unlock(&mutex_terminal);
-                // sem_post(&sem_terminal);
                 break;
             case '1':
                 pthread_mutex_unlock(&mutex_terminal);
@@ -63,41 +61,31 @@ void *menu() {
 }
 
 void *informacaoProcessos() {
-    pthread_mutex_lock(&mutex_terminal); // bloqueia acesso ao terminal
-    sem_wait(&sem_lista_processos); // bloqueia acesso à lista de processos
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
 
     BCP *atual = head_lista_processos;
 
+    pthread_mutex_lock(&mutex_terminal); // bloqueia acesso ao terminal
     if (!atual) {
         printf("Ainda não há processos no sistema.\n");
     } else {
+        char *estados[] = {"PRONTO", "EXECUTANDO", "BLOQUEADO", "TERMINADO"};
+
         while (atual != NULL) {
             char estado[11];
-            switch (atual->estado) {
-                case PRONTO:
-                    strcpy(estado, "PRONTO");
-                    break;
-                case EXECUTANDO:
-                    strcpy(estado, "EXECUTANDO");
-                    break;
-                case BLOQUEADO:
-                    strcpy(estado, "BLOQUEADO");
-                    break;
-                case TERMINADO:
-                    strcpy(estado, "TERMINADO");
-                    break;
-            }
+            strcpy(estado, estados[atual->estado]);
 
-            printf("%s (%d), Prioridade: %d    " BOLD "%s" NOT_BOLD "\n", atual->nome, atual->id_seg, atual->prioridade,
+            printf("%s (%d), Prioridade: %d    " BOLD "%s" NOT_BOLD_NOR_FAINT "\n", atual->nome, atual->id_seg,
+                   atual->prioridade,
                    estado);
             atual = atual->prox;
         }
     }
-    sem_post(&sem_lista_processos); // libera acesso à lista de processos
+    pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
     showSemaphoreList();
 
-    printf("\n\tAperte qualquer tecla para retornar");
+    printf(FAINT "\n\tAperte qualquer tecla para retornar" NOT_BOLD_NOR_FAINT);
     getchar();
     limpar_buffer();
 
@@ -111,7 +99,7 @@ void *informacaoMemoria() {
     double taxa_ocupacao = ((double) RAM->n_paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
     printf("\nTaxa de ocupação da memória: %.2f%% (%d/%d)\n", taxa_ocupacao, RAM->n_paginas_ocupadas, NUMERO_PAGINAS);
 
-    printf("\n\tAperte qualquer tecla para retornar"); //TODO: ajeitar isso
+    printf(FAINT "\n\tAperte qualquer tecla para retornar" NOT_BOLD_NOR_FAINT); //TODO: ajeitar isso
     getchar();
     limpar_buffer();
 
@@ -120,19 +108,19 @@ void *informacaoMemoria() {
 }
 
 void showSemaphoreList() {
-    sem_wait(&sem_terminal);
+    pthread_mutex_lock(&mutex_terminal);
     printf("Lista de Semáforos sendo utilizados: ");
     Semaforo *aux = semaforos_existentes->head;
     if (!aux) {
         printf("\tNenhum.\n");
-        sem_post(&sem_terminal);
+        pthread_mutex_unlock(&mutex_terminal);
         return;
     }
     while (aux) {
         printf("\t%c | Contador: %d\n", aux->nome, aux->refcount);
         aux = aux->prox;
     }
-    sem_post(&sem_terminal);
+    pthread_mutex_unlock(&mutex_terminal);
 }
 
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
