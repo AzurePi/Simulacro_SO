@@ -67,7 +67,7 @@ bool lerComandos(FILE *programa, BCP *bcp) {
     //lê cada comando como uma string e armazena no buffer
     while (fscanf(programa, " %[^\n]", buffer) == 1) {
         char buffer_operacao[6], buffer_parametro[10];
-        OPCODE opcode = -1;
+        OPCODE opcode;
         int parametro;
 
         //se estamos lidando com as operações de semáforo, a string terá formato "operação(parâmetro)"
@@ -87,9 +87,6 @@ bool lerComandos(FILE *programa, BCP *bcp) {
 
             parametro = atoi(buffer_parametro);
         }
-
-        if (opcode == -1)
-            return false;
 
         Comando *comando = novoComando(opcode, parametro);
         if (!comando) return false;
