@@ -185,8 +185,24 @@ void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
 void process_sleep(BCP *processo) {
     if (!processo) return; // se o processo passado não existe
     processo->estado = BLOQUEADO;
+    //Vou fazer minha ideia, não sei se vai funcionar, mas eu vou remover o processo (freeListaBCP) e colocar no fim, vou achar, dar free e adicionar
+    BCP *aux;
+    aux = processo;
+    freeListaBCP(processo);
+    incluiFinalBCP(aux);
+}
 
-    //TODO: mandar o processo para o final da lista
+void incluiFinalBCP(BCP *processo){
+    BCP *aux;
+    
+    if(!head_lista_processos){//Se tiver vazia, eu reinsiro em primeiro(sei não hein)
+        head_lista_processos = processo;
+    }else{
+       aux = head_lista_processos; //Pego o começo e vou indo até o final
+       while(aux->prox != NULL){
+           aux = aux->prox;
+       }
+        aux->prox = processo;
 }
 
 void process_wakeup(BCP *processo) {
