@@ -16,6 +16,64 @@ BCP *novoBCP() {
     return new;
 }
 
+void inserirBCP(BCP *new) {
+    if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
+        new->prox = head_lista_processos;
+        head_lista_processos = new;
+        return;
+    }
+
+    BCP *atual = head_lista_processos;
+    while (atual->prox && atual->prox->prioridade >= new->prioridade)
+        atual = atual->prox;
+
+    new->prox = atual->prox;
+    atual->prox = novoBCP();
+}
+
+void inserirBCPFinal(BCP *processo) {
+    // se a lista estiver, inserimos como head
+    if (!head_lista_processos)
+        head_lista_processos = processo;
+    else {
+        // vamos do começo até o final
+        BCP *aux = head_lista_processos;
+        while (aux->prox != NULL)
+            aux = aux->prox;
+        aux->prox = processo;
+    }
+}
+
+BCP *buscaBCPExecutar() {
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso a lista de processos
+
+    BCP *anterior = NULL;
+    BCP *aux = head_lista_processos;
+    BCP *executar = NULL;
+    BCP *anterior_executar = NULL;
+
+    while (aux) {
+        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade)) {
+            executar = aux;
+            anterior_executar = anterior;
+        }
+        anterior = aux;
+        aux = aux->prox;
+    }
+
+    // remover o processo executar da lista
+    if (executar) {
+        if (anterior_executar)
+            anterior_executar->prox = executar->prox;
+        else
+            head_lista_processos = executar->prox;
+    }
+
+    pthread_mutex_lock(&mutex_lista_processos);
+
+    return executar;
+}
+
 void freeBCP(BCP *bcp) {
     if (!bcp) return;
     freeListaSemaforo(bcp->semaforos);
@@ -185,73 +243,13 @@ void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
 void process_sleep(BCP *processo) {
     if (!processo) return; // se o processo passado não existe
     processo->estado = BLOQUEADO;
-    //Vou fazer minha ideia, não sei se vai funcionar, mas eu vou remover o processo (freeListaBCP) e colocar no fim, vou achar, dar free e adicionar
-    BCP *aux;
-    aux = processo;
-    freeListaBCP(processo);
-    incluiFinalBCP(aux);
-}
 
-void incluiFinalBCP(BCP *processo){
-    BCP *aux;
-    
-    if(!head_lista_processos){//Se tiver vazia, eu reinsiro em primeiro(sei não hein)
-        head_lista_processos = processo;
-    }else{
-       aux = head_lista_processos; //Pego o começo e vou indo até o final
-       while(aux->prox != NULL){
-           aux = aux->prox;
-       }
-        aux->prox = processo;
+    //freeListaBCP(processo); TODO: isso tem que ser uma remoção do processo do lugar em que ele está na fila
+    inserirBCPFinal(processo);
 }
 
 void process_wakeup(BCP *processo) {
     if (!processo) return;
     processo->estado = PRONTO;
     inserirBCP(processo);
-}
-
-void inserirBCP(BCP *new) {
-    if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
-        new->prox = head_lista_processos;
-        head_lista_processos = new;
-        return;
-    }
-
-    BCP *atual = head_lista_processos;
-    while (atual->prox && atual->prox->prioridade >= new->prioridade)
-        atual = atual->prox;
-
-    new->prox = atual->prox;
-    atual->prox = novoBCP();
-}
-
-BCP *buscaBCPExecutar() {
-    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso a lista de processos
-
-    BCP *anterior = NULL;
-    BCP *aux = head_lista_processos;
-    BCP *executar = NULL;
-    BCP *anterior_executar = NULL;
-
-    while (aux) {
-        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade)) {
-            executar = aux;
-            anterior_executar = anterior;
-        }
-        anterior = aux;
-        aux = aux->prox;
-    }
-
-    // Remover o processo executar da lista
-    if (executar) {
-        if (anterior_executar)
-            anterior_executar->prox = executar->prox;
-        else
-            head_lista_processos = executar->prox;
-    }
-
-    pthread_mutex_lock(&mutex_lista_processos);
-
-    return executar;
 }

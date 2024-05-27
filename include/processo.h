@@ -63,17 +63,20 @@ typedef struct bcp {
 // Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
 BCP *novoBCP();
 
-// Insere um BCP ordenadamente na lista global
+// Insere um BCP ordenadamente (por prioridade) na lista global
 void inserirBCP(BCP *new);
+
+// Insere um BCP ignorando a ordem) no final da lista global
+void inserirBCPFinal(BCP *processo);
+
+// BUsca o próximo BCP que pode ser executado na lista; remove-o da lista
+BCP *buscaBCPExecutar();
 
 // Libera a memória alocada para um BCP
 void freeBCP(BCP *bcp);
 
 // Libera a memória de toda uma lista de BCPs
 void freeListaBCP(BCP *bcp_head);
-
-// BUsca o próximo BCP que pode ser executado na lista; remove-o da lista
-BCP *buscaBCPExecutar();
 
 // Lê o cabeçalho de um programa sintético
 bool lerCabecalho(FILE *programa, BCP *bcp);

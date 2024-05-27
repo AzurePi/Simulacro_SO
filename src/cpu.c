@@ -7,7 +7,7 @@ void *roundRobin() {
     do {
         pthread_mutex_lock(&mutex_CPU); //dizemos que a CPU está sendo utilizada
 
-        // econtrar o próximo processo pronto com a maior prioridade
+        // encontrar o próximo processo pronto com a maior prioridade
         executar = buscaBCPExecutar();
 
         // se não encontramos um processo para executar, é porque todos os processos terminaram
@@ -98,7 +98,6 @@ void processarComandos(BCP *processo) {
                 if (semaphoreP(sem, processo)) // se o semáforo permite a execução
                     atual = atual->prox; // passamos para o próximo comando
                 else { // se o semáforo bloqueou a execução
-                    process_sleep(processo); // o processo é bloqueado
                     atual = NULL; // interrompemos a execução
                 }
                 removerComando(processo->comandos); // remove o comando da lista de comandos

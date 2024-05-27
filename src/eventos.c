@@ -26,11 +26,13 @@ bool semaphoreP(Semaforo *semaph, BCP *proc) {
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v--;
     if (semaph->v <= 0) {
-        sem_queue(semaph->waiting_list, proc);
-        return false; // avisa que o processo precisa ser bloqueado
+        process_sleep(proc); // o processo é bloqueado
+        sem_queue(semaph->waiting_list, proc); // o processo é posto na lista de espera desse semáforo
+        return false; // avisa que o processo foi bloqueado
     }
     pthread_mutex_unlock(&semaph->mutex_lock);
-    return true;
+    return true; // avisa que o processo pode prosseguir
+
 }
 
 void semaphoreV(Semaforo *semaph) {
