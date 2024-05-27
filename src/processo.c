@@ -243,8 +243,17 @@ void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
 void process_sleep(BCP *processo) {
     if (!processo) return; // se o processo passado não existe
     processo->estado = BLOQUEADO;
+    BCP *aux = head_lista_processos;
+    BCP *anterior;
+    while(aux != processo){//TODO: Vê se agora ta certo, Pedro
+        anterior = aux;
+        aux = aux->prox;
+    }
+    if(aux == processo){
+        anterior->prox = aux->prox;
+        free(aux);
+    }
 
-    //freeListaBCP(processo); TODO: isso tem que ser uma remoção do processo do lugar em que ele está na fila
     inserirBCPFinal(processo);
 }
 
