@@ -1,7 +1,7 @@
 #ifndef SIMULACRO_SO_INTERFACE_H
 #define SIMULACRO_SO_INTERFACE_H
 
-#include "eventos.h"
+#include "syscalls.h"
 #include "semaforo.h"
 #include "processo.h"
 #include "globals.h"
@@ -36,17 +36,14 @@
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-// Exibição do menu no terminal e acesso às operações do usuário
-void *menu();
+// Exibição do interface no terminal e acesso às operações do usuário
+void *interface();
 
 // Exibe uma lista de todos os processos no sistema
 void *informacaoProcessos();
 
 // Calcula e exibir a taxa de ocupação da memória
 void *informacaoMemoria();
-
-// Exibe uma lista de todos os semáforos presentes
-void showSemaphoreList();
 
 // Imprime uma mensagem de erro advinda da criação de um BCP
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo);

@@ -1,25 +1,18 @@
-#include "include/eventos.h"
+#include "include/syscalls.h"
 
 void processInterrupt() {
-    // Bloqueia o acesso à lista de processos e à CPU
-    pthread_mutex_lock(&mutex_lista_processos);
-    pthread_mutex_lock(&mutex_CPU);
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
 
     // se há um processo rodando atualmente
-    if (rodando_agora) {
-        // atualiza o estado do processo para PRONTO
-        rodando_agora->estado = PRONTO;
+    if (executando_agora) {
+        executando_agora->estado = PRONTO; // atualiza o estado do processo para PRONTO
 
-        // insere o processo de volta na lista de processos
-        inserirBCP(rodando_agora);
+        inserirBCP(executando_agora); // insere o processo de volta na lista de processos
 
-        // libera a referência ao processo rodando agora
-        rodando_agora = NULL;
+        executando_agora = NULL; // libera a referência ao processo rodando agora
     }
 
-    // Libera os semáforos
-    pthread_mutex_unlock(&mutex_CPU);
-    pthread_mutex_unlock(&mutex_lista_processos);
+    pthread_mutex_unlock(&mutex_lista_processos); // libera o acesso à lista de processos
 }
 
 bool semaphoreP(Semaforo *semaph, BCP *proc) {
@@ -38,7 +31,7 @@ bool semaphoreP(Semaforo *semaph, BCP *proc) {
 void semaphoreV(Semaforo *semaph) {
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
-    if (semaph->v <= 0 && semaph->waiting_list->head != NULL) {
+    if (semaph->v <= 0 && semaph->waiting_list->head != NULL) { //TODO: verificar esse v < 0
         Espera_BCP *acordar = semaph->waiting_list->head;
         BCP *proc = acordar->processo;
         semaph->waiting_list->head = acordar->prox;
@@ -60,55 +53,42 @@ void PrintRequest() {}
 
 void PrintFinish() {}
 
-void memLoadReq(BCP *processo) {
-    carregarPaginasNecessarias(processo);
+void memLoadReq(BCP *processo) { carregarPaginasNecessarias(processo); }
 
-    //TODO: ver se tem mais coisa pra fazer
-}
-
-void memLoadFinish() {
-//TODO: fazer isso
-}
+void memLoadFinish(BCP *processo) { descarregarPaginas(processo); }
 
 void fsRequest() {}
 
 void fsFinish() {}
 
-void *processCreate() {
+void *processCreate(void *arg) {
     processInterrupt();
 
-    char filename[201];
-
-    pthread_mutex_lock(&mutex_terminal);
-    printf("Caminho do programa: ");
-    scanf("%200[^\n]s", filename);
-    limpar_buffer();
-    pthread_mutex_unlock(&mutex_terminal);
-
+    char *filename = (char *) arg;
     FILE *programa = fopen(filename, "r");
+
     if (programa) {
         BCP *processo = lerProgramaSintetico(programa);
         if (!processo) {
-            pthread_mutex_lock(&mutex_terminal);
-            printf(ERROR "não foi possível criar o processo com esse programa" CLEAR);
+            pthread_mutex_lock(&mutex_IO);
+            printf(ERROR "não foi possível criar o processo o programa %s" CLEAR, filename);
             sleep(2);
-            pthread_mutex_unlock(&mutex_terminal);
+            pthread_mutex_unlock(&mutex_IO);
         }
         inserirBCP(processo); // insere o BCP na lista de processos do sistema
     } else {
-        pthread_mutex_lock(&mutex_terminal);
+        pthread_mutex_lock(&mutex_IO);
         printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
         sleep(2);
-        pthread_mutex_unlock(&mutex_terminal);
+        pthread_mutex_unlock(&mutex_IO);
     }
     fclose(programa);
+    free(filename);
 
-    roundRobin();
-
-    pthread_exit(NULL);
+    return NULL;
 }
 
 void processFinish(BCP *bcp) {
     bcp->estado = TERMINADO;
-    rodando_agora = NULL;
+    executando_agora = NULL;
 }

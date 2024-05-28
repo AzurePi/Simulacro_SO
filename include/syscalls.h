@@ -1,5 +1,5 @@
-#ifndef SIMULACRO_SO_EVENTOS_H
-#define SIMULACRO_SO_EVENTOS_H
+#ifndef SIMULACRO_SO_SYSCALLS_H
+#define SIMULACRO_SO_SYSCALLS_H
 
 #include "memoria.h"
 #include "semaforo.h"
@@ -44,7 +44,7 @@ void PrintFinish();
 void memLoadReq(BCP *processo);
 
 // sinalização de final de carregamento
-void memLoadFinish();
+void memLoadFinish(BCP *processo);
 
 //  chamada para operação no sistema de arquivos
 void fsRequest();
@@ -53,9 +53,9 @@ void fsRequest();
 void fsFinish();
 
 // chamada para iniciar a criação de um processo no BCP
-void *processCreate();
+void * processCreate(void *arg);
 
 // chamada para terminar a existência de um processo no BCP
 void processFinish(BCP *bcp);
 
-#endif //SIMULACRO_SO_EVENTOS_H
+#endif //SIMULACRO_SO_SYSCALLS_H

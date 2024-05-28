@@ -42,6 +42,9 @@ int paginaParaSubstituir();
 // Carrega páginas necessárias para um processo na memória
 void carregarPaginasNecessarias(BCP *processo);
 
+// Descarrega todas as páginas de um processo
+void descarregarPaginas(BCP *processo);
+
 // Verifica se todas as páginas necessárias para um processo estão carregadas na memória
 bool verificarPaginasCarregadas(BCP *processo);
 

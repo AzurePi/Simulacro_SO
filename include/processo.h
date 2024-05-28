@@ -109,7 +109,7 @@ void inserirComando(Comando *comando, Fila_Comandos *fila);
 void removerComando(Fila_Comandos *fila);
 
 // Insere um novo semáforo no final de uma Lista_Semaforos.
-void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista);
+void inserirSemaforoBCP(Semaforo *semaforo, Lista_Semaforos *lista);
 
 // Muda o estado do processo para BLOQUEADO e o manda para o final da fila de escalonamento
 void process_sleep(BCP *processo);

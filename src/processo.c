@@ -3,10 +3,10 @@
 BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
-        pthread_mutex_lock(&mutex_terminal);
+        pthread_mutex_lock(&mutex_IO);
         printf(ERROR "falha na alocação de memória do BCP" CLEAR);
         sleep(2);
-        pthread_mutex_unlock(&mutex_terminal);
+        pthread_mutex_unlock(&mutex_IO);
         return NULL;
     }
     new->semaforos = novaListaSemaforos();
@@ -17,18 +17,20 @@ BCP *novoBCP() {
 }
 
 void inserirBCP(BCP *new) {
+    pthread_mutex_lock(&mutex_lista_processos);
     if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
         new->prox = head_lista_processos;
         head_lista_processos = new;
         return;
     }
 
-    BCP *atual = head_lista_processos;
-    while (atual->prox && atual->prox->prioridade >= new->prioridade)
-        atual = atual->prox;
+    BCP *aux = head_lista_processos;
+    while (aux->prox && aux->prox->prioridade >= new->prioridade)
+        aux = aux->prox;
 
-    new->prox = atual->prox;
-    atual->prox = novoBCP();
+    new->prox = aux->prox;
+    aux->prox = new;
+    pthread_mutex_unlock(&mutex_lista_processos);
 }
 
 void inserirBCPFinal(BCP *processo) {
@@ -61,6 +63,7 @@ BCP *buscaBCPExecutar() {
         aux = aux->prox;
     }
 
+    /*
     // remover o processo executar da lista
     if (executar) {
         if (anterior_executar)
@@ -68,6 +71,7 @@ BCP *buscaBCPExecutar() {
         else
             head_lista_processos = executar->prox;
     }
+     */
 
     pthread_mutex_lock(&mutex_lista_processos);
 
@@ -103,7 +107,7 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
 void lerSemaforos(FILE *programa, BCP *bcp) {
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
-    char i = 0; // contador de tamanaho pequeno
+    char i = 0; // contador de tamanho pequeno
 
     //enquanto não chegamos no fim da linha e há caracteres para ler e não ultrapassamos o máximo de 10 semáforos
     while ((s = (char) fgetc(programa)) != '\n' && s != EOF && i < 10) {
@@ -115,7 +119,7 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (char j = 0; j < i; j++) {
         Semaforo *t = novoSemaforo(semaforos[j]);
-        inserirSemaforo(t, bcp->semaforos);
+        inserirSemaforoBCP(t, bcp->semaforos);
     }
 }
 
@@ -234,7 +238,7 @@ void freeFilaComandos(Fila_Comandos *comandos) {
     free(comandos);
 }
 
-void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
+void inserirSemaforoBCP(Semaforo *semaforo, Lista_Semaforos *lista) {
     if (!lista || !semaforo) return;
     semaforo->prox = lista->head;
     lista->head = semaforo;
@@ -243,22 +247,28 @@ void inserirSemaforo(Semaforo *semaforo, Lista_Semaforos *lista) {
 void process_sleep(BCP *processo) {
     if (!processo) return; // se o processo passado não existe
     processo->estado = BLOQUEADO;
-    BCP *aux = head_lista_processos;
-    BCP *anterior;
-    while(aux != processo){//TODO: Vê se agora ta certo, Pedro
-        anterior = aux;
-        aux = aux->prox;
-    }
-    if(aux == processo){
-        anterior->prox = aux->prox;
-        free(aux);
-    }
 
-    inserirBCPFinal(processo);
+    // removemos o processo de sua posição na lista
+    if (processo == head_lista_processos) //se o processo está no começo da lista global
+        head_lista_processos = processo->prox; // alteramos o começo da lista
+    else { // procuramos a posição correta
+        BCP *aux = head_lista_processos;
+        BCP *anterior = NULL;
+
+        while (aux != NULL && aux != processo) {
+            anterior = aux;
+            aux = aux->prox;
+        }
+
+        if (aux == NULL) return; // o processo não estava na lista
+
+        if (anterior != NULL)
+            anterior->prox = aux->prox;
+    }
+    inserirBCPFinal(processo); // inserimos o processo no final da lista
 }
 
 void process_wakeup(BCP *processo) {
     if (!processo) return;
     processo->estado = PRONTO;
-    inserirBCP(processo);
 }

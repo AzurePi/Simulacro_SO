@@ -10,13 +10,13 @@ set(SOURCE_DIR "src")
 
 set(SOURCES
         ${SOURCE_DIR}/cpu.c
-        ${SOURCE_DIR}/eventos.c
         ${SOURCE_DIR}/globals.c
         ${SOURCE_DIR}/interface.c
         ${SOURCE_DIR}/main.c
         ${SOURCE_DIR}/memoria.c
         ${SOURCE_DIR}/processo.c
         ${SOURCE_DIR}/semaforo.c
+        ${SOURCE_DIR}/syscalls.c
 )
 
 add_executable(Simulacro_SO ${SOURCES})

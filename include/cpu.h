@@ -14,6 +14,8 @@
 
 #define QUANTUM 5000.0
 
-void *roundRobin();
+_Noreturn void *roundRobin();
+
+void processarComandos(BCP *processo);
 
 #endif //SIMULACRO_SO_CPU_H

@@ -72,6 +72,20 @@ int paginaParaSubstituir() {
     return pagina_para_substituir;
 }
 
+void descarregarPaginas(BCP *processo) {
+    pthread_mutex_lock(&mutex_RAM); // bloqueia acesso à memória
+    for (int i = 0; i < processo->n_paginas_usadas; i++) {
+        Pagina *pag = processo->paginas_usadas[i];
+
+        if (pag) { // se a página está carregada
+            pag->conteudo = NULL;
+            processo->paginas_usadas[i] = NULL;
+            RAM->n_paginas_ocupadas--;
+        }
+    }
+    pthread_mutex_unlock(&mutex_RAM); // libera acesso à memória
+}
+
 bool verificarPaginasCarregadas(BCP *processo) {
     for (int i = 0; i < processo->n_paginas_usadas; i++) {
         if (processo->paginas_usadas[i] == NULL)

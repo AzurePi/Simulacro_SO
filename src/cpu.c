@@ -1,26 +1,29 @@
 #include "include/cpu.h"
 
-void processarComandos(BCP *processo);
+// TODO: fazer o roundRobin funcionar em paralelo ao interface ( while(1),
 
-void *roundRobin() {
-    BCP *executar;
-    do {
-        pthread_mutex_lock(&mutex_CPU); //dizemos que a CPU está sendo utilizada
+_Noreturn void *roundRobin() {
+    while (1) {
+        pthread_mutex_lock(&mutex_CPU); // bloqueamos o uso da CPU
 
         // encontrar o próximo processo pronto com a maior prioridade
-        executar = buscaBCPExecutar();
+        while (!head_lista_processos); // espera até haver um BCP na lista de processos
+        BCP *executar = buscaBCPExecutar();
 
-        // se não encontramos um processo para executar, é porque todos os processos terminaram
-        if (!executar) {
-            pthread_mutex_unlock(&mutex_CPU);
-        } else { //se tem um processo para executar
+        // se não encontramos um processo para executar, é porque não há processos prontos
+        if (!executar)
+            pthread_mutex_unlock(&mutex_CPU); // libera a CPU
+        else { //se tem um processo para executar
             executar->estado = EXECUTANDO;
-            rodando_agora = executar;
+            executando_agora = executar;
 
-            memLoadReq(executar);
+            memLoadReq(executar); // carrega o processo na memória
 
-            // processamento dos comandos do processo
-            processarComandos(executar);
+            processarComandos(executar); // executa os comandos
+
+            processInterrupt();
+
+            memLoadFinish(executar); // descarrega o processo da memória
 
             // se todos os comandos já foram executados
             if (executar->comandos->head == NULL)
@@ -28,8 +31,7 @@ void *roundRobin() {
 
             pthread_mutex_unlock(&mutex_CPU); // libera a CPU
         }
-    } while (executar);
-    return NULL;
+    }
 }
 
 void processarComandos(BCP *processo) {
@@ -81,25 +83,20 @@ void processarComandos(BCP *processo) {
                     removerComando(processo->comandos); // remove o comando da lista de comandos
                 }
                 break;
-            case READ: //por enquanto, nada além de liberar o comando
-            {
+            case READ:  //por enquanto, nada além de liberar o comando
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
-            }
                 break;
             case WRITE: //por enquanto, nada além de liberar o comando
-            {
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
-            }
                 break;
             case P: {
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
                 if (semaphoreP(sem, processo)) // se o semáforo permite a execução
                     atual = atual->prox; // passamos para o próximo comando
-                else { // se o semáforo bloqueou a execução
+                else // se o semáforo bloqueou a execução
                     atual = NULL; // interrompemos a execução
-                }
                 removerComando(processo->comandos); // remove o comando da lista de comandos
             }
                 break;
@@ -111,13 +108,10 @@ void processarComandos(BCP *processo) {
             }
                 break;
             case PRINT: //por enquanto, nada além de liberar o comando
-            {
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos);
-            }
                 break;
         }
     }
-    processInterrupt();
 }
 

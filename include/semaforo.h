@@ -59,7 +59,7 @@ void freeSemaforo(Semaforo *semaforo);
 Lista_Semaforos *novaListaSemaforos();
 
 // Insere um semáforo na lista global de todos os semáforos existentes
-void insereSemaforo(Semaforo *semaforo);
+void inserirSemaforoGlobal(Semaforo *semaforo);
 
 // Libera a memória alocada para uma lista de semáforos
 void freeListaSemaforo(Lista_Semaforos *semaforos);
