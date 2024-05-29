@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <locale.h>
 #include <unistd.h>
-#include <semaphore.h>
 #include <pthread.h>
 
 #endif //SIMULACRO_SO_MAIN_H

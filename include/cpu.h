@@ -6,7 +6,6 @@
 #include "semaforo.h"
 
 #include <pthread.h>
-#include <semaphore.h>
 #include <unistd.h>
 #include <locale.h>
 #include <stdbool.h>

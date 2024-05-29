@@ -17,17 +17,17 @@ _Noreturn void *roundRobin() {
             executar->estado = EXECUTANDO;
             executando_agora = executar;
 
-            memLoadReq(executar); // carrega o processo na memória
+            sysCall(mem_load_req, executar); // carrega o processo na memória
 
             processarComandos(executar); // executa os comandos
 
-            processInterrupt();
+            sysCall(process_interrupt, NULL);
 
-            memLoadFinish(executar); // descarrega o processo da memória
+            sysCall(mem_load_finish, executar); // descarrega o processo da memória
 
             // se todos os comandos já foram executados
             if (executar->comandos->head == NULL)
-                processFinish(executar); // finaliza o processo
+                sysCall(process_finish, executar); // finaliza o processo
 
             pthread_mutex_unlock(&mutex_CPU); // libera a CPU
         }
@@ -93,16 +93,23 @@ void processarComandos(BCP *processo) {
                 break;
             case P: {
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
-                if (semaphoreP(sem, processo)) // se o semáforo permite a execução
+
+                // criamos uma struct provisória para passar os argumentos para sysCall
+                SemaphorePArgs *args = malloc(sizeof (SemaphorePArgs));
+                args->semaforo = sem;
+                args->proc = processo;
+
+                if (sysCall(semaphore_P, args)) // se o semáforo permite a execução
                     atual = atual->prox; // passamos para o próximo comando
                 else // se o semáforo bloqueou a execução
                     atual = NULL; // interrompemos a execução
                 removerComando(processo->comandos); // remove o comando da lista de comandos
+                free(args); // libera a estrutura provisória
             }
                 break;
             case V: {
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
-                semaphoreV(sem);
+                sysCall(semaphore_V, sem);
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
             }

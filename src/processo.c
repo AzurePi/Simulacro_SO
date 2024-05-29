@@ -63,7 +63,6 @@ BCP *buscaBCPExecutar() {
         aux = aux->prox;
     }
 
-    /*
     // remover o processo executar da lista
     if (executar) {
         if (anterior_executar)
@@ -71,9 +70,8 @@ BCP *buscaBCPExecutar() {
         else
             head_lista_processos = executar->prox;
     }
-     */
 
-    pthread_mutex_lock(&mutex_lista_processos);
+    pthread_mutex_unlock(&mutex_lista_processos); // desbloqueia o acesso à lista de processos
 
     return executar;
 }

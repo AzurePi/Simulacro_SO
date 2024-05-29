@@ -4,7 +4,7 @@ void *interface() {
     char op;
 
     pthread_attr_t atrib;
-    pthread_t t_processo, t_info_proc, t_info_mem;
+    pthread_t t_info_proc, t_info_mem;
 
     pthread_attr_init(&atrib);
     pthread_attr_setscope(&atrib, PTHREAD_SCOPE_PROCESS);
@@ -47,8 +47,7 @@ void *interface() {
                 // passamos uma cópia, para evitar que filename se perca no fim do bloco do case
                 char *filename_copy = strdup(filename);
 
-                pthread_create(&t_processo, &atrib, processCreate, filename_copy);
-                pthread_detach(t_processo);
+                sysCall(process_create, filename_copy);
             }
                 sleep(1);
                 break;
