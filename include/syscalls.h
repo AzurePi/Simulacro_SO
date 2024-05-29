@@ -28,22 +28,32 @@
 #define process_create (2)
 #define process_finish (3)
 
-// Declarações de tipos ------------------------------------------------------------------------------------------------
+// Declarações de Tipos ------------------------------------------------------------------------------------------------
 
 // declaração avançada para evitar dependência circular
 typedef struct semaforo Semaforo;
 typedef struct bcp BCP;
 
-// struct usada para passagem de argumentos para a syscall semaphoreP
+// struct usada para passagem de argumentos para a syscall semaphoreP()
 typedef struct {
     Semaforo *semaforo;
     BCP *proc;
 } SemaphorePArgs;
 
-// Funções -------------------------------------------------------------------------------------------------------------
+typedef enum {
+    FINAL_EXECUCAO, PROCESS_CREATE, TERMINO_E_S
+} INTERRUPCAO;
+
+// struct usada para passagem de argumentos para processInterrupt()
+typedef struct {
+    INTERRUPCAO tipo_interrupcao;
+    BCP *processo;
+} InterruptArgs;
+
+// Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // Gerenciamento de chamadas de sistema
-bool sysCall(int op, void *args);
+bool sysCall(short op, void *args);
 
 // interrupção gerada pelo final do quantum-time de um processo
 void *processInterrupt(void *args);

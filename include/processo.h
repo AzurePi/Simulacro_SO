@@ -10,15 +10,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Definições de Macros ------------------------------------------------------------------------------------------------
+
 #define TAMANHO_PAGINA 4096 // 4 KB por página
 #define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
 #define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
-// Declaração de Tipos -------------------------------------------------------------------------------------------------
+// Declarações de Tipos ------------------------------------------------------------------------------------------------
 
 // declaração avançada de semaforo.h para evitar dependência circular
 typedef struct semaforo Semaforo;
-typedef struct lista_semaforos Lista_Semaforos;
 typedef struct pagina Pagina;
 
 // Estado do processo
@@ -53,12 +54,12 @@ typedef struct bcp {
     int n_paginas_usadas; // número de páginas necessárias na memória
     Pagina *paginas_usadas[NUMERO_PAGINAS]; // Array de ponteiros para páginas utilizadas pelo processo
     ESTADO estado; // PRONTO, EXECUTANDO, BLOQUEADO ou TERMINADO
-    Lista_Semaforos *semaforos; // Lista de semáforos usados pelo programa
+    Semaforo *head_semaforos; // Lista de semáforos usados pelo programa
     Fila_Comandos *comandos; // Lista de comandos do programa
     struct bcp *prox; // ponteiro para o próximo processo na lista
 } BCP;
 
-// Funções -------------------------------------------------------------------------------------------------------------
+// Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // Cria um novo BCP; inicializa ele com estado PRONTO, lista de semáforos vazia, e lista de ocmandos vazia
 BCP *novoBCP();
@@ -108,8 +109,8 @@ void inserirComando(Comando *comando, Fila_Comandos *fila);
 // Remove o comando no começo de uma Fila_Comandos.
 void removerComando(Fila_Comandos *fila);
 
-// Insere um novo semáforo no final de uma Lista_Semaforos.
-void inserirSemaforoBCP(Semaforo *semaforo, Lista_Semaforos *lista);
+// Insere um novo semáforo no final de uma Lista_Semaforos_Global.
+void inserirSemaforoBCP(BCP *processs, Semaforo *semaforo, Semaforo *head_lista);
 
 // Muda o estado do processo para BLOQUEADO e o manda para o final da fila de escalonamento
 void process_sleep(BCP *processo);

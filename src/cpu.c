@@ -1,37 +1,39 @@
 #include "include/cpu.h"
 
-// TODO: fazer o roundRobin funcionar em paralelo ao interface ( while(1),
+void *roundRobin() {
+    while (!encerrar) {
+        pthread_mutex_lock(&mutex_lista_processos);
 
-_Noreturn void *roundRobin() {
-    while (1) {
-        pthread_mutex_lock(&mutex_CPU); // bloqueamos o uso da CPU
+        // espera até haver um BCP na lista de processos
+        if (!head_lista_processos) {
+            pthread_mutex_unlock(&mutex_lista_processos);
+            continue;
+        }
+        pthread_mutex_unlock(&mutex_lista_processos);
 
-        // encontrar o próximo processo pronto com a maior prioridade
-        while (!head_lista_processos); // espera até haver um BCP na lista de processos
-        BCP *executar = buscaBCPExecutar();
+        BCP *executar = buscaBCPExecutar(); // encontra o próximo processo pronto com a maior prioridade
 
         // se não encontramos um processo para executar, é porque não há processos prontos
         if (!executar)
-            pthread_mutex_unlock(&mutex_CPU); // libera a CPU
-        else { //se tem um processo para executar
-            executar->estado = EXECUTANDO;
-            executando_agora = executar;
+            continue;
 
-            sysCall(mem_load_req, executar); // carrega o processo na memória
+        //se tem um processo para executar
+        executar->estado = EXECUTANDO;
+        executando_agora = executar;
 
-            processarComandos(executar); // executa os comandos
+        sysCall(mem_load_req, executar); // carrega o processo na memória
 
-            sysCall(process_interrupt, NULL);
+        processarComandos(executar); // executa os comandos
 
-            sysCall(mem_load_finish, executar); // descarrega o processo da memória
+        // quando terminou o processamneto
+        InterruptArgs *intArgs = malloc(sizeof(InterruptArgs));
+        intArgs->tipo_interrupcao = FINAL_EXECUCAO;
+        intArgs->processo = executar;
+        sysCall(process_interrupt, intArgs);
 
-            // se todos os comandos já foram executados
-            if (executar->comandos->head == NULL)
-                sysCall(process_finish, executar); // finaliza o processo
-
-            pthread_mutex_unlock(&mutex_CPU); // libera a CPU
-        }
+        sysCall(mem_load_finish, executar); // descarrega o processo da memória
     }
+    return NULL;
 }
 
 void processarComandos(BCP *processo) {
@@ -95,7 +97,7 @@ void processarComandos(BCP *processo) {
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
 
                 // criamos uma struct provisória para passar os argumentos para sysCall
-                SemaphorePArgs *args = malloc(sizeof (SemaphorePArgs));
+                SemaphorePArgs *args = malloc(sizeof(SemaphorePArgs));
                 args->semaforo = sem;
                 args->proc = processo;
 
@@ -119,6 +121,7 @@ void processarComandos(BCP *processo) {
                 removerComando(processo->comandos);
                 break;
         }
+        sleep(1);
     }
 }
 

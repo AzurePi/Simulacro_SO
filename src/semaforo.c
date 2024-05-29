@@ -1,5 +1,7 @@
 #include "include/semaforo.h"
 
+void freeSemaforoGlobal(Semaforo_Global *semaforoG);
+
 Espera_BCP *novaEsperaBCP() {
     Espera_BCP *new = malloc(sizeof(Espera_BCP));
     if (!new) return NULL;
@@ -8,8 +10,8 @@ Espera_BCP *novaEsperaBCP() {
     return new;
 }
 
-Lista_Espera_BCP *novaListaEsperaBCP() {
-    Lista_Espera_BCP *new = malloc(sizeof(Lista_Espera_BCP));
+Fila_Espera_BCP *novaListaEsperaBCP() {
+    Fila_Espera_BCP *new = malloc(sizeof(Fila_Espera_BCP));
     if (!new) return NULL;
     new->head = novaEsperaBCP();
     if (!new->head) {
@@ -18,6 +20,24 @@ Lista_Espera_BCP *novaListaEsperaBCP() {
     }
     new->tail = new->head;
     return new;
+}
+
+void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
+    Espera_BCP *aux = lista->head;
+    Espera_BCP *prox;
+
+    while (aux != NULL) {
+        prox = aux->prox;
+        free(aux);
+        aux = prox;
+    }
+
+    // após liberar todos os nós, limpa os ponteiros da lista
+    lista->head = NULL;
+    lista->tail = NULL;
+
+    // libera a própria lista
+    free(lista);
 }
 
 Semaforo *novoSemaforo(char nome) {
@@ -31,6 +51,7 @@ Semaforo *novoSemaforo(char nome) {
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
         printf(ERROR "falha ao alocar memória para o semáforo" CLEAR);
+        fflush(stdout);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
     }
@@ -49,13 +70,34 @@ Semaforo *novoSemaforo(char nome) {
 }
 
 void freeSemaforo(Semaforo *semaforo) {
-    // freeListaEsperaBCP(semaforo->waiting_list); //TODO
+    if (semaforo->refcount > 0) return;
+    if (semaforo->waiting_list)
+        freeListaEsperaBCP(semaforo->waiting_list);
     pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
 
-Lista_Semaforos *novaListaSemaforos() {
-    Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
+Semaforo_Global *novoSemaforoGlobal(Semaforo *sem) {
+    Semaforo_Global *new = malloc(sizeof(Semaforo_Global));
+    if (!new) {
+        pthread_mutex_lock(&mutex_IO);
+        printf(ERROR "falha ao alocar memória para o semáforo" CLEAR);
+        fflush(stdout);
+        pthread_mutex_unlock(&mutex_IO);
+        return NULL;
+    }
+    new->semaforo = sem;
+    new->prox = NULL;
+    return new;
+}
+
+void freeSemaforoGlobal(Semaforo_Global *semaforoG) {
+    freeSemaforo(semaforoG->semaforo);
+    free(semaforoG);
+}
+
+Lista_Semaforos_Global *novaListaSemaforos() {
+    Lista_Semaforos_Global *new = malloc(sizeof(Lista_Semaforos_Global));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
         printf(ERROR "falha ao alocar memória para a lista de semáforos" CLEAR);
@@ -68,61 +110,66 @@ Lista_Semaforos *novaListaSemaforos() {
 }
 
 void inserirSemaforoGlobal(Semaforo *semaforo) {
+    Semaforo_Global *new  = novoSemaforoGlobal(semaforo);
+
+    pthread_mutex_lock(&mutex_lista_semaforos);
     if (semaforos_existentes == NULL)
         semaforos_existentes = novaListaSemaforos();
 
     if (semaforos_existentes->head == NULL) {
-        semaforos_existentes->head = semaforo;
+        new->prox = NULL;
+        semaforos_existentes->head = new;
+        pthread_mutex_unlock(&mutex_lista_semaforos);
         return;
     }
 
     // percorremos a lista de semáforos existente até o final
-    Semaforo *aux, *prev = NULL;
-    for (aux = semaforos_existentes->head; aux != NULL; prev = aux, aux = aux->prox) {
-        // se um semáforo com esse nome já existe, o apagamos e paramos
-        if (semaforo->nome == aux->nome) {
-            aux->refcount++;
-            free(semaforo);
+    Semaforo_Global *aux = semaforos_existentes->head;
+    while (aux->prox) {
+        // Se um semáforo com esse nome já existe, liberamos a memória do semáforo global sendo inserido
+        if (new->semaforo == aux->semaforo) {
+            freeSemaforoGlobal(new);
+            pthread_mutex_unlock(&mutex_lista_semaforos);
             return;
         }
+        aux = aux->prox;
     }
 
-    // inserirmos o semáforo novo no final da lista
-    semaforo->prox = aux;
-    if (prev)
-        prev->prox = semaforo;
-    else
-        semaforos_existentes->head = semaforo;
+    // Inserimos o semáforo no final da lista
+    aux->prox = new;
+    new->prox = NULL;
+    pthread_mutex_unlock(&mutex_lista_semaforos);
 }
 
-void freeListaSemaforo(Lista_Semaforos *semaforos) {
+void freeListaSemaforo(Lista_Semaforos_Global *semaforos) {
     if (!semaforos) return;
-    Semaforo *temp;
+    Semaforo_Global *temp;
     while (semaforos->head != NULL) {
         temp = semaforos->head;
         semaforos->head = semaforos->head->prox;
-        freeSemaforo(temp);
+        freeSemaforoGlobal(temp);
     }
     free(semaforos);
 }
 
 Semaforo *retrieveSemaforo(char nome) {
-    Semaforo *aux = semaforos_existentes->head;
+    pthread_mutex_lock(&mutex_lista_semaforos);
+    Semaforo_Global *aux = semaforos_existentes->head;
     while (aux) {
-        if (aux->nome == nome)
-            return aux;
+        if (aux->semaforo->nome == nome) {
+            pthread_mutex_unlock(&mutex_lista_semaforos);
+            return aux->semaforo;
+        }
         aux = aux->prox;
     }
-    pthread_mutex_lock(&mutex_IO);
-    printf(ERROR "busca de semáforo não pode ser concluida." CLEAR);
-    sleep(2);
-    pthread_mutex_unlock(&mutex_IO);
+    pthread_mutex_unlock(&mutex_lista_semaforos);
     return NULL;
 }
 
 void removeSemaforo(Semaforo *semaforo) {
-    Semaforo *aux = semaforos_existentes->head, *prev = NULL;
-    for (; aux != NULL && aux != semaforo; prev = aux, aux = aux->prox);
+    pthread_mutex_lock(&mutex_lista_semaforos);
+    Semaforo_Global *aux = semaforos_existentes->head, *prev = NULL;
+    for (; aux != NULL && aux->semaforo != semaforo; prev = aux, aux = aux->prox);
     if (aux) {
         if (prev)
             prev->prox = aux->prox;
@@ -130,9 +177,10 @@ void removeSemaforo(Semaforo *semaforo) {
             semaforos_existentes->head = semaforos_existentes->head->prox;
         free(aux);
     }
+    pthread_mutex_unlock(&mutex_lista_semaforos);
 }
 
-void sem_queue(Lista_Espera_BCP *lista, BCP *processo) {
+void sem_queue(Fila_Espera_BCP *lista, BCP *processo) {
     if (!lista || !processo) return; // se os parâmetros são ponteiros nulos
 
     Espera_BCP *new = malloc((sizeof(Espera_BCP))); //TODO: revisar se isso faz sentido

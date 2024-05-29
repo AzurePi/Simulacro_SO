@@ -13,10 +13,18 @@
 #include <stdlib.h>
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
+
+// definição dependente do sistema operacional
 #ifdef _WIN32
+
 #define CLEAR_SCREEN system("cls");
+
 #else
+
 #define CLEAR_SCREEN printf("\033[H\033[J"); fflush(stdout);
+
+#include <termios.h>
+
 #endif
 
 #define ERROR "\033[3;31m" "ERRO: "
@@ -49,5 +57,8 @@ BCP *mensagemErroBCP(const char *mensagem, BCP *processo);
 
 // Limpa o buffer de entrada do terminal
 void limpar_buffer();
+
+
+void press_any_key_to_continue();
 
 #endif //SIMULACRO_SO_INTERFACE_H

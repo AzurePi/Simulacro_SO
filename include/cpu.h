@@ -13,7 +13,7 @@
 
 #define QUANTUM 5000.0
 
-_Noreturn void *roundRobin();
+void *roundRobin();
 
 void processarComandos(BCP *processo);
 

@@ -9,8 +9,7 @@ BCP *novoBCP() {
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
     }
-    new->semaforos = novaListaSemaforos();
-    if (!new->semaforos) return NULL;
+    new->head_semaforos = NULL;
     new->comandos = novaFilaComandos();
     if (!new->comandos) return NULL;
     return new;
@@ -21,6 +20,7 @@ void inserirBCP(BCP *new) {
     if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
         new->prox = head_lista_processos;
         head_lista_processos = new;
+        pthread_mutex_unlock(&mutex_lista_processos);
         return;
     }
 
@@ -78,7 +78,6 @@ BCP *buscaBCPExecutar() {
 
 void freeBCP(BCP *bcp) {
     if (!bcp) return;
-    freeListaSemaforo(bcp->semaforos);
     freeFilaComandos(bcp->comandos);
     free(bcp);
 }
@@ -116,8 +115,8 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
 
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (char j = 0; j < i; j++) {
-        Semaforo *t = novoSemaforo(semaforos[j]);
-        inserirSemaforoBCP(t, bcp->semaforos);
+        Semaforo *sem = novoSemaforo(semaforos[j]);
+        inserirSemaforoBCP(NULL, sem, bcp->head_semaforos);
     }
 }
 
@@ -144,6 +143,7 @@ bool lerComandos(FILE *programa, BCP *bcp) {
             else if (strcmp(buffer_operacao, "print") == 0) opcode = PRINT;
             else
                 return false;
+
 
             parametro = atoi(buffer_parametro);
         }
@@ -236,10 +236,10 @@ void freeFilaComandos(Fila_Comandos *comandos) {
     free(comandos);
 }
 
-void inserirSemaforoBCP(Semaforo *semaforo, Lista_Semaforos *lista) {
-    if (!lista || !semaforo) return;
-    semaforo->prox = lista->head;
-    lista->head = semaforo;
+void inserirSemaforoBCP(BCP *processs, Semaforo *semaforo, Semaforo *head_lista) {
+    if (!processs || !head_lista || !semaforo) return;
+    semaforo->prox = head_lista;
+    processs->head_semaforos = semaforo;
 }
 
 void process_sleep(BCP *processo) {

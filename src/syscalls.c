@@ -1,13 +1,13 @@
 #include "include/syscalls.h"
 
-bool sysCall(int op, void *args) {
+bool sysCall(short op, void *args) {
     pthread_attr_t atrib;
     pthread_t t_operacao;
 
     pthread_attr_init(&atrib);
     pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
 
-    bool result = true; // presumimos sucesso, a menos que haja uma falha específica
+    bool result = true; // presumimos sucesso
 
     switch (op) {
         case process_interrupt:
@@ -76,18 +76,40 @@ bool sysCall(int op, void *args) {
 }
 
 void *processInterrupt(void *args) {
-    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
+    InterruptArgs *intArgs = (InterruptArgs *) args;
+    INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
+    BCP *proc = intArgs->processo;
 
-    // se há um processo rodando atualmente
-    if (executando_agora) {
-        executando_agora->estado = PRONTO; // atualiza o estado do processo para PRONTO
+    switch (tipo_interrupcao) {
+        case FINAL_EXECUCAO: { // interrupção pelo final do quantum time
+            pthread_mutex_lock(&mutex_lista_processos);
 
-        inserirBCP(executando_agora); // insere o processo de volta na lista de processos
+            if (proc->comandos->head == NULL) // se todos os comandos já foram executados
+                sysCall(process_finish, proc); // finaliza o processo
+            else
+                proc->estado = PRONTO; // atualiza o estado do processo atual para PRONTO
 
-        executando_agora = NULL; // libera a referência ao processo rodando agora
+            executando_agora = NULL;
+
+            pthread_mutex_unlock(&mutex_lista_processos);
+            break;
+        }
+        case PROCESS_CREATE: { // interrupção pela criação de um novo processo
+            inserirBCP(proc); // adiciona o novo processo na lista global de processos
+            break;
+        }
+        case TERMINO_E_S: { // interrupção pelo término de uma operação de E/S
+            pthread_mutex_lock(&mutex_lista_processos);
+            proc->estado = PRONTO; // atualiza o estado do processo para PRONTO
+            pthread_mutex_unlock(&mutex_lista_processos);
+            break;
+        }
+        default:
+            // Tipo de interrupção desconhecida
+            printf(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
+            break;
     }
-
-    pthread_mutex_unlock(&mutex_lista_processos); // libera o acesso à lista de processos
+    return NULL;
 }
 
 void *semaphoreP(void *args) {
@@ -117,7 +139,7 @@ void *semaphoreV(void *semaforo) {
 
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
-    if (semaph->v >= 0 && semaph->waiting_list->head != NULL) { //TODO: verificar esse v < 0
+    if (semaph->v >= 0 && semaph->waiting_list->head != NULL) {
         Espera_BCP *acordar = semaph->waiting_list->head;
         BCP *proc = acordar->processo;
         semaph->waiting_list->head = acordar->prox;
@@ -129,6 +151,7 @@ void *semaphoreV(void *semaforo) {
         process_wakeup(proc);
     }
     pthread_mutex_unlock(&semaph->mutex_lock);
+    return NULL;
 }
 
 void *DiskRequest(void *args) { return NULL; }
@@ -156,34 +179,51 @@ void *fsRequest(void *args) { return NULL; }
 void *fsFinish(void *args) { return NULL; }
 
 void *processCreate(void *filename) {
-    sysCall(process_interrupt, NULL);
-
     char *arquivo = (char *) filename;
     FILE *programa = fopen(arquivo, "r");
 
     if (programa) {
         BCP *processo = lerProgramaSintetico(programa);
-        if (!processo) {
+        fclose(programa);
+        if (processo) {
+            // Chama sysCall para process_interrupt, especificando o tipo de interrupção PROCESS_CREATE
+            InterruptArgs *args = malloc(sizeof(InterruptArgs));
+            args->tipo_interrupcao = PROCESS_CREATE;
+            args->processo = processo;
+
+            sysCall(process_interrupt, args);
+        } else {
             pthread_mutex_lock(&mutex_IO);
-            printf(ERROR "não foi possível criar o processo o programa %s" CLEAR, arquivo);
+            printf(ERROR "não foi possível criar o processo do programa %s" CLEAR, arquivo);
+            fflush(stdout);
             sleep(2);
             pthread_mutex_unlock(&mutex_IO);
         }
-        inserirBCP(processo); // insere o BCP na lista de processos do sistema
     } else {
         pthread_mutex_lock(&mutex_IO);
-        printf(ERROR "arquivo do programa sintético não pôde ser aberto" CLEAR);
+        printf(ERROR "arquivo %s do programa sintético não pôde ser aberto" CLEAR, arquivo);
+        fflush(stdout);
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
     }
-    fclose(programa);
     free(arquivo);
 
     return NULL;
 }
 
 void *processFinish(void *args) {
+    pthread_mutex_lock(&mutex_lista_processos);
     BCP *process = (BCP *) args;
     process->estado = TERMINADO;
-    executando_agora = NULL;
+    if (process == executando_agora)
+        executando_agora = NULL;
+
+    // percorre a lista de semáforos associada ao processo
+    Semaforo *sem = process->head_semaforos;
+    while (sem != NULL) {
+        sem->refcount--;
+        sem = sem->prox;
+    }
+    pthread_mutex_unlock(&mutex_lista_processos);
+    return NULL;
 }
