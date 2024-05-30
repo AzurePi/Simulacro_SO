@@ -4,7 +4,7 @@ BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        printf(ERROR "falha na alocação de memória do BCP" CLEAR);
+        puts(ERROR "falha na alocação de memória do BCP" CLEAR);
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
@@ -47,28 +47,15 @@ void inserirBCPFinal(BCP *processo) {
 }
 
 BCP *buscaBCPExecutar() {
-    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso a lista de processos
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
 
-    BCP *anterior = NULL;
     BCP *aux = head_lista_processos;
     BCP *executar = NULL;
-    BCP *anterior_executar = NULL;
 
     while (aux) {
-        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade)) {
+        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade))
             executar = aux;
-            anterior_executar = anterior;
-        }
-        anterior = aux;
         aux = aux->prox;
-    }
-
-    // remover o processo executar da lista
-    if (executar) {
-        if (anterior_executar)
-            anterior_executar->prox = executar->prox;
-        else
-            head_lista_processos = executar->prox;
     }
 
     pthread_mutex_unlock(&mutex_lista_processos); // desbloqueia o acesso à lista de processos

@@ -3,31 +3,25 @@
 void *interface() {
     char op;
 
-    pthread_attr_t atrib;
-    pthread_t t_info;
-
-    pthread_attr_init(&atrib);
-    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
-
     do {
         pthread_mutex_lock(&mutex_IO); // bloqueia o acesso ao terminal
 
         CLEAR_SCREEN
-        printf("╔════════════════════════════════════════╗\n");
-        printf("║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE"    ║\n");
-        printf("╟────────────────────────────────────────╢\n");
-        printf("║ [1] Novo processo                      ║\n");
-        printf("║ [2] Ver informações dos processos      ║\n");
-        printf("║ [3] Ver informações da memória         ║\n");
-        printf("║ [0] Encerrar                           ║\n");
-        printf("╚════════════════════════════════════════╝\n");
+        puts("╔════════════════════════════════════════╗");
+        puts("║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE "    ║");
+        puts("╟────────────────────────────────────────╢");
+        puts("║ [1] Novo processo                      ║");
+        puts("║ [2] Ver informações dos processos      ║");
+        puts("║ [3] Ver informações da memória         ║");
+        puts("║ [0] Encerrar                           ║");
+        puts("╚════════════════════════════════════════╝");
 
         pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
         printf("\n\t" UNDERLINE "Processando agora:" NOT_UNDERLINE " ");
         if (executando_agora)
             printf("%s (%d)\n", executando_agora->nome, executando_agora->id_seg);
         else
-            printf("nada\n");
+            puts("nada");
         pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
         printf("\nSelecione a operação: ");
@@ -38,7 +32,7 @@ void *interface() {
         switch (op) {
             case '0':
                 pthread_mutex_lock(&mutex_IO);
-                printf("Encerrando programa.\n");
+                puts("Encerrando programa...");
                 pthread_mutex_unlock(&mutex_IO);
                 encerrar = true;
                 break;
@@ -57,20 +51,18 @@ void *interface() {
             }
                 break;
             case '2': {
-                pthread_create(&t_info, &atrib, informacaoProcessos, NULL);
-                pthread_detach(t_info);
+                create_and_detach(informacaoProcessos, NULL);
                 sleep(1);
             }
                 break;
             case '3': {
-                pthread_create(&t_info, &atrib, informacaoMemoria, NULL);
-                pthread_detach(t_info);
+                create_and_detach(informacaoMemoria, NULL);
                 sleep(1);
             }
                 break;
             default:
                 pthread_mutex_lock(&mutex_IO);
-                printf(ERROR "Opção inválida!" CLEAR);
+                puts(ERROR "Opção inválida!" CLEAR);
                 fflush(stdout);
                 sleep(2);
                 pthread_mutex_unlock(&mutex_IO);
@@ -78,24 +70,20 @@ void *interface() {
         }
     } while (!encerrar);
 
-    pthread_attr_destroy(&atrib);
-
     return NULL;
 }
 
 void *informacaoProcessos() {
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
-
     BCP *atual = head_lista_processos;
 
     pthread_mutex_lock(&mutex_IO); // bloqueia acesso ao terminal
     if (!atual) {
-        printf("\nAinda não há processos no sistema.\n"); // TODO: tá sempre caindo aqui; provavelmente é problema com a inserção na lista global e quando ela acontece
-        fflush(stdout);
+        puts("\nAinda não há processos no sistema.\n");
     } else {
         char *estados[] = {"PRONTO", "EXECUTANDO", "BLOQUEADO", "TERMINADO"};
 
-        while (atual != NULL) {
+        while (atual) {
             char estado[11];
             strcpy(estado, estados[atual->estado]);
 
@@ -106,7 +94,7 @@ void *informacaoProcessos() {
     }
     pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
-    printf("\nLista de Semáforos sendo utilizados: \n");
+    puts("Lista de Semáforos sendo utilizados: ");
     pthread_mutex_lock(&mutex_lista_semaforos); // bloqueia acesso á lista de semáforos
     Semaforo_Global *aux = semaforos_existentes->head;
     if (!aux)
@@ -117,15 +105,11 @@ void *informacaoProcessos() {
             aux = aux->prox;
         }
     }
-    pthread_mutex_unlock(&mutex_lista_semaforos);
+    pthread_mutex_unlock(&mutex_lista_semaforos); //libera acesso à lista de semáforos
 
-    //press_any_key_to_continue();
-    printf(FAINT "\n\tAperte qualquer tecla para continuar" NOT_BOLD_NOR_FAINT);
-    fflush(stdout);
-    getchar();
-    limpar_buffer();
-
+    press_any_key_to_continue();
     pthread_mutex_unlock(&mutex_IO); // libera acesso ao terminal
+
     return NULL;
 }
 
@@ -139,13 +123,9 @@ void *informacaoMemoria() {
 
     pthread_mutex_unlock(&mutex_RAM); // libera acesso à RAM
 
-    //press_any_key_to_continue();
-    printf(FAINT "\n\tAperte qualquer tecla para continuar" NOT_BOLD_NOR_FAINT);
-    fflush(stdout);
-    getchar();
-    limpar_buffer();
-
+    press_any_key_to_continue();
     pthread_mutex_unlock(&mutex_IO); // libera acesso ao terminal
+
     return NULL;
 }
 
@@ -160,37 +140,40 @@ BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
 }
 
 void limpar_buffer() {
-    while (getchar() != '\n');
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
 // função dependente do sistema operacional
 #ifdef _WIN32
 
 void press_any_key_to_continue() {
-    printf(FAINT "\n\tAperte qualquer tecla para continuar\n" NOT_BOLD_NOR_FAINT);
-    _getch(); // Espera até que qualquer tecla seja pressionada
-    limpar_buffer();
+    puts(FAINT "\n\tAperte qualquer tecla para continuar\n" NOT_BOLD_NOR_FAINT);
+    _getwch();
+    fflush(stdout);
 }
 
 #else
 
 void press_any_key_to_continue() {
-    struct termios oldt, newt;
+    struct termios old, new;
 
-    printf(FAINT "\n\tAperte qualquer tecla para continuar\n" NOT_BOLD_NOR_FAINT);
+    tcgetattr(STDIN_FILENO, &old);
+    new = old;
+    new.c_lflag &= ~ICANON;
+    new.c_cc[VMIN] = 1;
+    new.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &new);
 
-    // Desativa o modo canônico e o eco
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    puts(FAINT "\n\tAperte qualquer tecla para continuar\n" NOT_BOLD_NOR_FAINT);
 
     // Espera por uma tecla
     getchar();
+    fflush(stdout);
     limpar_buffer();
 
     // Restaura o terminal para seu estado original
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    tcsetattr(STDIN_FILENO, TCSANOW, &old);
 }
 
 #endif

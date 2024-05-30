@@ -19,6 +19,8 @@
 
 #define CLEAR_SCREEN system("cls");
 
+#include <conio.h>
+
 #else
 
 #define CLEAR_SCREEN printf("\033[H\033[J"); fflush(stdout);
@@ -26,6 +28,8 @@
 #include <termios.h>
 
 #endif
+
+// definições de códigos ANSI para customização do terminal
 
 #define ERROR "\033[3;31m" "ERRO: "
 #define CLEAR "\033[0m"
@@ -58,7 +62,7 @@ BCP *mensagemErroBCP(const char *mensagem, BCP *processo);
 // Limpa o buffer de entrada do terminal
 void limpar_buffer();
 
-
+// Função
 void press_any_key_to_continue();
 
 #endif //SIMULACRO_SO_INTERFACE_H

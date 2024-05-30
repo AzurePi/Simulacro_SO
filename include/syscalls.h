@@ -6,7 +6,6 @@
 #include "processo.h"
 #include "globals.h"
 #include "interface.h"
-#include "cpu.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -14,19 +13,19 @@
 
 // Definição de Macros -------------------------------------------------------------------------------------------------
 
-#define process_interrupt (1)
-#define semaphore_P (10)
-#define semaphore_V (11)
-#define disk_request (4)
-#define disk_finish (5)
-#define print_request (14)
-#define print_finish (15)
-#define mem_load_req (6)
-#define mem_load_finish (7)
-#define fs_request (8)
-#define fs_finish (9)
-#define process_create (2)
-#define process_finish (3)
+#define process_interrupt 1
+#define semaphore_P 10
+#define semaphore_V 11
+#define disk_request 4
+#define disk_finish 5
+#define print_request 14
+#define print_finish 15
+#define mem_load_req 6
+#define mem_load_finish 7
+#define fs_request 8
+#define fs_finish 9
+#define process_create 2
+#define process_finish 3
 
 // Declarações de Tipos ------------------------------------------------------------------------------------------------
 
@@ -52,8 +51,11 @@ typedef struct {
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
+// função auxiliar para criar e despachar uma thread com uma função
+void create_and_detach(void *(*func)(void *), void *args);
+
 // Gerenciamento de chamadas de sistema
-bool sysCall(short op, void *args);
+bool sysCall(short func, void *args);
 
 // interrupção gerada pelo final do quantum-time de um processo
 void *processInterrupt(void *args);

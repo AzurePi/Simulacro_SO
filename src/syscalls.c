@@ -1,77 +1,76 @@
 #include "include/syscalls.h"
 
-bool sysCall(short op, void *args) {
+void create_and_detach(void *(*func)(void *), void *args) {
     pthread_attr_t atrib;
-    pthread_t t_operacao;
-
     pthread_attr_init(&atrib);
     pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
 
-    bool result = true; // presumimos sucesso
+    pthread_t thread;
+
+    pthread_create(&thread, &atrib, func, args);
+    pthread_detach(thread);
+}
+
+bool sysCall(short op, void *args) {
+    bool result = true; // usado para indicar o status da operação (na maioria dos casos, será true)
 
     switch (op) {
         case process_interrupt:
-            pthread_create(&t_operacao, &atrib, processInterrupt, args);
-            pthread_detach(t_operacao);
+            create_and_detach(processInterrupt, args);
             break;
         case semaphore_P: {
             bool *res = (bool *) malloc(sizeof(bool));
-            pthread_create(&t_operacao, &atrib, semaphoreP, args);
-            pthread_join(t_operacao, (void **) res);
-            result = *res;
+
+            pthread_attr_t a;
+            pthread_attr_init(&a);
+            pthread_attr_setscope(&a, PTHREAD_SCOPE_SYSTEM);
+
+            pthread_t t;
+
+            pthread_create(&t, &a, semaphoreP, args);
+            pthread_join(t, (void **) res);
+            result = *res; // indicamos se o processo precisa ou não ser bloqueado pleo semáforo
             free(res);
+            pthread_attr_destroy(&a);
             break;
         }
         case semaphore_V:
-            pthread_create(&t_operacao, &atrib, semaphoreV, args);
-            pthread_detach(t_operacao);
+            create_and_detach(semaphoreV, args);
             break;
         case disk_request:
-            pthread_create(&t_operacao, &atrib, DiskRequest, args);
-            pthread_detach(t_operacao);
+            create_and_detach(DiskRequest, args);
             break;
         case disk_finish:
-            pthread_create(&t_operacao, &atrib, DiskFinish, args);
-            pthread_detach(t_operacao);
+            create_and_detach(DiskFinish, args);
             break;
         case print_request:
-            pthread_create(&t_operacao, &atrib, PrintRequest, args);
-            pthread_detach(t_operacao);
+            create_and_detach(PrintRequest, args);
             break;
         case print_finish:
-            pthread_create(&t_operacao, &atrib, PrintFinish, args);
-            pthread_detach(t_operacao);
+            create_and_detach(PrintFinish, args);
             break;
         case mem_load_req:
-            pthread_create(&t_operacao, &atrib, memLoadReq, args);
-            pthread_detach(t_operacao);
+            create_and_detach(memLoadReq, args);
             break;
         case mem_load_finish:
-            pthread_create(&t_operacao, &atrib, memLoadFinish, args);
-            pthread_detach(t_operacao);
+            create_and_detach(memLoadFinish, args);
             break;
         case fs_request:
-            pthread_create(&t_operacao, &atrib, fsRequest, args);
-            pthread_detach(t_operacao);
+            create_and_detach(fsRequest, args);
             break;
         case fs_finish:
-            pthread_create(&t_operacao, &atrib, fsFinish, args);
-            pthread_detach(t_operacao);
+            create_and_detach(fsFinish, args);
             break;
         case process_create:
-            pthread_create(&t_operacao, &atrib, processCreate, args);
-            pthread_detach(t_operacao);
+            create_and_detach(processCreate, args);
             break;
         case process_finish:
-            pthread_create(&t_operacao, &atrib, processFinish, args);
-            pthread_detach(t_operacao);
+            create_and_detach(processFinish, args);
             break;
         default:
             result = false;
             break;
     }
-
-    pthread_attr_destroy(&atrib);
     return result;
 }
 
@@ -81,15 +80,15 @@ void *processInterrupt(void *args) {
     BCP *proc = intArgs->processo;
 
     switch (tipo_interrupcao) {
-        case FINAL_EXECUCAO: { // interrupção pelo final do quantum time
+        case FINAL_EXECUCAO: { // interrupção pelo final da execução de um processo
             pthread_mutex_lock(&mutex_lista_processos);
 
             if (proc->comandos->head == NULL) // se todos os comandos já foram executados
                 sysCall(process_finish, proc); // finaliza o processo
-            else
+            else // se ainda há comandos para executar
                 proc->estado = PRONTO; // atualiza o estado do processo atual para PRONTO
 
-            executando_agora = NULL;
+            executando_agora = NULL; // dizemos que nenhum processo está sendo executado agora
 
             pthread_mutex_unlock(&mutex_lista_processos);
             break;
@@ -106,7 +105,7 @@ void *processInterrupt(void *args) {
         }
         default:
             // Tipo de interrupção desconhecida
-            printf(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
+            puts(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
             break;
     }
     return NULL;

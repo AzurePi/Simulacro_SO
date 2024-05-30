@@ -2,14 +2,9 @@
 
 void *roundRobin() {
     while (!encerrar) {
-        pthread_mutex_lock(&mutex_lista_processos);
-
         // espera até haver um BCP na lista de processos
-        if (!head_lista_processos) {
-            pthread_mutex_unlock(&mutex_lista_processos);
+        if (!head_lista_processos)
             continue;
-        }
-        pthread_mutex_unlock(&mutex_lista_processos);
 
         BCP *executar = buscaBCPExecutar(); // encontra o próximo processo pronto com a maior prioridade
 
@@ -18,8 +13,10 @@ void *roundRobin() {
             continue;
 
         //se tem um processo para executar
+        pthread_mutex_lock(&mutex_lista_processos);
         executar->estado = EXECUTANDO;
         executando_agora = executar;
+        pthread_mutex_unlock(&mutex_lista_processos);
 
         sysCall(mem_load_req, executar); // carrega o processo na memória
 
@@ -29,7 +26,7 @@ void *roundRobin() {
         InterruptArgs *intArgs = malloc(sizeof(InterruptArgs));
         intArgs->tipo_interrupcao = FINAL_EXECUCAO;
         intArgs->processo = executar;
-        sysCall(process_interrupt, intArgs);
+        sysCall(process_interrupt, intArgs); // interrompe o processo
 
         sysCall(mem_load_finish, executar); // descarrega o processo da memória
     }
