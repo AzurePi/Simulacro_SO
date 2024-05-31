@@ -3,7 +3,7 @@
 // Variáveis globais ---------------------------------------------------------------------------------------------------
 
 BCP *head_lista_processos;
-BCP *executando_agora;
+volatile BCP *executando_agora;
 Lista_Semaforos *semaforos_existentes;
 Memoria *RAM;
 volatile bool encerrar;
@@ -11,7 +11,7 @@ pthread_mutex_t mutex_IO;
 pthread_mutex_t mutex_RAM;
 pthread_mutex_t mutex_lista_processos;
 pthread_mutex_t mutex_semaforos_globais;
-volatile long int relogio;
+unsigned long int relogio;
 
 // Implementação de funções --------------------------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ void create_and_detach(void *(*func)(void *), void *args) {
 }
 
 bool sysCall(short op, void *args) {
-    bool result = true; // usado para indicar o status da operação (na maioria dos casos, será true)
+    bool result = true; // usado para indicar o status da operação (geralmente, será true)
 
     switch (op) {
         case process_interrupt:

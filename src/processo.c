@@ -115,7 +115,7 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (char j = 0; j < i; j++) {
         Semaforo *sem = novoSemaforo(semaforos[j]);
-        inserirSemaforoBCP(bcp, sem);
+        inserirSemaforo(bcp->semaforos, sem);
     }
 }
 
@@ -239,13 +239,6 @@ void freeFilaComandos(Fila_Comandos *fila) {
         freeComando(temp);
     }
     free(fila);
-}
-
-void inserirSemaforoBCP(BCP *processso, Semaforo *semaforo) {
-    if (!processso || !semaforo) return;
-    No_Semaforo *new = novoNoSemaforo(semaforo);
-    new->prox = processso->semaforos->head;
-    processso->semaforos->head = new;
 }
 
 void process_sleep(BCP *processo) {

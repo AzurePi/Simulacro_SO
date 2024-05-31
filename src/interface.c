@@ -1,34 +1,35 @@
 #include "include/interface.h"
 
 void *interface() {
+    char *menu = "╔════════════════════════════════════════╗\n"
+                 "║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE "    ║\n"
+                 "╟────────────────────────────────────────╢\n"
+                 "║ [1] Novo processo                      ║\n"
+                 "║ [2] Ver informações dos processos      ║\n"
+                 "║ [3] Ver informações da memória         ║\n"
+                 "║ [0] Encerrar                           ║\n"
+                 "╚════════════════════════════════════════╝";
     char op;
 
     do {
         pthread_mutex_lock(&mutex_IO); // bloqueia o acesso ao terminal
 
         CLEAR_SCREEN();
-        puts("╔════════════════════════════════════════╗");
-        puts("║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE "    ║");
-        puts("╟────────────────────────────────────────╢");
-        puts("║ [1] Novo processo                      ║");
-        puts("║ [2] Ver informações dos processos      ║");
-        puts("║ [3] Ver informações da memória         ║");
-        puts("║ [0] Encerrar                           ║");
-        puts("╚════════════════════════════════════════╝");
+        puts(menu);
 
-        pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
+        //pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
         printf("\n\t" UNDERLINE "Processando agora:" CLEAR " ");
         if (executando_agora)
             printf("%s (%d)\n", executando_agora->nome, executando_agora->id_seg);
         else
             puts(ITALIC "nada" NOT_ITALIC);
-        pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
+        //pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
         printf("\nSelecione a operação: " INPUT);
         scanf(" %c", &op);
         printf(CLEAR);
         limpar_buffer();
-        pthread_mutex_unlock(&mutex_IO);
+        pthread_mutex_unlock(&mutex_IO); // desbloqueia acesso ao terminal
 
         switch (op) {
             case '0':
@@ -81,32 +82,60 @@ void *informacaoProcessos() {
         puts("\nAinda não há processos no sistema.");
     } else {
         char *estados[] = {"PRONTO", "EXECUTANDO", "BLOQUEADO", "TERMINADO"};
+        size_t buffer_size = 128;
+        char *buffer = malloc(buffer_size);
+        buffer[0] = '\0';
 
         while (atual) {
-            char estado[11];
-            strcpy(estado, estados[atual->estado]);
+            char linha[128];
+            snprintf(linha, sizeof(linha),
+                     "\n%s (%d), Prioridade: %d   " BOLD "%s" NOT_BOLD_NOR_FAINT,
+                     atual->nome, atual->id_seg, atual->prioridade, estados[atual->estado]);
 
-            printf("\n%s (%d), Prioridade: %d   " BOLD "%s" NOT_BOLD_NOR_FAINT,
-                   atual->nome, atual->id_seg,
-                   atual->prioridade, estado);
+            size_t linha_len = strlen(linha);
+            size_t new_size = strlen(buffer) + linha_len + 1;
+
+            if (new_size > buffer_size) {
+                buffer_size = new_size;
+                buffer = realloc(buffer, buffer_size);
+            }
+            strcat(buffer, linha);
             atual = atual->prox;
         }
+        puts(buffer);
+        free(buffer);
     }
     pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
-    puts("\nLista de Semáforos sendo utilizados: " BLUE);
-    pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso á lista de semáforos
+    printf("\nLista de Semáforos sendo utilizados: " BLUE);
+    pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
     No_Semaforo *aux = semaforos_existentes->head;
     if (!aux)
-        printf("\tNenhum" CLEAR "\n");
+        printf("\n\tNenhum" CLEAR "\n");
     else {
+        size_t buffer_size = 128;
+        char *buffer = malloc(buffer_size);
+        buffer[0] = '\0';
+
         while (aux) {
-            printf("\t%c " BOLD "|" NOT_BOLD_NOR_FAINT " Contador: %d processos\n", aux->semaforo->nome,
-                   aux->semaforo->refcount);
+            char linha[128];
+            snprintf(linha, sizeof(linha),
+                     "\n\t%c " BOLD "|" NOT_BOLD_NOR_FAINT " Contador: %d processos",
+                     aux->semaforo->nome, aux->semaforo->refcount);
+
+            size_t linha_len = strlen(linha);
+            size_t new_size = strlen(buffer) + linha_len + 1;
+
+            if (new_size > buffer_size) {
+                buffer_size = new_size;
+                buffer = realloc(buffer, buffer_size);
+            }
+            strcat(buffer, linha);
             aux = aux->prox;
         }
+        printf("%s" CLEAR "\n", buffer);
+        free(buffer);
     }
-    printf(CLEAR);
     pthread_mutex_unlock(&mutex_semaforos_globais); //libera acesso à lista de semáforos
 
     press_any_key_to_continue();
@@ -123,11 +152,12 @@ void *informacaoMemoria() {
         return NULL;
     }
 
-    double taxa_ocupacao = ((double) RAM->n_paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
+    int paginas_ocupadas = RAM->n_paginas_ocupadas;
+    double taxa_ocupacao = ((double) paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
 
     pthread_mutex_lock(&mutex_IO); // bloqueia acesso ao terminal
-    printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n", taxa_ocupacao, RAM->n_paginas_ocupadas,
-           NUMERO_PAGINAS);
+    printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n",
+           taxa_ocupacao, paginas_ocupadas, NUMERO_PAGINAS);
     fflush(stdout);
 
     pthread_mutex_unlock(&mutex_RAM); // libera acesso à RAM
@@ -177,7 +207,6 @@ void press_any_key_to_continue() {
     tcsetattr(STDIN_FILENO, TCSANOW, &new); // seta os atributos novos
 
     printf(FAINT "\n\tAperte qualquer tecla para continuar" NOT_BOLD_NOR_FAINT);
-
     getchar(); // espera por uma tecla
 
     tcsetattr(STDIN_FILENO, TCSANOW, &old); // restaura o terminal para seu estado original

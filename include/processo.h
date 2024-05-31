@@ -109,9 +109,6 @@ void inserirComando(Comando *comando, Fila_Comandos *fila);
 // Remove o comando no começo de uma fila de comandos.
 void removerComando(Fila_Comandos *fila);
 
-// Insere um novo semáforo no final de uma lista de semáforos global.
-void inserirSemaforoBCP(BCP *processso, Semaforo *semaforo);
-
 // Muda o estado do processo para BLOQUEADO e o manda para o final da fila de escalonamento
 void process_sleep(BCP *processo);
 
