@@ -17,13 +17,13 @@ void *interface() {
         CLEAR_SCREEN();
         puts(menu);
 
-        //pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
+        pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
         printf("\n\t" UNDERLINE "Processando agora:" CLEAR " ");
         if (executando_agora)
             printf("%s (%d)\n", executando_agora->nome, executando_agora->id_seg);
         else
             puts(ITALIC "nada" NOT_ITALIC);
-        //pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
+        pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
         printf("\nSelecione a operação: " INPUT);
         scanf(" %c", &op);
@@ -54,16 +54,20 @@ void *interface() {
             }
                 break;
             case '2':
-                create_and_detach(informacaoProcessos, NULL);
+                pthread_mutex_lock(&mutex_IO);
+                informacaoProcessos();
+                pthread_mutex_unlock(&mutex_IO);
                 break;
             case '3':
-                create_and_detach(informacaoMemoria, NULL);
+                pthread_mutex_lock(&mutex_IO);
+                informacaoMemoria();
+                pthread_mutex_unlock(&mutex_IO);
                 break;
             default:
                 pthread_mutex_lock(&mutex_IO);
                 puts(ERROR "Opção inválida!" CLEAR);
                 fflush(stdout);
-                sleep(2);
+                sleep(1);
                 pthread_mutex_unlock(&mutex_IO);
                 break;
         }
@@ -73,12 +77,8 @@ void *interface() {
     return NULL;
 }
 
-void *informacaoProcessos() {
-    pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
-    BCP *atual = head_lista_processos;
-
-    pthread_mutex_lock(&mutex_IO); // bloqueia acesso ao terminal
-    if (!atual) {
+void informacaoProcessos() {
+    if (!head_lista_processos) {
         puts("\nAinda não há processos no sistema.");
     } else {
         char *estados[] = {"PRONTO", "EXECUTANDO", "BLOQUEADO", "TERMINADO"};
@@ -86,6 +86,8 @@ void *informacaoProcessos() {
         char *buffer = malloc(buffer_size);
         buffer[0] = '\0';
 
+        pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
+        BCP *atual = head_lista_processos;
         while (atual) {
             char linha[128];
             snprintf(linha, sizeof(linha),
@@ -102,10 +104,10 @@ void *informacaoProcessos() {
             strcat(buffer, linha);
             atual = atual->prox;
         }
+        pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
         puts(buffer);
         free(buffer);
     }
-    pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
 
     printf("\nLista de Semáforos sendo utilizados: " BLUE);
     pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
@@ -139,23 +141,19 @@ void *informacaoProcessos() {
     pthread_mutex_unlock(&mutex_semaforos_globais); //libera acesso à lista de semáforos
 
     press_any_key_to_continue();
-    pthread_mutex_unlock(&mutex_IO); // libera acesso ao terminal
-
-    return NULL;
 }
 
-void *informacaoMemoria() {
+void informacaoMemoria() {
     pthread_mutex_lock(&mutex_RAM); // bloqueia acesso á RAM
 
     if (!RAM) {
         pthread_mutex_unlock(&mutex_RAM);
-        return NULL;
+        return;
     }
 
     int paginas_ocupadas = RAM->n_paginas_ocupadas;
     double taxa_ocupacao = ((double) paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
 
-    pthread_mutex_lock(&mutex_IO); // bloqueia acesso ao terminal
     printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n",
            taxa_ocupacao, paginas_ocupadas, NUMERO_PAGINAS);
     fflush(stdout);
@@ -163,9 +161,6 @@ void *informacaoMemoria() {
     pthread_mutex_unlock(&mutex_RAM); // libera acesso à RAM
 
     press_any_key_to_continue();
-    pthread_mutex_unlock(&mutex_IO); // libera acesso ao terminal
-
-    return NULL;
 }
 
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
@@ -189,8 +184,8 @@ void limpar_buffer() {
 
 void press_any_key_to_continue() {
     printf(FAINT "\n\tAperte qualquer tecla para continuar" NOT_BOLD_NOR_FAINT);
-    _getwch(); // lê um caractere, sem escrevê-lo no terminal e sem esperar por um enter
     fflush(stdout);
+    _getwch(); // lê um caractere, sem escrevê-lo no terminal e sem esperar por um enter
 }
 
 #else
@@ -200,13 +195,13 @@ void press_any_key_to_continue() {
 
     tcgetattr(STDIN_FILENO, &old); // guarda os atributos velhos do terminal
     new = old;
-    new.c_lflag &= ~ICANON; // desabilita a espera por um enter
-    new.c_iflag &= ~ECHO; // desabilita o eco
+    new.c_lflag &= ~(ICANON | ECHO); // desabilita a espera por um enter
     new.c_cc[VMIN] = 1;
     new.c_cc[VTIME] = 0;
     tcsetattr(STDIN_FILENO, TCSANOW, &new); // seta os atributos novos
 
     printf(FAINT "\n\tAperte qualquer tecla para continuar" NOT_BOLD_NOR_FAINT);
+    fflush(stdout);
     getchar(); // espera por uma tecla
 
     tcsetattr(STDIN_FILENO, TCSANOW, &old); // restaura o terminal para seu estado original

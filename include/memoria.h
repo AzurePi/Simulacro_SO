@@ -9,8 +9,14 @@
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
 
-#define TAMANHO_PAGINA 4096 // 4 KB por página
-#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
+/*
+ * Nossa menor unidade é um programa com segmento de tamanho 1 KB, que podemos definir como 1 unidade de memória (um).
+ * Nossas páginas têm 8 KB, ou seja, 8 um.
+ * A memória total tem 1 GB, ou seja, 1024 * 1024 * 1024 bytes => 1024 * 1024 kbytes, ou seja, 1024*1024 um.
+ */
+
+#define TAMANHO_PAGINA 8 // 8 unidades de memória (1 um = 1 kbyte)
+#define TAMANHO_MEMORIA (1024 * 1024) // 1 GB de memória (1024 * 1024 kbytes = 1024 * 1024 um)
 #define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
 // Declaração de Tipos -------------------------------------------------------------------------------------------------

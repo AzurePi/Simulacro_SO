@@ -48,10 +48,10 @@
 #define INPUT ITALIC BRIGHT_YELLOW
 
 // repetição dos macros de memoria.h
-#define TAMANHO_PAGINA 4096 // 4 KB por página
-#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
-#define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
+#define TAMANHO_PAGINA 8 // 8 unidades de memória (1 um = 1 kbyte)
+#define TAMANHO_MEMORIA (1024 * 1024) // 1 GB de memória (1024 * 1024 kbytes = 1024 * 1024 um)
+#define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
@@ -59,10 +59,10 @@
 void *interface();
 
 // Exibe uma lista de todos os processos no sistema.
-void *informacaoProcessos();
+void informacaoProcessos();
 
 // Calcula e exibir a taxa de ocupação da memória.
-void *informacaoMemoria();
+void informacaoMemoria();
 
 // Imprime uma mensagem de erro advinda da criação de um BCP.
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo);

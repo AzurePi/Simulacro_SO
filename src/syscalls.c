@@ -29,7 +29,7 @@ bool sysCall(short op, void *args) {
 
             pthread_create(&t, &a, semaphoreP, args);
             pthread_join(t, (void **) res);
-            result = *res; // indicamos se o processo precisa ou não ser bloqueado pleo semáforo
+            result = *res; // indicamos se o processo precisa ou não ser bloqueado pelo semáforo
             free(res);
             pthread_attr_destroy(&a);
             break;
@@ -83,12 +83,12 @@ void *processInterrupt(void *args) {
         case FINAL_EXECUCAO: { // interrupção pelo final da execução de um processo
             pthread_mutex_lock(&mutex_lista_processos);
 
-            if (proc->comandos->head == NULL) // se todos os comandos já foram executados
+            if (proc->comandos == NULL || proc->comandos->head == NULL) // se todos os comandos já foram executados
                 sysCall(process_finish, proc); // finaliza o processo
             else // se ainda há comandos para executar
                 proc->estado = PRONTO; // atualiza o estado do processo atual para PRONTO
 
-            executando_agora = NULL; // dizemos que nenhum processo está sendo executado agora
+            //executando_agora = NULL; // dizemos que nenhum processo está sendo executado agora
 
             pthread_mutex_unlock(&mutex_lista_processos);
             break;
@@ -104,7 +104,6 @@ void *processInterrupt(void *args) {
             break;
         }
         default:
-            // Tipo de interrupção desconhecida
             puts(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
             break;
     }
@@ -185,7 +184,6 @@ void *processCreate(void *filename) {
         BCP *processo = lerProgramaSintetico(programa);
         fclose(programa);
         if (processo) {
-            // Chama sysCall para process_interrupt, especificando o tipo de interrupção PROCESS_CREATE
             InterruptArgs *args = malloc(sizeof(InterruptArgs));
             args->tipo_interrupcao = PROCESS_CREATE;
             args->processo = processo;
@@ -213,23 +211,22 @@ void *processCreate(void *filename) {
 void *processFinish(void *args) {
     BCP *process = (BCP *) args;
 
-    pthread_mutex_lock(&mutex_lista_processos);
     process->estado = TERMINADO;
-    if (process == executando_agora)
-        executando_agora = NULL;
-    pthread_mutex_unlock(&mutex_lista_processos);
+
+    sysCall(mem_load_finish, process); // descarrega o processo da memória
 
     // percorre a lista de semáforos associada ao processo
-    pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso lista de semáforos
+    pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
     No_Semaforo *no_sem = process->semaforos->head;
     while (no_sem) {
         No_Semaforo *next = no_sem->prox;
 
-        // bloqueia acesso a esse semáforo
-        pthread_mutex_lock(&no_sem->semaforo->mutex_lock);
-        no_sem->semaforo->refcount--;
+        pthread_mutex_lock(&no_sem->semaforo->mutex_lock); // bloqueia acesso a esse semáforo
+        no_sem->semaforo->refcount--; // decrementa a quantidade de referências
+        pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
 
-        // se não há mais processos associados oa semáforo
+        /* TODO: algo aqui não funciona direito para deletar os semáforos
+        // se não há mais processos associados ao semáforo
         if (no_sem->semaforo->refcount == 0) {
             pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
             pthread_mutex_unlock(
@@ -237,8 +234,10 @@ void *processFinish(void *args) {
             removeSemaforoGlobal(no_sem); // remove o nó do semáforo da lista global
             pthread_mutex_lock(
                     &mutex_semaforos_globais); // re-bloqueia o acesso à lista de semáforos para continuar o loop
-        } else
-            pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
+        }
+        pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
+        */
+
         no_sem = next;
     }
     pthread_mutex_unlock(&mutex_semaforos_globais); // desbloqueia o acesso à lista de semáforos
