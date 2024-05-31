@@ -30,22 +30,22 @@ typedef struct memoria {
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-// Inicializa a variável global da memória do simulador
+// Inicializa a variável global da memória do simulador.
 void inicializarRAM();
 
-// Libera a variável global da memória do simulador
+// Libera a variável global da memória do simulador.
 void freeRAM();
 
-// Encontra a próxima página a ser substituída usando o algoritmo FIFO com Segunda Chance
+// Encontra a próxima página a ser substituída usando o algoritmo FIFO com Segunda Chance.
 int paginaParaSubstituir();
 
-// Carrega páginas necessárias para um processo na memória
+// Carrega páginas necessárias para um processo na memória.
 void carregarPaginasNecessarias(BCP *processo);
 
-// Descarrega todas as páginas de um processo
+// Descarrega todas as páginas de um processo.
 void descarregarPaginas(BCP *processo);
 
-// Verifica se todas as páginas necessárias para um processo estão carregadas na memória
+// Verifica se todas as páginas necessárias para um processo estão carregadas na memória.
 bool verificarPaginasCarregadas(BCP *processo);
 
 #endif //SIMULACRO_SO_MEMORIA_H

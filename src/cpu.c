@@ -1,18 +1,13 @@
 #include "include/cpu.h"
 
-void *roundRobin() {
+void *CPU() {
     while (!encerrar) {
-        // espera até haver um BCP na lista de processos
-        if (!head_lista_processos)
-            continue;
-
         BCP *executar = buscaBCPExecutar(); // encontra o próximo processo pronto com a maior prioridade
 
-        // se não encontramos um processo para executar, é porque não há processos prontos
-        if (!executar)
-            continue;
+        // se não encontramos um processo para executar, pulamos para a próxima iteração
+        if (!executar) continue;
 
-        //se tem um processo para executar
+        //se há um processo para executar
         pthread_mutex_lock(&mutex_lista_processos);
         executar->estado = EXECUTANDO;
         executando_agora = executar;
@@ -22,11 +17,9 @@ void *roundRobin() {
 
         processarComandos(executar); // executa os comandos
 
-        // quando terminou o processamneto
-        InterruptArgs *intArgs = malloc(sizeof(InterruptArgs));
-        intArgs->tipo_interrupcao = FINAL_EXECUCAO;
-        intArgs->processo = executar;
-        sysCall(process_interrupt, intArgs); // interrompe o processo
+        // quando terminou o processamento, interrompemos o processo
+        InterruptArgs intArgs = {.tipo_interrupcao = FINAL_EXECUCAO, .processo = executar};
+        sysCall(process_interrupt, &intArgs);
 
         sysCall(mem_load_finish, executar); // descarrega o processo da memória
     }
@@ -34,91 +27,83 @@ void *roundRobin() {
 }
 
 void processarComandos(BCP *processo) {
-    long double quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
-    long double tempo_executado = 0; // o tempo que o processo já está executando
+    if (!processo) return;
+
+    long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
+    long int tempo_executado = 0; // o tempo que o processo já está executando
     Comando *atual = processo->comandos->head;
 
     while (atual && tempo_executado < quantum) {
-        long double t; // tempo que esse comando leva para ser executado
+        long int t; // tempo que esse comando leva para ser executado
 
-        // dependendo da operação, o t é contado de uma forma diferente
-        /* consideramos, por enquanto, que a leitura/escrita no disco e escrita no terminal são instantâneos
-         * posteriormente, esse t será influenciado por DiskRequest(), DiskFinish(), PrintRequest() e PrintFinish()
+        /*
+         * consideramos, por enquanto, que a leitura/escrita no disco e escrita no terminal levam 100 ut
+         * posteriormente, esse tempo será influenciado por DiskRequest(), DiskFinish(), PrintRequest() e PrintFinish()
+         *
+         * consideramos que todas as operações, exceto EXEC, são atômicas
          */
         switch (atual->opcode) {
-            case EXEC:
+            case EXEC: {
                 t = atual->parametro;
-                break;
-            case READ:
-                t = 0;
-                break;
-            case WRITE:
-                t = 0;
-                break;
-            case P:
-            case V:
-                t = 200;
-                break;
-            default:
-                t = 0;
-                break;
-        }
+                if (t > (quantum - tempo_executado))
+                    t = quantum - tempo_executado;
 
-        // consideramos que os comandos são atômicos, com exceção de EXEC
-        // verifica se o comando é EXEC, e se o t desse comando seria maior que o tempo restante para execução
-        if (atual->opcode == EXEC && t > (quantum - tempo_executado))
-            t = quantum - tempo_executado;
-
-        // atualiza o relógio com o tempo do processamento
-        relogio += t;
-        tempo_executado += t;
-
-        // processa o comando
-        switch (atual->opcode) {
-            case EXEC: // pode ser que o processo não seja executado por inteiro
                 atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
                 if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
                     atual = atual->prox; // passamos para o próximo comando da lista
                     removerComando(processo->comandos); // remove o comando da lista de comandos
                 }
                 break;
-            case READ:  //por enquanto, nada além de liberar o comando
+            }
+            case READ: {
+                t = 100;
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
                 break;
-            case WRITE: //por enquanto, nada além de liberar o comando
+            }
+            case WRITE: {
+                t = 100;
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
                 break;
+            }
             case P: {
-                Semaforo *sem = retrieveSemaforo((char) atual->parametro);
+                t = 200;
+                Semaforo *sem = retrieveSemaforo((char) atual->parametro); // encontramos o semáforo sendo chamado
 
                 // criamos uma struct provisória para passar os argumentos para sysCall
-                SemaphorePArgs *args = malloc(sizeof(SemaphorePArgs));
-                args->semaforo = sem;
-                args->proc = processo;
+                SemaphorePArgs args = {.semaforo = sem, .proc = processo};
 
-                if (sysCall(semaphore_P, args)) // se o semáforo permite a execução
+                if (sysCall(semaphore_P, &args)) // se o semáforo permite a execução
                     atual = atual->prox; // passamos para o próximo comando
                 else // se o semáforo bloqueou a execução
                     atual = NULL; // interrompemos a execução
                 removerComando(processo->comandos); // remove o comando da lista de comandos
-                free(args); // libera a estrutura provisória
-            }
                 break;
+            }
             case V: {
+                t = 200;
                 Semaforo *sem = retrieveSemaforo((char) atual->parametro);
+
                 sysCall(semaphore_V, sem);
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
-            }
                 break;
-            case PRINT: //por enquanto, nada além de liberar o comando
+            }
+            case PRINT: {
+                t = 100;
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos);
                 break;
+            }
+            default:
+                t = 0;
+                break;
         }
+
+        // atualiza o relógio com o tempo do processamento
+        relogio += t;
+        tempo_executado += t;
         sleep(1);
     }
 }
-

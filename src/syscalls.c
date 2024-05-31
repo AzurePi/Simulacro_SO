@@ -211,18 +211,37 @@ void *processCreate(void *filename) {
 }
 
 void *processFinish(void *args) {
-    pthread_mutex_lock(&mutex_lista_processos);
     BCP *process = (BCP *) args;
+
+    pthread_mutex_lock(&mutex_lista_processos);
     process->estado = TERMINADO;
     if (process == executando_agora)
         executando_agora = NULL;
+    pthread_mutex_unlock(&mutex_lista_processos);
 
     // percorre a lista de semáforos associada ao processo
-    Semaforo *sem = process->head_semaforos;
-    while (sem != NULL) {
-        sem->refcount--;
-        sem = sem->prox;
+    pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso lista de semáforos
+    No_Semaforo *no_sem = process->semaforos->head;
+    while (no_sem) {
+        No_Semaforo *next = no_sem->prox;
+
+        // bloqueia acesso a esse semáforo
+        pthread_mutex_lock(&no_sem->semaforo->mutex_lock);
+        no_sem->semaforo->refcount--;
+
+        // se não há mais processos associados oa semáforo
+        if (no_sem->semaforo->refcount == 0) {
+            pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
+            pthread_mutex_unlock(
+                    &mutex_semaforos_globais); // desbloqueia o acesso à lista de semáforos (para evitar deadlock)
+            removeSemaforoGlobal(no_sem); // remove o nó do semáforo da lista global
+            pthread_mutex_lock(
+                    &mutex_semaforos_globais); // re-bloqueia o acesso à lista de semáforos para continuar o loop
+        } else
+            pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
+        no_sem = next;
     }
-    pthread_mutex_unlock(&mutex_lista_processos);
+    pthread_mutex_unlock(&mutex_semaforos_globais); // desbloqueia o acesso à lista de semáforos
+
     return NULL;
 }

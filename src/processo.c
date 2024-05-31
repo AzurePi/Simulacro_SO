@@ -9,13 +9,15 @@ BCP *novoBCP() {
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
     }
-    new->head_semaforos = NULL;
+    new->semaforos = novaListaSemaforos();
     new->comandos = novaFilaComandos();
     if (!new->comandos) return NULL;
     return new;
 }
 
 void inserirBCP(BCP *new) {
+    if (!new) return;
+
     pthread_mutex_lock(&mutex_lista_processos);
     if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
         new->prox = head_lista_processos;
@@ -34,20 +36,27 @@ void inserirBCP(BCP *new) {
 }
 
 void inserirBCPFinal(BCP *processo) {
-    // se a lista estiver, inserimos como head
-    if (!head_lista_processos)
+    if (!processo) return; // se não há processo para inserir
+
+    if (!head_lista_processos) { // se a lista estiver vazia, inserimos como head
         head_lista_processos = processo;
-    else {
-        // vamos do começo até o final
-        BCP *aux = head_lista_processos;
-        while (aux->prox != NULL)
-            aux = aux->prox;
-        aux->prox = processo;
+        return;
     }
+
+    // vamos do começo até o final
+    BCP *aux = head_lista_processos;
+    while (aux->prox != NULL)
+        aux = aux->prox;
+    aux->prox = processo;
 }
 
 BCP *buscaBCPExecutar() {
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
+
+    if (!head_lista_processos) { // se a lista de processos está vazia
+        pthread_mutex_unlock(&mutex_lista_processos);
+        return NULL;
+    }
 
     BCP *aux = head_lista_processos;
     BCP *executar = NULL;
@@ -59,7 +68,6 @@ BCP *buscaBCPExecutar() {
     }
 
     pthread_mutex_unlock(&mutex_lista_processos); // desbloqueia o acesso à lista de processos
-
     return executar;
 }
 
@@ -80,6 +88,8 @@ void freeListaBCP(BCP *bcp_head) {
 }
 
 bool lerCabecalho(FILE *programa, BCP *bcp) {
+    if (!programa || !bcp) return false;
+
     if (fscanf(programa, "%60s\n", bcp->nome) != 1 ||
         fscanf(programa, "%d\n", &bcp->id_seg) != 1 ||
         fscanf(programa, "%d\n", &bcp->prioridade) != 1 ||
@@ -89,6 +99,8 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
 }
 
 void lerSemaforos(FILE *programa, BCP *bcp) {
+    if (!programa || !bcp) return;
+
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
     char i = 0; // contador de tamanho pequeno
@@ -103,41 +115,46 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
     // para cada semáforo guardado, cria um novo semáforo, e coloca na lista do BCP
     for (char j = 0; j < i; j++) {
         Semaforo *sem = novoSemaforo(semaforos[j]);
-        inserirSemaforoBCP(NULL, sem, bcp->head_semaforos);
+        inserirSemaforoBCP(bcp, sem);
     }
 }
 
-bool lerComandos(FILE *programa, BCP *bcp) {
+bool lerComandos(FILE *programa, Fila_Comandos *fila) {
+    if (!programa || !fila) return false;
+
     char buffer[11];
 
     //lê cada comando como uma string e armazena no buffer
     while (fscanf(programa, " %[^\n]", buffer) == 1) {
-        char buffer_operacao[6], buffer_parametro[10];
+        char buffer_operacao[6], buffer_parametro[11];
         OPCODE opcode;
         int parametro;
 
         //se estamos lidando com as operações de semáforo, a string terá formato "operação(parâmetro)"
         if (buffer[0] == 'P' || buffer[0] == 'V') {
-            sscanf(buffer, "%[^(](%[^)])", buffer_operacao, buffer_parametro);
+            if (sscanf(buffer, "%5[^(](%10[^)])", buffer_operacao, buffer_parametro) != 2)
+                return false; // erro ao analisar a string do comando
             opcode = (buffer_operacao[0] == 'P' ? P : V);
             parametro = (int) buffer_parametro[0];
         } else { //se estamos lidando com as demais operações, a string terá formato "operação parâmetro"
-            sscanf(buffer, "%s %s", buffer_operacao, buffer_parametro);
+            if (sscanf(buffer, "%s %s", buffer_operacao, buffer_parametro) != 2)
+                return false; // erro ao analisar a string do comando
 
             if (strcmp(buffer_operacao, "exec") == 0) opcode = EXEC;
             else if (strcmp(buffer_operacao, "read") == 0) opcode = READ;
             else if (strcmp(buffer_operacao, "write") == 0) opcode = WRITE;
             else if (strcmp(buffer_operacao, "print") == 0) opcode = PRINT;
-            else
-                return false;
-
+            else return false;
 
             parametro = atoi(buffer_parametro);
         }
 
         Comando *comando = novoComando(opcode, parametro);
-        if (!comando) return false;
-        inserirComando(comando, bcp->comandos);
+        if (!comando) {
+            freeFilaComandos(fila);
+            return false;
+        }
+        inserirComando(comando, fila);
     }
     return true;
 }
@@ -164,7 +181,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
     // ignora uma linha em branco
     while (fgetc(programa) != '\n' && !feof(programa));
-    if (!lerComandos(programa, processo))
+    if (!lerComandos(programa, processo->comandos))
         return mensagemErroBCP("programa sintético contém erro nos comandos", processo);
 
     return processo;
@@ -180,6 +197,7 @@ Comando *novoComando(OPCODE opcode, int parametro) {
 }
 
 void freeComando(Comando *comando) {
+    if (!comando) return;
     free(comando);
 }
 
@@ -194,7 +212,7 @@ Fila_Comandos *novaFilaComandos() {
 void inserirComando(Comando *comando, Fila_Comandos *fila) {
     if (!fila || !comando) return; // se os parâmetros são ponteiros nulos
 
-    if (fila->head == NULL) {
+    if (!fila->head) {
         fila->head = comando;
         fila->tail = comando;
     } else {
@@ -212,25 +230,27 @@ void removerComando(Fila_Comandos *fila) {
     freeComando(aux);
 }
 
-void freeFilaComandos(Fila_Comandos *comandos) {
-    if (!comandos) return;
+void freeFilaComandos(Fila_Comandos *fila) {
+    if (!fila) return;
     Comando *temp;
-    while (comandos->head != NULL) {
-        temp = comandos->head;
-        comandos->head = comandos->head->prox;
+    while (fila->head != NULL) {
+        temp = fila->head;
+        fila->head = fila->head->prox;
         freeComando(temp);
     }
-    free(comandos);
+    free(fila);
 }
 
-void inserirSemaforoBCP(BCP *processs, Semaforo *semaforo, Semaforo *head_lista) {
-    if (!processs || !head_lista || !semaforo) return;
-    semaforo->prox = head_lista;
-    processs->head_semaforos = semaforo;
+void inserirSemaforoBCP(BCP *processso, Semaforo *semaforo) {
+    if (!processso || !semaforo) return;
+    No_Semaforo *new = novoNoSemaforo(semaforo);
+    new->prox = processso->semaforos->head;
+    processso->semaforos->head = new;
 }
 
 void process_sleep(BCP *processo) {
     if (!processo) return; // se o processo passado não existe
+    pthread_mutex_lock(&mutex_lista_processos);
     processo->estado = BLOQUEADO;
 
     // removemos o processo de sua posição na lista
@@ -250,6 +270,7 @@ void process_sleep(BCP *processo) {
         if (anterior != NULL)
             anterior->prox = aux->prox;
     }
+    pthread_mutex_unlock(&mutex_lista_processos);
     inserirBCPFinal(processo); // inserimos o processo no final da lista
 }
 

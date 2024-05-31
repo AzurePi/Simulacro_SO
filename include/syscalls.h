@@ -5,7 +5,6 @@
 #include "semaforo.h"
 #include "processo.h"
 #include "globals.h"
-#include "interface.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -57,37 +56,37 @@ void create_and_detach(void *(*func)(void *), void *args);
 // Gerenciamento de chamadas de sistema
 bool sysCall(short func, void *args);
 
-// interrupção gerada pelo final do quantum-time de um processo
+// Gerenciamento de interrupções de um processo
 void *processInterrupt(void *args);
 
-// tratamento de bloqueio de processo
+// Tratamento de bloqueio de processo
 void *semaphoreP(void *semaph);
 
-// tratamento de desbloqueio de processo
+// Tratamento de desbloqueio de processo
 void *semaphoreV(void *semaforo);
 
-// chamada de operação de E/S para disco
+// Chamada de operação de E/S para disco
 void *DiskRequest(void *args);
 
-// sinalização de final de E/S para disco
+// Sinalização de final de E/S para disco
 void *DiskFinish(void *args);
 
-// chamada de operação de E/S para impressão
+// Chamada de operação de E/S para impressão
 void *PrintRequest(void *args);
 
-//  sinalização de final de E/S para impressão
+// Sinalização de final de E/S para impressão
 void *PrintFinish(void *args);
 
-// chamada de operação de carregamento na memória
+// Chamada de operação de carregamento na memória
 void *memLoadReq(void *args);
 
-// sinalização de final de carregamento
+// Sinalização de final de carregamento
 void *memLoadFinish(void *args);
 
-//  chamada para operação no sistema de arquivos
+// Chamada para operação no sistema de arquivos
 void *fsRequest(void *args);
 
-// sinalização de final de operação no sistema de arquivos
+// Sinalização de final de operação no sistema de arquivos
 void *fsFinish(void *args);
 
 // chamada para iniciar a criação de um processo no BCP

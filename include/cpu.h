@@ -11,10 +11,14 @@
 #include <stdbool.h>
 #include <malloc.h>
 
-#define QUANTUM 5000.0
+#define QUANTUM 5000
 
-void *roundRobin();
+// Protótipos de Funções -----------------------------------------------------------------------------------------------
 
+// Permanece em execução até o encerramento do programa, procurando o próximo processo a executar
+void *CPU();
+
+// Processa os comandos de um dado processo com um limite de tempo proporcional a sua prioridade.
 void processarComandos(BCP *processo);
 
 #endif //SIMULACRO_SO_CPU_H

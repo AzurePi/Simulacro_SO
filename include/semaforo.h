@@ -3,7 +3,6 @@
 
 #include "globals.h"
 #include "processo.h"
-#include "interface.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -32,19 +31,19 @@ typedef struct semaforo {
     volatile int v; // valor do semáforo
     int refcount; // conta o número de processos que estão usando o semáforo
     Fila_Espera_BCP *waiting_list; // topo da lista de espera de processos do semáforo
-    struct semaforo *prox;
+    //struct semaforo *prox;
 } Semaforo;
 
-// Um semáforo na lista global de semáforos
-typedef struct semaforo_global {
+// Um semáforo em uma lista de semáforos
+typedef struct no_semaforo {
     Semaforo *semaforo;
-    struct semaforo_global *prox;
-} Semaforo_Global;
+    struct no_semaforo *prox;
+} No_Semaforo;
 
-// Lista global de semáforos
+// Lista de semáforos
 typedef struct lista_semaforos {
-    Semaforo_Global *head;
-} Lista_Semaforos_Global;
+    No_Semaforo *head;
+} Lista_Semaforos;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
@@ -60,20 +59,29 @@ Semaforo *novoSemaforo(char nome);
 // Libera a memória alocada para um semáforo
 void freeSemaforo(Semaforo *semaforo);
 
+// Cria uma struct para representar um semáforo numa lista
+No_Semaforo *novoNoSemaforo(Semaforo *sem);
+
 // Inicializa uma lista de semáforos vazia
-Lista_Semaforos_Global *novaListaSemaforos();
+Lista_Semaforos *novaListaSemaforos();
+
+// Libera a memoŕia alocada para uma referência de lista a um semáforo
+void freeNoSemaforo(No_Semaforo *no_semaforo);
+
+// Insere um semáforo em uma lista de semáforos
+void inserirSemaforo(Lista_Semaforos *lista, Semaforo *semaforo);
 
 // Insere um semáforo na lista global de todos os semáforos existentes
 void inserirSemaforoGlobal(Semaforo *semaforo);
 
 // Libera a memória alocada para uma lista de semáforos
-void freeListaSemaforo(Lista_Semaforos_Global *semaforos);
+void freeListaSemaforo(Lista_Semaforos *semaforos);
 
 // Retorna um semáforo a partir de seu identificador
 Semaforo *retrieveSemaforo(char nome);
 
 // Remove um semáforo da lista global de todos os semáforos existentes
-void removeSemaforo(Semaforo *semaforo);
+void removeSemaforoGlobal(No_Semaforo *semaforo);
 
 // Enfileira processos bloqueados por uma chamada falha à semaphoreP()
 void sem_queue(Fila_Espera_BCP *lista, BCP *processo);

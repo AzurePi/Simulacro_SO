@@ -1,7 +1,5 @@
 #include "include/semaforo.h"
 
-void freeSemaforoGlobal(Semaforo_Global *semaforoG);
-
 Espera_BCP *novaEsperaBCP() {
     Espera_BCP *new = malloc(sizeof(Espera_BCP));
     if (!new) return NULL;
@@ -36,8 +34,7 @@ void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
     lista->head = NULL;
     lista->tail = NULL;
 
-    // libera a própria lista
-    free(lista);
+    free(lista); // libera a própria lista
 }
 
 Semaforo *novoSemaforo(char nome) {
@@ -64,21 +61,21 @@ Semaforo *novoSemaforo(char nome) {
         free(new);
         return NULL;
     }
-    new->prox = NULL;
     inserirSemaforoGlobal(new);
     return new;
 }
 
 void freeSemaforo(Semaforo *semaforo) {
-    if (semaforo->refcount > 0) return;
+    if (!semaforo) return;
     if (semaforo->waiting_list)
         freeListaEsperaBCP(semaforo->waiting_list);
     pthread_mutex_destroy(&semaforo->mutex_lock);
     free(semaforo);
 }
 
-Semaforo_Global *novoSemaforoGlobal(Semaforo *sem) {
-    Semaforo_Global *new = malloc(sizeof(Semaforo_Global));
+No_Semaforo *novoNoSemaforo(Semaforo *sem) {
+    if (!sem) return NULL;
+    No_Semaforo *new = malloc(sizeof(No_Semaforo));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
         puts(ERROR "falha ao alocar memória para o semáforo" CLEAR);
@@ -91,13 +88,15 @@ Semaforo_Global *novoSemaforoGlobal(Semaforo *sem) {
     return new;
 }
 
-void freeSemaforoGlobal(Semaforo_Global *semaforoG) {
-    freeSemaforo(semaforoG->semaforo);
-    free(semaforoG);
+void freeNoSemaforo(No_Semaforo *no_semaforo) {
+    if (!no_semaforo) return;
+    no_semaforo->semaforo = NULL;
+    no_semaforo->prox = NULL;
+    free(no_semaforo);
 }
 
-Lista_Semaforos_Global *novaListaSemaforos() {
-    Lista_Semaforos_Global *new = malloc(sizeof(Lista_Semaforos_Global));
+Lista_Semaforos *novaListaSemaforos() {
+    Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
         puts(ERROR "falha ao alocar memória para a lista de semáforos" CLEAR);
@@ -109,69 +108,76 @@ Lista_Semaforos_Global *novaListaSemaforos() {
     return new;
 }
 
-void inserirSemaforoGlobal(Semaforo *semaforo) {
-    Semaforo_Global *new  = novoSemaforoGlobal(semaforo);
+void inserirSemaforo(Lista_Semaforos *lista, Semaforo *semaforo) {
+    if (!lista || !semaforo) return;
 
-    pthread_mutex_lock(&mutex_lista_semaforos);
-    if (semaforos_existentes == NULL)
-        semaforos_existentes = novaListaSemaforos();
-
-    if (semaforos_existentes->head == NULL) {
-        new->prox = NULL;
-        semaforos_existentes->head = new;
-        pthread_mutex_unlock(&mutex_lista_semaforos);
-        return;
-    }
-
-    // percorremos a lista de semáforos existente até o final
-    Semaforo_Global *aux = semaforos_existentes->head;
-    while (aux->prox) {
-        // Se um semáforo com esse nome já existe, liberamos a memória do semáforo global sendo inserido
-        if (new->semaforo == aux->semaforo) {
-            freeSemaforoGlobal(new);
-            pthread_mutex_unlock(&mutex_lista_semaforos);
+    // verificamos se já existe um semáforo com esse nome na lista
+    No_Semaforo *aux = lista->head;
+    while (aux) {
+        if (aux->semaforo->nome == semaforo->nome) {
+            pthread_mutex_lock(&aux->semaforo->mutex_lock);
+            aux->semaforo->refcount++;
+            pthread_mutex_unlock(&aux->semaforo->mutex_lock);
             return;
         }
         aux = aux->prox;
     }
 
-    // Inserimos o semáforo no final da lista
-    aux->prox = new;
-    new->prox = NULL;
-    pthread_mutex_unlock(&mutex_lista_semaforos);
+    // se não existe, criamos um nó de semáforo novo
+    No_Semaforo *new = novoNoSemaforo(semaforo);
+    if (!new) return;
+
+    if (lista->head == NULL)
+        lista->head = new; // se a lista está vazia, inserimos no começo
+    else {
+        aux = lista->head;
+        while (aux->prox)
+            aux = aux->prox;
+        aux->prox = new;
+    }
 }
 
-void freeListaSemaforo(Lista_Semaforos_Global *semaforos) {
+void inserirSemaforoGlobal(Semaforo *semaforo) {
+    if (!semaforo) return;
+
+    pthread_mutex_lock(&mutex_semaforos_globais);
+    inserirSemaforo(semaforos_existentes, semaforo);
+    pthread_mutex_unlock(&mutex_semaforos_globais);
+}
+
+void freeListaSemaforo(Lista_Semaforos *semaforos) {
     if (!semaforos) return;
-    Semaforo_Global *temp;
+    No_Semaforo *temp;
     while (semaforos->head != NULL) {
         temp = semaforos->head;
         semaforos->head = semaforos->head->prox;
-        freeSemaforoGlobal(temp);
+        freeNoSemaforo(temp);
     }
     free(semaforos);
 }
 
 Semaforo *retrieveSemaforo(char nome) {
-    pthread_mutex_lock(&mutex_lista_semaforos);
-    Semaforo_Global *aux = semaforos_existentes->head;
+    pthread_mutex_lock(&mutex_semaforos_globais);
+    No_Semaforo *aux = semaforos_existentes->head;
     while (aux) {
         if (aux->semaforo->nome == nome) {
-            pthread_mutex_unlock(&mutex_lista_semaforos);
+            pthread_mutex_unlock(&mutex_semaforos_globais);
             return aux->semaforo;
         }
         aux = aux->prox;
     }
-    pthread_mutex_unlock(&mutex_lista_semaforos);
+    pthread_mutex_unlock(&mutex_semaforos_globais);
     return NULL;
 }
 
-void removeSemaforo(Semaforo *semaforo) {
-    pthread_mutex_lock(&mutex_lista_semaforos);
-    Semaforo_Global *aux = semaforos_existentes->head;
-    Semaforo_Global *prev = NULL;
+void removeSemaforoGlobal(No_Semaforo *semaforo) {
+    if (!semaforo) return;
 
-    while (aux && aux->semaforo != semaforo) {
+    pthread_mutex_lock(&mutex_semaforos_globais);
+    No_Semaforo *aux = semaforos_existentes->head;
+    No_Semaforo *prev = NULL;
+
+    while (aux && aux != semaforo) {
         prev = aux;
         aux = aux->prox;
     }
@@ -179,11 +185,11 @@ void removeSemaforo(Semaforo *semaforo) {
     if (aux) {
         if (prev)
             prev->prox = aux->prox;
-        else //aux é a head atual
+        else
             semaforos_existentes->head = aux->prox;
-        free(aux);
+        freeNoSemaforo(aux);
     }
-    pthread_mutex_unlock(&mutex_lista_semaforos);
+    pthread_mutex_unlock(&mutex_semaforos_globais);
 }
 
 void sem_queue(Fila_Espera_BCP *lista, BCP *processo) {
