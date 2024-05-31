@@ -20,8 +20,6 @@ void *CPU() {
         // quando terminou o processamento, interrompemos o processo
         InterruptArgs intArgs = {.tipo_interrupcao = FINAL_EXECUCAO, .processo = executar};
         sysCall(process_interrupt, &intArgs);
-
-        sysCall(mem_load_finish, executar); // descarrega o processo da memória
     }
     return NULL;
 }

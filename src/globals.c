@@ -35,6 +35,5 @@ void finalizeGlobals() {
     pthread_mutex_destroy(&mutex_IO);
     freeRAM();
     freeListaSemaforo(semaforos_existentes);
-    freeBCP(executando_agora);
     freeListaBCP(head_lista_processos);
 }

@@ -18,11 +18,11 @@ BCP *novoBCP() {
 void inserirBCP(BCP *new) {
     if (!new) return;
 
-    pthread_mutex_lock(&mutex_lista_processos);
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
     if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
         new->prox = head_lista_processos;
         head_lista_processos = new;
-        pthread_mutex_unlock(&mutex_lista_processos);
+        pthread_mutex_unlock(&mutex_lista_processos); // libera acesso á lista de processos
         return;
     }
 
@@ -32,14 +32,16 @@ void inserirBCP(BCP *new) {
 
     new->prox = aux->prox;
     aux->prox = new;
-    pthread_mutex_unlock(&mutex_lista_processos);
+    pthread_mutex_unlock(&mutex_lista_processos); // libera acesso á lista de processos
 }
 
 void inserirBCPFinal(BCP *processo) {
     if (!processo) return; // se não há processo para inserir
 
+    pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
     if (!head_lista_processos) { // se a lista estiver vazia, inserimos como head
         head_lista_processos = processo;
+        pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
         return;
     }
 
@@ -48,6 +50,7 @@ void inserirBCPFinal(BCP *processo) {
     while (aux->prox != NULL)
         aux = aux->prox;
     aux->prox = processo;
+    pthread_mutex_unlock(&mutex_lista_processos); // libera acesso á lista de processos
 }
 
 BCP *buscaBCPExecutar() {
@@ -62,7 +65,7 @@ BCP *buscaBCPExecutar() {
     BCP *executar = NULL;
 
     while (aux) {
-        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade > executar->prioridade))
+        if (aux->estado == PRONTO && (executar == NULL || aux->prioridade < executar->prioridade))
             executar = aux;
         aux = aux->prox;
     }
@@ -80,7 +83,7 @@ void freeBCP(BCP *bcp) {
 void freeListaBCP(BCP *bcp_head) {
     if (!bcp_head) return;
     BCP *temp;
-    while (bcp_head != NULL) {
+    while (bcp_head) {
         temp = bcp_head;
         bcp_head = bcp_head->prox;
         freeBCP(temp);
@@ -95,6 +98,10 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
         fscanf(programa, "%d\n", &bcp->prioridade) != 1 ||
         fscanf(programa, "%d\n", &bcp->tamanho_seg) != 1)
         return false; // alguma parte da leitura falhou
+
+    if (bcp->tamanho_seg <= 0 || bcp->prioridade <= 0) // validação de informações
+        return false;
+
     return true; // toda a leitura funcionou
 }
 
@@ -169,12 +176,8 @@ BCP *lerProgramaSintetico(FILE *programa) {
     if (!lerCabecalho(programa, processo))
         return mensagemErroBCP("programa sintético contém erro no cabeçalho", processo);
 
-    // se a prioridade for menor do que 1, há um erro
-    if (processo->prioridade < 1)
-        return mensagemErroBCP("prioridade do programa não pode ser um número menor que 1", processo);
-
     // calcula o número de páginas da memória que precisam ser utilizadas para esse processo
-    processo->n_paginas_usadas = (processo->tamanho_seg + TAMANHO_PAGINA - 1) / TAMANHO_PAGINA;
+    processo->n_paginas_usadas = (int) ceil((processo->tamanho_seg / (double) TAMANHO_PAGINA));
 
     // lê a linha que contém os semáforos
     lerSemaforos(programa, processo);

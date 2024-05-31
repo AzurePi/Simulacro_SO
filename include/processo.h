@@ -5,6 +5,7 @@
 #include "memoria.h"
 #include "interface.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,13 +13,13 @@
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
 
-#define TAMANHO_PAGINA 4096 // 4 KB por página
-#define TAMANHO_MEMORIA (1024 * 1024 * 1024) // 1 GB de memória
+#define TAMANHO_PAGINA 8 // 8 unidades de memória (1 um = 1 kbyte)
+#define TAMANHO_MEMORIA (1024 * 1024) // 1 GB de memória (1024 * 1024 kbytes = 1024 * 1024 um)
 #define NUMERO_PAGINAS (TAMANHO_MEMORIA / TAMANHO_PAGINA)
 
 // Declarações de Tipos ------------------------------------------------------------------------------------------------
 
-// declaração avançada de semaforo.h para evitar dependência circular
+// declaração avançada para evitar dependência circular
 typedef struct lista_semaforos Lista_Semaforos;
 typedef struct pagina Pagina;
 

@@ -20,3 +20,5 @@ set(SOURCES
 )
 
 add_executable(Simulacro_SO ${SOURCES})
+
+target_link_libraries(Simulacro_SO m)

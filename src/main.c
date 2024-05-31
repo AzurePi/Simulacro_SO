@@ -1,5 +1,13 @@
 #include "include/main.h"
 
+/*
+ * Projeto de simulador de Sistema Operacional
+ *
+ * Heloísa Silveira Bula
+ * Lucas Xavier de Britto Pereira
+ * Pedro benedicto de Melo Cardana
+ */
+
 int main() {
     setlocale(LC_ALL, "PORTUGUESE");
 
