@@ -12,24 +12,22 @@ int main() {
     setlocale(LC_ALL, "PORTUGUESE");
 
     initializeGlobals();
+    initializeInterface();
 
-    create_and_detach(CPU, NULL); // criamos uma thread para execução da CPU em segundo plano
+    create_and_detach(CPU, NULL); // uma thread para execução da CPU em segundo plano
 
-    // criamos uma thread para a exibição do interface -----------------------------------------------------------------
-    pthread_attr_t atrib;
-    pthread_attr_init(&atrib);
-    pthread_attr_setscope(&atrib, PTHREAD_SCOPE_SYSTEM);
+    // threads para controle das múltiplas janelas da interface
+    create_and_detach(menu, NULL); // exibição do menu com input do usuário
+    create_and_detach(informacaoProcessos, NULL); // exibição da lista de processos
+    create_and_detach(informacaoSemaforos, NULL); // exibição da lista de semáforos
+    create_and_detach(informacaoMemoria, NULL); // exibição do status da memória
 
-    pthread_t t_menu;
-
-    pthread_create(&t_menu, &atrib, interface, NULL);
-    pthread_attr_destroy(&atrib);
-
-    pthread_join(t_menu, NULL); // quando o interface é encerrado -----------------------------------------------
+    while (!encerrar); // esperamos enquanto o programa não é encerrado.
 
     // mostramos ao usuário quanto tempo a execução dos processos demorou na simulação e a lista final de processos
-    printf("\nTempo total de execução do simulador: " BOLD ITALIC "%ld" CLEAR " ut\n", relogio);
+    printw("Tempo total de execução do simulador: %ld ut\n", relogio);
 
+    endwin();
     finalizeGlobals();
 
     return 0;

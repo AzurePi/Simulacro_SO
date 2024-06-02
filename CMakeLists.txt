@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22.1)
 project(Simulacro_SO C)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_PROJECT_DESCRIPTION "Projeto de simulacro de um sistema operacional")
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_PROJECT_DESCRIPTION "Projeto de simulador de um sistema operacional")
 
 include_directories(.)
+
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIRS})
 
 set(SOURCE_DIR "src")
 
@@ -19,6 +22,7 @@ set(SOURCES
         ${SOURCE_DIR}/syscalls.c
 )
 
-add_executable(Simulacro_SO ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(Simulacro_SO m)
+target_link_libraries(${PROJECT_NAME} m)
+target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARIES})

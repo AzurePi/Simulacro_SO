@@ -13,6 +13,16 @@ pthread_mutex_t mutex_lista_processos;
 pthread_mutex_t mutex_semaforos_globais;
 unsigned long int relogio;
 
+WINDOW *win_menu;
+WINDOW *win_exec_proc;
+WINDOW *win_mem_state;
+WINDOW *win_processos;
+WINDOW *win_semaforos;
+WINDOW *win_error_log;
+
+bool refresh_proc;
+bool refresh_mem;
+
 // Implementação de funções --------------------------------------------------------------------------------------------
 
 void initializeGlobals() {

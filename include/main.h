@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "cpu.h"
 
+#include <ncurses.h>
 #include <malloc.h>
 #include <stdbool.h>
 #include <locale.h>

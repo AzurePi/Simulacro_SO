@@ -7,6 +7,7 @@
 #include "globals.h"
 #include "memoria.h"
 
+#include <ncurses.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -55,22 +56,25 @@
 
 // Funções -------------------------------------------------------------------------------------------------------------
 
-// Exibição do interface no terminal e acesso às operações do usuário.
-void *interface();
+// Inicializa a interface do ncurses e delimita as janelas
+void initializeInterface();
+
+// Desenha as bordas de uma janela
+void draw_borders(WINDOW *win);
+
+// Exibição do menu no terminal e acesso às operações do usuário.
+void * menu();
 
 // Exibe uma lista de todos os processos no sistema.
-void informacaoProcessos();
+void *informacaoProcessos();
+
+// Exibe uma lista de todos os semáforos no sistema.
+void *informacaoSemaforos();
 
 // Calcula e exibir a taxa de ocupação da memória.
-void informacaoMemoria();
+void *informacaoMemoria();
 
 // Imprime uma mensagem de erro advinda da criação de um BCP.
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo);
-
-// Limpa o buffer de entrada do terminal.
-void limpar_buffer();
-
-// Espera o input de qualquer tecla para continuar.
-void press_any_key_to_continue();
 
 #endif //SIMULACRO_SO_INTERFACE_H

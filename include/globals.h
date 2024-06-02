@@ -5,6 +5,7 @@
 #include "semaforo.h"
 #include "memoria.h"
 
+#include <ncurses.h>
 #include <pthread.h>
 #include <stdbool.h>
 
@@ -25,6 +26,16 @@ extern pthread_mutex_t mutex_RAM; // mutex para acesso à memória simulada
 extern pthread_mutex_t mutex_lista_processos; // mutex para acesso à lista global de processos
 extern pthread_mutex_t mutex_semaforos_globais; // mutex para acesso à lista global de semáforos
 extern unsigned long int relogio; // contador de tempo de execução simulada
+
+extern WINDOW *win_menu;
+extern WINDOW *win_exec_proc;
+extern WINDOW *win_mem_state;
+extern WINDOW *win_processos;
+extern WINDOW *win_semaforos;
+extern WINDOW *win_error_log;
+
+extern bool refresh_proc;
+extern bool refresh_mem;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
