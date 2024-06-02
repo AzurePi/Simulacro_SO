@@ -20,8 +20,11 @@ WINDOW *win_processos;
 WINDOW *win_semaforos;
 WINDOW *win_error_log;
 
-bool refresh_proc;
-bool refresh_mem;
+volatile bool refresh_atual;
+volatile bool refresh_mem;
+volatile bool refresh_proc;
+volatile bool refresh_sem;
+
 
 // Implementação de funções --------------------------------------------------------------------------------------------
 
@@ -36,6 +39,11 @@ void initializeGlobals() {
     pthread_mutex_init(&mutex_lista_processos, NULL);
     pthread_mutex_init(&mutex_semaforos_globais, NULL);
     relogio = 0;
+
+    refresh_atual = true;
+    refresh_mem = true;
+    refresh_proc = true;
+    refresh_sem = true;
 }
 
 void finalizeGlobals() {

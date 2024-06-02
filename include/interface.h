@@ -65,6 +65,9 @@ void draw_borders(WINDOW *win);
 // Exibição do menu no terminal e acesso às operações do usuário.
 void * menu();
 
+// Exibe a infromação do procesos sendo executado nesse instante
+void *processandoAgora();
+
 // Exibe uma lista de todos os processos no sistema.
 void *informacaoProcessos();
 

@@ -34,8 +34,10 @@ extern WINDOW *win_processos;
 extern WINDOW *win_semaforos;
 extern WINDOW *win_error_log;
 
-extern bool refresh_proc;
-extern bool refresh_mem;
+extern volatile bool refresh_atual;
+extern volatile bool refresh_mem;
+extern volatile bool refresh_proc;
+extern volatile bool refresh_sem;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 

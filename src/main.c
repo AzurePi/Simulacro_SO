@@ -18,16 +18,18 @@ int main() {
 
     // threads para controle das múltiplas janelas da interface
     create_and_detach(menu, NULL); // exibição do menu com input do usuário
+    create_and_detach(processandoAgora, NULL); // exibição do processo atualmente em execução
     create_and_detach(informacaoProcessos, NULL); // exibição da lista de processos
     create_and_detach(informacaoSemaforos, NULL); // exibição da lista de semáforos
     create_and_detach(informacaoMemoria, NULL); // exibição do status da memória
 
     while (!encerrar); // esperamos enquanto o programa não é encerrado.
 
+    endwin();
+
     // mostramos ao usuário quanto tempo a execução dos processos demorou na simulação e a lista final de processos
     printw("Tempo total de execução do simulador: %ld ut\n", relogio);
 
-    endwin();
     finalizeGlobals();
 
     return 0;
