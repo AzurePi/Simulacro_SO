@@ -15,21 +15,6 @@
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
 
-// definição dependente do sistema operacional
-#ifdef _WIN32
-
-#define CLEAR_SCREEN() system("cls")
-
-#include <conio.h>
-
-#else
-
-#define CLEAR_SCREEN() printf("\033[H\033[J")
-
-#include <termios.h>
-
-#endif
-
 // definições de códigos ANSI para customização do terminal
 
 #define CLEAR "\033[0m"

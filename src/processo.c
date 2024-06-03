@@ -4,7 +4,7 @@ BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "falha na alocação de memória do BCP" CLEAR);
+        puts("falha na alocação de memória do BCP");
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
@@ -82,9 +82,8 @@ void freeBCP(BCP *bcp) {
 
 void freeListaBCP(BCP *bcp_head) {
     if (!bcp_head) return;
-    BCP *temp;
     while (bcp_head) {
-        temp = bcp_head;
+        BCP* temp = bcp_head;
         bcp_head = bcp_head->prox;
         freeBCP(temp);
     }
@@ -190,7 +189,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
     return processo;
 }
 
-Comando *novoComando(OPCODE opcode, int parametro) {
+Comando *novoComando(const OPCODE opcode, const int parametro) {
     Comando *new = malloc(sizeof(Comando));
     if (!new) return NULL; // se a alocação de memória falhou
     new->opcode = opcode;
@@ -235,9 +234,8 @@ void removerComando(Fila_Comandos *fila) {
 
 void freeFilaComandos(Fila_Comandos *fila) {
     if (!fila) return;
-    Comando *temp;
     while (fila->head != NULL) {
-        temp = fila->head;
+        Comando* temp = fila->head;
         fila->head = fila->head->prox;
         freeComando(temp);
     }
