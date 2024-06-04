@@ -80,7 +80,7 @@ void *menu() {
         mvwprintw(win_menu, 3, 1, "Selecione a operação: ");
         wrefresh(win_menu); // Atualiza a tela com o conteúdo impresso
 
-        char op = wgetch(win_menu); // Captura a entrada do usuário
+        const char op = wgetch(win_menu); // Captura a entrada do usuário
         flushinp();
 
         switch (op) {
@@ -117,7 +117,7 @@ void *menu() {
 void *processandoAgora() {
     while (!encerrar) {
         if (!refresh_atual) {
-            nsleep(500);
+            usleep(500);
             continue;
         }
         refresh_atual = false;
@@ -142,7 +142,7 @@ void *processandoAgora() {
 void *informacaoProcessos() {
     while (!encerrar) {
         if (!refresh_proc) {
-            nsleep(500);
+            usleep(500);
             continue;
         }
         refresh_proc = false;
@@ -179,7 +179,7 @@ void *informacaoProcessos() {
 void *informacaoSemaforos() {
     while (!encerrar) {
         if (!refresh_sem) {
-            nsleep(500);
+            usleep(500);
             continue;
         }
         refresh_sem = false;
@@ -216,7 +216,7 @@ void *informacaoSemaforos() {
 void *informacaoMemoria() {
     while (!encerrar) {
         if (!refresh_mem) {
-            nsleep(500);
+            usleep(500);
             continue;
         }
         refresh_mem = false;
@@ -240,7 +240,7 @@ void *informacaoMemoria() {
 
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
     if (!mensagem || !processo) return NULL;
-    static i = 0;
+    static int i = 0;
 
     wclear(win_error_log);
     mvwprintw(win_error_log, i, 0, "%s", mensagem);

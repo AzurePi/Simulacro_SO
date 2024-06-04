@@ -22,10 +22,9 @@ Fila_Espera_BCP *novaListaEsperaBCP() {
 
 void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
     Espera_BCP *aux = lista->head;
-    Espera_BCP *prox;
 
     while (aux != NULL) {
-        prox = aux->prox;
+        Espera_BCP* prox = aux->prox;
         free(aux);
         aux = prox;
     }
@@ -37,7 +36,7 @@ void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
     free(lista); // libera a própria lista
 }
 
-Semaforo *novoSemaforo(char nome) {
+Semaforo *novoSemaforo(const char nome) {
     Semaforo *new = retrieveSemaforo(nome); // se o semáforo já existe
     if (new) {
         new->refcount++; // aumentamos a contagem de referências
@@ -47,7 +46,7 @@ Semaforo *novoSemaforo(char nome) {
     new = malloc(sizeof(Semaforo)); // criamos um semáforo novo
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "falha ao alocar memória para o semáforo" CLEAR);
+        puts("falha ao alocar memória para o semáforo");
         fflush(stdout);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
@@ -78,7 +77,7 @@ No_Semaforo *novoNoSemaforo(Semaforo *sem) {
     No_Semaforo *new = malloc(sizeof(No_Semaforo));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "falha ao alocar memória para o semáforo" CLEAR);
+        puts("falha ao alocar memória para o semáforo");
         fflush(stdout);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
@@ -99,7 +98,7 @@ Lista_Semaforos *novaListaSemaforos() {
     Lista_Semaforos *new = malloc(sizeof(Lista_Semaforos));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "falha ao alocar memória para a lista de semáforos" CLEAR);
+        puts("falha ao alocar memória para a lista de semáforos");
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
@@ -147,9 +146,8 @@ void inserirSemaforoGlobal(Semaforo *semaforo) {
 
 void freeListaSemaforo(Lista_Semaforos *semaforos) {
     if (!semaforos) return;
-    No_Semaforo *temp;
     while (semaforos->head != NULL) {
-        temp = semaforos->head;
+        No_Semaforo* temp = semaforos->head;
         semaforos->head = semaforos->head->prox;
         freeNoSemaforo(temp);
     }

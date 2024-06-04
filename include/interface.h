@@ -15,24 +15,6 @@
 
 // Definições de Macros ------------------------------------------------------------------------------------------------
 
-// definições de códigos ANSI para customização do terminal
-
-#define CLEAR "\033[0m"
-#define BOLD "\033[1m"
-#define FAINT "\033[2m"
-#define ITALIC "\033[3m"
-#define UNDERLINE "\033[4m"
-#define NOT_BOLD_NOR_FAINT "\033[22m"
-#define NOT_ITALIC "\033[23m"
-#define NOT_UNDERLINE "\033[24m"
-
-#define RED "\033[31m"
-#define BLUE "\033[34m"
-#define BRIGHT_YELLOW "\033[93m"
-
-#define ERROR ITALIC RED "ERRO: "
-#define INPUT ITALIC BRIGHT_YELLOW
-
 // repetição dos macros de memoria.h
 
 #define TAMANHO_PAGINA 8 // 8 unidades de memória (1 um = 1 kbyte)

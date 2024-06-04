@@ -23,12 +23,13 @@ int main() {
     create_and_detach(informacaoSemaforos, NULL); // exibição da lista de semáforos
     create_and_detach(informacaoMemoria, NULL); // exibição do status da memória
 
-    while (!encerrar); // esperamos enquanto o programa não é encerrado.
+    while (!encerrar) // esperamos enquanto o programa não é encerrado
+        usleep(500);
 
     endwin();
 
     // mostramos ao usuário quanto tempo a execução dos processos demorou na simulação e a lista final de processos
-    printw("Tempo total de execução do simulador: %ld ut\n", relogio);
+    printw("Tempo total de execução do simulador: %ld ut", relogio);
 
     finalizeGlobals();
 

@@ -27,7 +27,7 @@ void *CPU() {
 void processarComandos(BCP *processo) {
     if (!processo) return;
 
-    long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
+    const long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
     long int tempo_executado = 0; // o tempo que o processo já está executando
     Comando *atual = processo->comandos->head;
 
