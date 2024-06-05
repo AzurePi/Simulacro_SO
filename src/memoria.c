@@ -5,7 +5,7 @@ void inicializarRAM() {
     RAM = malloc(sizeof(Memoria));
     RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
-        RAM->memoria[i].segunda_chance = 0; // inicializa todas como podendo ser trocadas
+        RAM->memoria[i].segunda_chance = false; // inicializa todas como podendo ser trocadas
         RAM->memoria[i].conteudo = NULL; // essa página não aponta para ninguém
     }
     RAM->n_paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
@@ -61,7 +61,7 @@ int paginaParaSubstituir() {
             return pagina_para_substituir;
         }
 
-        RAM->memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
+        RAM->memoria[ponteiro].segunda_chance = false; // Remove a segunda chance
         ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
     }
     pthread_mutex_unlock(&mutex_RAM);

@@ -104,7 +104,7 @@ void *processInterrupt(void *args) {
             break;
         }
         default:
-            puts(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
+            puts("Tipo de interrupção desconhecida\n");
             break;
     }
     return NULL;
@@ -191,14 +191,14 @@ void *processCreate(void *filename) {
             sysCall(process_interrupt, args);
         } else {
             pthread_mutex_lock(&mutex_IO);
-            printf(ERROR "não foi possível criar o processo do programa %s" CLEAR, arquivo);
+            printf("não foi possível criar o processo do programa %s", arquivo);
             fflush(stdout);
             sleep(2);
             pthread_mutex_unlock(&mutex_IO);
         }
     } else {
         pthread_mutex_lock(&mutex_IO);
-        printf(ERROR "arquivo %s do programa sintético não pôde ser aberto" CLEAR, arquivo);
+        printf("arquivo %s do programa sintético não pôde ser aberto", arquivo);
         fflush(stdout);
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);

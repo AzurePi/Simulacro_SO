@@ -10,69 +10,70 @@ void initializeInterface() {
     start_color();
     cbreak();
 
-    int height, width;
+    short height, width;
     getmaxyx(stdscr, height, width);
-    const int middle = width / 2;
+    const short middle = width / 2;
 
     const short menu_lines = 7;
     const short error_lines = 5;
     const short mem_lines = 3;
-    const short mid_lines = height - menu_lines - error_lines - mem_lines;
+    const short end_lines = height - menu_lines - error_lines - mem_lines;
 
     // Definindo dimensões e posições das janelas ----------------------------------------------------------------------
 
     // Menu na parte superior
-    WINDOW *win_super_menu = newwin(menu_lines, middle, 0, 0);
+    WINDOW *win_super_menu = newwin(menu_lines, width, 0, 0);
 
-    // Processo em Execução ao lado do Menu
-    WINDOW *win_super_exec_proc = newwin(menu_lines, middle, 0, middle);
+    // Processo em Execução ao lado da Memória (lado esquerdo)
+    WINDOW *win_super_exec_proc = newwin(mem_lines, middle, menu_lines, 0);
 
-    // Log de Erros na parte inferior
-    WINDOW *win_super_error_log = newwin(error_lines, width, menu_lines, 0);
+    // Estado da Memória abaixo do Menu (lado direito)
+    WINDOW *win_super_mem_state = newwin(mem_lines, middle, menu_lines, middle);
 
-    // Lista de Processos abaixo do Estado da Memória (lado esquerdo)
-    WINDOW *win_super_processos = newwin(mid_lines, middle, menu_lines + error_lines, 0);
+    // Log de Erros abaixo do Processo em execução
+    WINDOW *win_super_error_log = newwin(error_lines, width, menu_lines + mem_lines, 0);
 
-    // Lista de Semáforos abaixo do Estado da Memória (lado direito)
-    WINDOW *win_super_semaforos = newwin(mid_lines, middle, menu_lines + error_lines, middle);
+    // Lista de Processos abaixo do Log de Erros (lado esquerdo)
+    WINDOW *win_super_processos = newwin(end_lines, middle, menu_lines + mem_lines + error_lines, 0);
 
-    // Estado da Memória abaixo do Menu
-    WINDOW *win_super_mem_state = newwin(mem_lines, width, menu_lines + error_lines + mid_lines, 0);
+    // Lista de Semáforos abaixo do Log de Erros (lado direito)
+    WINDOW *win_super_semaforos = newwin(end_lines, middle, menu_lines + mem_lines + error_lines, middle);
 
 
     // Definindo a parte interna das janelas, que é onde escreveremos de fato
-    win_menu = derwin(win_super_menu, menu_lines - 2, middle - 2, 1, 1);
-    win_exec_proc = derwin(win_super_exec_proc, menu_lines - 2, middle - 2, 1, 1);
+    win_menu = derwin(win_super_menu, menu_lines - 2, width - 2, 1, 1);
+    win_exec_proc = derwin(win_super_exec_proc, mem_lines - 2, middle - 2, 1, 1);
+    win_mem_state = derwin(win_super_mem_state, mem_lines - 2, middle - 2, 1, middle + 1);
     win_error_log = derwin(win_super_error_log, error_lines - 2, width - 2, 1, 1);
-    win_processos = derwin(win_super_processos, mid_lines - 2, middle - 2, 1, 1);
-    win_semaforos = derwin(win_super_semaforos, mid_lines - 2, middle - 2, 1, middle + 1);
-    win_mem_state = derwin(win_super_mem_state, mem_lines - 2, width - 2, 1, 1);
+    win_processos = derwin(win_super_processos, end_lines - 2, middle - 2, 1, 1);
+    win_semaforos = derwin(win_super_semaforos, end_lines - 2, middle - 2, 1, middle + 1);
 
     // Habilitar scrolling em algumas janelas
+    scrollok(win_error_log, TRUE);
     scrollok(win_processos, TRUE);
     scrollok(win_semaforos, TRUE);
-    scrollok(win_error_log, TRUE);
 
     // Desenha as bordas das janelas
     draw_borders(win_super_menu);
     draw_borders(win_super_exec_proc);
     draw_borders(win_super_mem_state);
+    draw_borders(win_super_error_log);
     draw_borders(win_super_processos);
     draw_borders(win_super_semaforos);
-    draw_borders(win_super_error_log);
 
     // Atualiza as janelas com as bordas desenhadas
     wrefresh(win_super_menu);
     wrefresh(win_super_exec_proc);
     wrefresh(win_super_mem_state);
+    wrefresh(win_super_error_log);
     wrefresh(win_super_processos);
     wrefresh(win_super_semaforos);
-    wrefresh(win_super_error_log);
 }
 
 void *menu() {
     while (!encerrar) {
         wclear(win_menu); // limpa a janela
+        flushinp();
 
         mvwprintw(win_menu, 0, 1, " [1] Novo processo");
         mvwprintw(win_menu, 1, 1, " [0] Encerrar");

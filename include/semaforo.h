@@ -31,7 +31,6 @@ typedef struct semaforo {
     volatile int v; // valor do semáforo
     int refcount; // conta o número de processos que estão usando o semáforo
     Fila_Espera_BCP *waiting_list; // topo da lista de espera de processos do semáforo
-    //struct semaforo *prox;
 } Semaforo;
 
 // Um semáforo em uma lista de semáforos
