@@ -1,7 +1,11 @@
 #include "include/memoria.h"
 
 void inicializarRAM() {
-    if (RAM) return; // se a RAM já foi inicializada, retorna
+    pthread_mutex_lock(&mutex_RAM);
+    if (RAM) {
+        pthread_mutex_unlock(&mutex_RAM);
+        return; // se a RAM já foi inicializada, retorna
+    }
     RAM = malloc(sizeof(Memoria));
     RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
@@ -9,12 +13,18 @@ void inicializarRAM() {
         RAM->memoria[i].conteudo = NULL; // essa página não aponta para ninguém
     }
     RAM->n_paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
+    pthread_mutex_unlock(&mutex_RAM);
 }
 
 void freeRAM() {
-    if (!RAM) return;
+    pthread_mutex_lock(&mutex_RAM);
+    if (!RAM) {
+        pthread_mutex_unlock(&mutex_RAM);
+        return;
+    }
     free(RAM->memoria);
     free(RAM);
+    pthread_mutex_unlock(&mutex_RAM);
 }
 
 void carregarPaginasNecessarias(BCP *processo) {
