@@ -22,7 +22,7 @@ void carregarPaginasNecessarias(BCP *processo) {
 
     for (int i = 0; i < processo->n_paginas_usadas; i++) {
         if (processo->paginas_usadas[i] == NULL) {
-            int para_substituir = paginaParaSubstituir();
+            const int para_substituir = paginaParaSubstituir();
 
             pthread_mutex_lock(&mutex_RAM);
             Pagina *pagina = &RAM->memoria[para_substituir];
@@ -55,19 +55,19 @@ int paginaParaSubstituir() {
     pthread_mutex_lock(&mutex_RAM);
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
         if (RAM->memoria[ponteiro].segunda_chance == false) {
-            int pagina_para_substituir = ponteiro;
+            const int pagina_para_substituir = ponteiro;
             ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
             pthread_mutex_unlock(&mutex_RAM);
             return pagina_para_substituir;
-        } else {
-            RAM->memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
-            ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
         }
+
+        RAM->memoria[ponteiro].segunda_chance = 0; // Remove a segunda chance
+        ponteiro = (ponteiro + 1) % NUMERO_PAGINAS; // Avança o ponteiro
     }
     pthread_mutex_unlock(&mutex_RAM);
 
     // Caso todas as páginas tenham segunda chance, substitui a primeira página examinada
-    int pagina_para_substituir = ponteiro;
+    const int pagina_para_substituir = ponteiro;
     ponteiro = (ponteiro + 1) % NUMERO_PAGINAS;
     return pagina_para_substituir;
 }
@@ -86,7 +86,7 @@ void descarregarPaginas(BCP *processo) {
     pthread_mutex_unlock(&mutex_RAM); // libera acesso à memória
 }
 
-bool verificarPaginasCarregadas(BCP *processo) {
+bool verificarPaginasCarregadas(const BCP *processo) {
     for (int i = 0; i < processo->n_paginas_usadas; i++) {
         if (processo->paginas_usadas[i] == NULL)
             return false; // Página não carregada encontrada

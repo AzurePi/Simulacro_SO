@@ -22,10 +22,9 @@ Fila_Espera_BCP *novaListaEsperaBCP() {
 
 void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
     Espera_BCP *aux = lista->head;
-    Espera_BCP *prox;
 
     while (aux != NULL) {
-        prox = aux->prox;
+        Espera_BCP* prox = aux->prox;
         free(aux);
         aux = prox;
     }
@@ -147,9 +146,8 @@ void inserirSemaforoGlobal(Semaforo *semaforo) {
 
 void freeListaSemaforo(Lista_Semaforos *semaforos) {
     if (!semaforos) return;
-    No_Semaforo *temp;
     while (semaforos->head != NULL) {
-        temp = semaforos->head;
+        No_Semaforo* temp = semaforos->head;
         semaforos->head = semaforos->head->prox;
         freeNoSemaforo(temp);
     }
@@ -158,7 +156,7 @@ void freeListaSemaforo(Lista_Semaforos *semaforos) {
 
 Semaforo *retrieveSemaforo(char nome) {
     pthread_mutex_lock(&mutex_semaforos_globais);
-    No_Semaforo *aux = semaforos_existentes->head;
+    const No_Semaforo *aux = semaforos_existentes->head;
     while (aux) {
         if (aux->semaforo->nome == nome) {
             pthread_mutex_unlock(&mutex_semaforos_globais);

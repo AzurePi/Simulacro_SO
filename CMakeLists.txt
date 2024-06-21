@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25)
 project(Simulacro_SO C)
 
 set(CMAKE_C_STANDARD 11)
@@ -7,6 +7,7 @@ set(CMAKE_PROJECT_DESCRIPTION "Projeto de simulacro de um sistema operacional")
 include_directories(.)
 
 set(SOURCE_DIR "src")
+set(HEADERS_DIR "include")
 
 set(SOURCES
         ${SOURCE_DIR}/cpu.c
@@ -19,6 +20,16 @@ set(SOURCES
         ${SOURCE_DIR}/syscalls.c
 )
 
-add_executable(Simulacro_SO ${SOURCES})
+set(HEADERS
+        ${HEADERS_DIR}/cpu.h
+        ${HEADERS_DIR}/globals.h
+        ${HEADERS_DIR}/interface.h
+        ${HEADERS_DIR}/memoria.h
+        ${HEADERS_DIR}/processo.h
+        ${HEADERS_DIR}/semaforo.h
+        ${HEADERS_DIR}/syscalls.h
+)
+
+add_executable(Simulacro_SO ${SOURCES} ${HEADERS})
 
 target_link_libraries(Simulacro_SO m)

@@ -52,6 +52,6 @@ void carregarPaginasNecessarias(BCP *processo);
 void descarregarPaginas(BCP *processo);
 
 // Verifica se todas as páginas necessárias para um processo estão carregadas na memória.
-bool verificarPaginasCarregadas(BCP *processo);
+bool verificarPaginasCarregadas(const BCP *processo);
 
 #endif //SIMULACRO_SO_MEMORIA_H

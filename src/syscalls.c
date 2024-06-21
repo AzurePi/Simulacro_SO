@@ -19,7 +19,7 @@ bool sysCall(short op, void *args) {
             create_and_detach(processInterrupt, args);
             break;
         case semaphore_P: {
-            bool *res = (bool *) malloc(sizeof(bool));
+            bool *res = malloc(sizeof(bool));
 
             pthread_attr_t a;
             pthread_attr_init(&a);
@@ -75,8 +75,8 @@ bool sysCall(short op, void *args) {
 }
 
 void *processInterrupt(void *args) {
-    InterruptArgs *intArgs = (InterruptArgs *) args;
-    INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
+    const InterruptArgs *intArgs = (InterruptArgs *) args;
+    const INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
     BCP *proc = intArgs->processo;
 
     switch (tipo_interrupcao) {
@@ -111,7 +111,7 @@ void *processInterrupt(void *args) {
 }
 
 void *semaphoreP(void *args) {
-    SemaphorePArgs *sem_args = (SemaphorePArgs *) args;
+    const SemaphorePArgs *sem_args = (SemaphorePArgs *) args;
     Semaforo *semaforo = sem_args->semaforo;
     BCP *proc = sem_args->proc;
 
@@ -122,18 +122,18 @@ void *semaphoreP(void *args) {
         sem_queue(semaforo->waiting_list, proc); // o processo é posto na lista de espera desse semáforo
         pthread_mutex_unlock(&semaforo->mutex_lock);
 
-        bool *result = (bool *) malloc(sizeof(bool));
+        bool *result = malloc(sizeof(bool));
         *result = false; // avisa que o processo foi bloqueado
         return result;
     }
     pthread_mutex_unlock(&semaforo->mutex_lock);
-    bool *result = (bool *) malloc(sizeof(bool));
+    bool *result = malloc(sizeof(bool));
     *result = true; // avisa que o processo pode prosseguir
     return result;
 }
 
 void *semaphoreV(void *semaforo) {
-    Semaforo *semaph = (Semaforo *) semaforo;
+    Semaforo *semaph = semaforo;
 
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
@@ -161,13 +161,13 @@ void *PrintRequest(void *args) { return NULL; }
 void *PrintFinish(void *args) { return NULL; }
 
 void *memLoadReq(void *args) {
-    BCP *processo = (BCP *) args;
+    BCP *processo = args;
     carregarPaginasNecessarias(processo);
     return NULL;
 }
 
 void *memLoadFinish(void *args) {
-    BCP *processo = (BCP *) args;
+    BCP *processo = args;
     descarregarPaginas(processo);
     return NULL;
 }
@@ -177,7 +177,7 @@ void *fsRequest(void *args) { return NULL; }
 void *fsFinish(void *args) { return NULL; }
 
 void *processCreate(void *filename) {
-    char *arquivo = (char *) filename;
+    char *arquivo = filename;
     FILE *programa = fopen(arquivo, "r");
 
     if (programa) {
@@ -209,7 +209,7 @@ void *processCreate(void *filename) {
 }
 
 void *processFinish(void *args) {
-    BCP *process = (BCP *) args;
+    BCP *process = args;
 
     process->estado = TERMINADO;
 
@@ -217,9 +217,9 @@ void *processFinish(void *args) {
 
     // percorre a lista de semáforos associada ao processo
     pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
-    No_Semaforo *no_sem = process->semaforos->head;
+    const No_Semaforo *no_sem = process->semaforos->head;
     while (no_sem) {
-        No_Semaforo *next = no_sem->prox;
+        const No_Semaforo *next = no_sem->prox;
 
         pthread_mutex_lock(&no_sem->semaforo->mutex_lock); // bloqueia acesso a esse semáforo
         no_sem->semaforo->refcount--; // decrementa a quantidade de referências

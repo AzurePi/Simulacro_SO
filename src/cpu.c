@@ -27,7 +27,7 @@ void *CPU() {
 void processarComandos(BCP *processo) {
     if (!processo) return;
 
-    long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
+    const long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
     long int tempo_executado = 0; // o tempo que o processo já está executando
     Comando *atual = processo->comandos->head;
 
@@ -43,7 +43,7 @@ void processarComandos(BCP *processo) {
         switch (atual->opcode) {
             case EXEC: {
                 t = atual->parametro;
-                if (t > (quantum - tempo_executado))
+                if (t > quantum - tempo_executado)
                     t = quantum - tempo_executado;
 
                 atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
@@ -67,7 +67,7 @@ void processarComandos(BCP *processo) {
             }
             case P: {
                 t = 200;
-                Semaforo *sem = retrieveSemaforo((char) atual->parametro); // encontramos o semáforo sendo chamado
+                Semaforo *sem = retrieveSemaforo(atual->parametro); // encontramos o semáforo sendo chamado
 
                 // criamos uma struct provisória para passar os argumentos para sysCall
                 SemaphorePArgs args = {.semaforo = sem, .proc = processo};
@@ -81,7 +81,7 @@ void processarComandos(BCP *processo) {
             }
             case V: {
                 t = 200;
-                Semaforo *sem = retrieveSemaforo((char) atual->parametro);
+                Semaforo *sem = retrieveSemaforo(atual->parametro);
 
                 sysCall(semaphore_V, sem);
                 atual = atual->prox; // passamos para o próximo comando da lista

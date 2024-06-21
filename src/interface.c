@@ -94,8 +94,8 @@ void informacaoProcessos() {
                      "\n%s (%d), Prioridade: %d   " BOLD "%s" NOT_BOLD_NOR_FAINT,
                      atual->nome, atual->id_seg, atual->prioridade, estados[atual->estado]);
 
-            size_t linha_len = strlen(linha);
-            size_t new_size = strlen(buffer) + linha_len + 1;
+            const size_t linha_len = strlen(linha);
+            const size_t new_size = strlen(buffer) + linha_len + 1;
 
             if (new_size > buffer_size) {
                 buffer_size = new_size;
@@ -125,8 +125,8 @@ void informacaoProcessos() {
                      "\n\t%c " BOLD "|" NOT_BOLD_NOR_FAINT " Contador: %d processos",
                      aux->semaforo->nome, aux->semaforo->refcount);
 
-            size_t linha_len = strlen(linha);
-            size_t new_size = strlen(buffer) + linha_len + 1;
+            const size_t linha_len = strlen(linha);
+            const size_t new_size = strlen(buffer) + linha_len + 1;
 
             if (new_size > buffer_size) {
                 buffer_size = new_size;
@@ -151,8 +151,8 @@ void informacaoMemoria() {
         return;
     }
 
-    int paginas_ocupadas = RAM->n_paginas_ocupadas;
-    double taxa_ocupacao = ((double) paginas_ocupadas / NUMERO_PAGINAS) * 100.0;
+    const int paginas_ocupadas = RAM->n_paginas_ocupadas;
+    const double taxa_ocupacao = (double) paginas_ocupadas / NUMERO_PAGINAS * 100.0;
 
     printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n",
            taxa_ocupacao, paginas_ocupadas, NUMERO_PAGINAS);

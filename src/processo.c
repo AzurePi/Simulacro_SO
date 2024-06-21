@@ -235,9 +235,8 @@ void removerComando(Fila_Comandos *fila) {
 
 void freeFilaComandos(Fila_Comandos *fila) {
     if (!fila) return;
-    Comando *temp;
     while (fila->head != NULL) {
-        temp = fila->head;
+        Comando* temp = fila->head;
         fila->head = fila->head->prox;
         freeComando(temp);
     }
