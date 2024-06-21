@@ -27,49 +27,49 @@ bool sysCall(const short func, void *args) {
 
         pthread_t t;
 
-        pthread_create(&t, &a, semaphoreP, args);
-        pthread_join(t, (void**)res);
-        result = *res; // indicamos se o processo precisa ou não ser bloqueado pelo semáforo
-        free(res);
-        pthread_attr_destroy(&a);
-        break;
-    }
-    case semaphore_V:
-        create_and_detach(semaphoreV, args);
-        break;
-    case disk_request:
-        create_and_detach(DiskRequest, args);
-        break;
-    case disk_finish:
-        create_and_detach(DiskFinish, args);
-        break;
-    case print_request:
-        create_and_detach(PrintRequest, args);
-        break;
-    case print_finish:
-        create_and_detach(PrintFinish, args);
-        break;
-    case mem_load_req:
-        create_and_detach(memLoadReq, args);
-        break;
-    case mem_load_finish:
-        create_and_detach(memLoadFinish, args);
-        break;
-    case fs_request:
-        create_and_detach(fsRequest, args);
-        break;
-    case fs_finish:
-        create_and_detach(fsFinish, args);
-        break;
-    case process_create:
-        create_and_detach(processCreate, args);
-        break;
-    case process_finish:
-        create_and_detach(processFinish, args);
-        break;
-    default:
-        result = false;
-        break;
+            pthread_create(&t, &a, semaphoreP, args);
+            pthread_join(t, (void **) res);
+            result = *res; // indicamos se o processo precisa ou não ser bloqueado pelo semáforo
+            free(res);
+            pthread_attr_destroy(&a);
+            break;
+        }
+        case semaphore_V:
+            create_and_detach(semaphoreV, args);
+            break;
+        case disk_request:
+            create_and_detach(DiskRequest, args);
+            break;
+        case disk_finish:
+            create_and_detach(DiskFinish, args);
+            break;
+        case print_request:
+            create_and_detach(PrintRequest, args);
+            break;
+        case print_finish:
+            create_and_detach(PrintFinish, args);
+            break;
+        case mem_load_req:
+            create_and_detach(memLoadReq, args);
+            break;
+        case mem_load_finish:
+            create_and_detach(memLoadFinish, args);
+            break;
+        case fs_request:
+            create_and_detach(fsRequest, args);
+            break;
+        case fs_finish:
+            create_and_detach(fsFinish, args);
+            break;
+        case process_create:
+            create_and_detach(processCreate, args);
+            break;
+        case process_finish:
+            create_and_detach(processFinish, args);
+            break;
+        default:
+            result = false;
+            break;
     }
     return result;
 }
@@ -195,16 +195,14 @@ void *processCreate(void *filename) {
             args->processo = processo;
 
             sysCall(process_interrupt, args);
-        }
-        else {
+        } else {
             pthread_mutex_lock(&mutex_IO);
             printf(ERROR "não foi possível criar o processo do programa %s" CLEAR, arquivo);
             fflush(stdout);
             sleep(2);
             pthread_mutex_unlock(&mutex_IO);
         }
-    }
-    else {
+    } else {
         pthread_mutex_lock(&mutex_IO);
         printf(ERROR "arquivo %s do programa sintético não pôde ser aberto" CLEAR, arquivo);
         fflush(stdout);
