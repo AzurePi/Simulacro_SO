@@ -73,8 +73,7 @@ void *interface() {
             break;
         }
         sleep(1);
-    }
-    while (!encerrar);
+    } while (!encerrar);
 
     return NULL;
 }
