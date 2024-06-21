@@ -60,10 +60,10 @@ bool sysCall(short func, void *args);
 void *processInterrupt(void *args);
 
 // Tratamento de bloqueio de processo
-void *semaphoreP(void *semaph);
+void *semaphoreP(void *args_semaforo);
 
 // Tratamento de desbloqueio de processo
-void *semaphoreV(void *semaforo);
+void *semaphoreV(void *args_semaforo);
 
 // Chamada de operação de E/S para disco
 void *DiskRequest(void *args);
@@ -93,6 +93,6 @@ void *fsFinish(void *args);
 void *processCreate(void *filename);
 
 // chamada para terminar a existência de um processo no BCP
-void *processFinish(void *args);
+void *processFinish(void *args_BCP);
 
 #endif //SIMULACRO_SO_SYSCALLS_H

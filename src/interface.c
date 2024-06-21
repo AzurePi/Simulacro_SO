@@ -1,14 +1,15 @@
 #include "include/interface.h"
 
 void *interface() {
-    char *menu = "╔════════════════════════════════════════╗\n"
-                 "║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE "    ║\n"
-                 "╟────────────────────────────────────────╢\n"
-                 "║ [1] Novo processo                      ║\n"
-                 "║ [2] Ver informações dos processos      ║\n"
-                 "║ [3] Ver informações da memória         ║\n"
-                 "║ [0] Encerrar                           ║\n"
-                 "╚════════════════════════════════════════╝";
+    const char *menu =
+        "╔════════════════════════════════════════╗\n"
+        "║    " BOLD UNDERLINE "Simulador de Sistema Operacional" NOT_BOLD_NOR_FAINT NOT_UNDERLINE "    ║\n"
+        "╟────────────────────────────────────────╢\n"
+        "║ [1] Novo processo                      ║\n"
+        "║ [2] Ver informações dos processos      ║\n"
+        "║ [3] Ver informações da memória         ║\n"
+        "║ [0] Encerrar                           ║\n"
+        "╚════════════════════════════════════════╝";
     char op;
 
     do {
@@ -32,55 +33,55 @@ void *interface() {
         pthread_mutex_unlock(&mutex_IO); // desbloqueia acesso ao terminal
 
         switch (op) {
-            case '0':
-                pthread_mutex_lock(&mutex_IO);
-                puts("Encerrando programa...");
-                pthread_mutex_unlock(&mutex_IO);
-                encerrar = true;
-                break;
-            case '1': {
-                char filename[201];
+        case '0':
+            pthread_mutex_lock(&mutex_IO);
+            puts("Encerrando programa...");
+            pthread_mutex_unlock(&mutex_IO);
+            encerrar = true;
+            break;
+        case '1': {
+            char filename[201];
 
-                pthread_mutex_lock(&mutex_IO);
-                printf("Caminho do programa: " INPUT);
-                scanf("%200[^\n]s", filename);
-                printf(CLEAR);
-                limpar_buffer();
-                pthread_mutex_unlock(&mutex_IO);
+            pthread_mutex_lock(&mutex_IO);
+            printf("Caminho do programa: " INPUT);
+            scanf("%200[^\n]s", filename);
+            printf(CLEAR);
+            limpar_buffer();
+            pthread_mutex_unlock(&mutex_IO);
 
-                // passamos uma cópia, para evitar que filename se perca no fim do bloco do case
-                char *filename_copy = strdup(filename);
-                sysCall(process_create, filename_copy);
-            }
-                break;
-            case '2':
-                pthread_mutex_lock(&mutex_IO);
-                informacaoProcessos();
-                pthread_mutex_unlock(&mutex_IO);
-                break;
-            case '3':
-                pthread_mutex_lock(&mutex_IO);
-                informacaoMemoria();
-                pthread_mutex_unlock(&mutex_IO);
-                break;
-            default:
-                pthread_mutex_lock(&mutex_IO);
-                puts(ERROR "Opção inválida!" CLEAR);
-                fflush(stdout);
-                sleep(1);
-                pthread_mutex_unlock(&mutex_IO);
-                break;
+            // passamos uma cópia, para evitar que filename se perca no fim do bloco do case
+            char *filename_copy = strdup(filename);
+            sysCall(process_create, filename_copy);
+        }
+        break;
+        case '2':
+            pthread_mutex_lock(&mutex_IO);
+            informacaoProcessos();
+            pthread_mutex_unlock(&mutex_IO);
+            break;
+        case '3':
+            pthread_mutex_lock(&mutex_IO);
+            informacaoMemoria();
+            pthread_mutex_unlock(&mutex_IO);
+            break;
+        default:
+            pthread_mutex_lock(&mutex_IO);
+            puts(ERROR "Opção inválida!" CLEAR);
+            fflush(stdout);
+            sleep(1);
+            pthread_mutex_unlock(&mutex_IO);
+            break;
         }
         sleep(1);
-    } while (!encerrar);
+    }
+    while (!encerrar);
 
     return NULL;
 }
 
 void informacaoProcessos() {
-    if (!head_lista_processos) {
-        puts("\nAinda não há processos no sistema.");
-    } else {
+    if (!head_lista_processos) { puts("\nAinda não há processos no sistema."); }
+    else {
         char *estados[] = {"PRONTO", "EXECUTANDO", "BLOQUEADO", "TERMINADO"};
         size_t buffer_size = 128;
         char *buffer = malloc(buffer_size);
@@ -152,7 +153,7 @@ void informacaoMemoria() {
     }
 
     const int paginas_ocupadas = RAM->n_paginas_ocupadas;
-    const double taxa_ocupacao = (double) paginas_ocupadas / NUMERO_PAGINAS * 100.0;
+    const double taxa_ocupacao = (double)paginas_ocupadas / NUMERO_PAGINAS * 100.0;
 
     printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n",
            taxa_ocupacao, paginas_ocupadas, NUMERO_PAGINAS);

@@ -41,62 +41,63 @@ void processarComandos(BCP *processo) {
          * consideramos que todas as operações, exceto EXEC, são atômicas
          */
         switch (atual->opcode) {
-            case EXEC: {
-                t = atual->parametro;
-                if (t > quantum - tempo_executado)
-                    t = quantum - tempo_executado;
+        case EXEC: {
+            t = atual->parametro;
+            if (t > quantum - tempo_executado)
+                t = quantum - tempo_executado;
 
-                atual->parametro -= (int) t; // retiramos o tempo que já foi executado do parâmetro
-                if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
-                    atual = atual->prox; // passamos para o próximo comando da lista
-                    removerComando(processo->comandos); // remove o comando da lista de comandos
-                }
-                break;
-            }
-            case READ: {
-                t = 100;
+            atual->parametro -= (int)t; // retiramos o tempo que já foi executado do parâmetro
+            if (atual->parametro <= 0) {
+                // se após isso, terminamos a execução, apagamos o comando
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
-                break;
             }
-            case WRITE: {
-                t = 100;
-                atual = atual->prox; // passamos para o próximo comando da lista
-                removerComando(processo->comandos); // remove o comando da lista de comandos
-                break;
-            }
-            case P: {
-                t = 200;
-                Semaforo *sem = retrieveSemaforo(atual->parametro); // encontramos o semáforo sendo chamado
+            break;
+        }
+        case READ: {
+            t = 100;
+            atual = atual->prox; // passamos para o próximo comando da lista
+            removerComando(processo->comandos); // remove o comando da lista de comandos
+            break;
+        }
+        case WRITE: {
+            t = 100;
+            atual = atual->prox; // passamos para o próximo comando da lista
+            removerComando(processo->comandos); // remove o comando da lista de comandos
+            break;
+        }
+        case P: {
+            t = 200;
+            Semaforo *sem = retrieveSemaforo(atual->parametro); // encontramos o semáforo sendo chamado
 
-                // criamos uma struct provisória para passar os argumentos para sysCall
-                SemaphorePArgs args = {.semaforo = sem, .proc = processo};
+            // criamos uma struct provisória para passar os argumentos para sysCall
+            SemaphorePArgs args = {.semaforo = sem, .proc = processo};
 
-                if (sysCall(semaphore_P, &args)) // se o semáforo permite a execução
-                    atual = atual->prox; // passamos para o próximo comando
-                else // se o semáforo bloqueou a execução
-                    atual = NULL; // interrompemos a execução
-                removerComando(processo->comandos); // remove o comando da lista de comandos
-                break;
-            }
-            case V: {
-                t = 200;
-                Semaforo *sem = retrieveSemaforo(atual->parametro);
+            if (sysCall(semaphore_P, &args)) // se o semáforo permite a execução
+                atual = atual->prox; // passamos para o próximo comando
+            else // se o semáforo bloqueou a execução
+                atual = NULL; // interrompemos a execução
+            removerComando(processo->comandos); // remove o comando da lista de comandos
+            break;
+        }
+        case V: {
+            t = 200;
+            Semaforo *sem = retrieveSemaforo(atual->parametro);
 
-                sysCall(semaphore_V, sem);
-                atual = atual->prox; // passamos para o próximo comando da lista
-                removerComando(processo->comandos); // remove o comando da lista de comandos
-                break;
-            }
-            case PRINT: {
-                t = 100;
-                atual = atual->prox; // passamos para o próximo comando da lista
-                removerComando(processo->comandos);
-                break;
-            }
-            default:
-                t = 0;
-                break;
+            sysCall(semaphore_V, sem);
+            atual = atual->prox; // passamos para o próximo comando da lista
+            removerComando(processo->comandos); // remove o comando da lista de comandos
+            break;
+        }
+        case PRINT: {
+            t = 100;
+            atual = atual->prox; // passamos para o próximo comando da lista
+            removerComando(processo->comandos);
+            break;
+        }
+        default:
+            t = 0;
+            break;
         }
 
         // atualiza o relógio com o tempo do processamento

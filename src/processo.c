@@ -39,7 +39,8 @@ void inserirBCPFinal(BCP *processo) {
     if (!processo) return; // se não há processo para inserir
 
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
-    if (!head_lista_processos) { // se a lista estiver vazia, inserimos como head
+    if (!head_lista_processos) {
+        // se a lista estiver vazia, inserimos como head
         head_lista_processos = processo;
         pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
         return;
@@ -56,7 +57,8 @@ void inserirBCPFinal(BCP *processo) {
 BCP *buscaBCPExecutar() {
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
 
-    if (!head_lista_processos) { // se a lista de processos está vazia
+    if (!head_lista_processos) {
+        // se a lista de processos está vazia
         pthread_mutex_unlock(&mutex_lista_processos);
         return NULL;
     }
@@ -82,9 +84,8 @@ void freeBCP(BCP *bcp) {
 
 void freeListaBCP(BCP *bcp_head) {
     if (!bcp_head) return;
-    BCP *temp;
     while (bcp_head) {
-        temp = bcp_head;
+        BCP *temp = bcp_head;
         bcp_head = bcp_head->prox;
         freeBCP(temp);
     }
@@ -113,7 +114,7 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
     char i = 0; // contador de tamanho pequeno
 
     //enquanto não chegamos no fim da linha e há caracteres para ler e não ultrapassamos o máximo de 10 semáforos
-    while ((s = (char) fgetc(programa)) != '\n' && s != EOF && i < 10) {
+    while ((s = (char)fgetc(programa)) != '\n' && s != EOF && i < 10) {
         if (s != ' ')
             semaforos[i++] = s; //guardamos o s e passamos para a próxima posição do vetor
     }
@@ -142,8 +143,10 @@ bool lerComandos(FILE *programa, Fila_Comandos *fila) {
             if (sscanf(buffer, "%5[^(](%10[^)])", buffer_operacao, buffer_parametro) != 2)
                 return false; // erro ao analisar a string do comando
             opcode = (buffer_operacao[0] == 'P' ? P : V);
-            parametro = (int) buffer_parametro[0];
-        } else { //se estamos lidando com as demais operações, a string terá formato "operação parâmetro"
+            parametro = (int)buffer_parametro[0];
+        }
+        else {
+            //se estamos lidando com as demais operações, a string terá formato "operação parâmetro"
             if (sscanf(buffer, "%s %s", buffer_operacao, buffer_parametro) != 2)
                 return false; // erro ao analisar a string do comando
 
@@ -177,7 +180,7 @@ BCP *lerProgramaSintetico(FILE *programa) {
         return mensagemErroBCP("programa sintético contém erro no cabeçalho", processo);
 
     // calcula o número de páginas da memória que precisam ser utilizadas para esse processo
-    processo->n_paginas_usadas = (int) ceil((processo->tamanho_seg / (double) TAMANHO_PAGINA));
+    processo->n_paginas_usadas = (int)ceil(processo->tamanho_seg / (double)TAMANHO_PAGINA);
 
     // lê a linha que contém os semáforos
     lerSemaforos(programa, processo);
@@ -218,7 +221,8 @@ void inserirComando(Comando *comando, Fila_Comandos *fila) {
     if (!fila->head) {
         fila->head = comando;
         fila->tail = comando;
-    } else {
+    }
+    else {
         fila->tail->prox = comando;
         fila->tail = comando;
     }
@@ -236,7 +240,7 @@ void removerComando(Fila_Comandos *fila) {
 void freeFilaComandos(Fila_Comandos *fila) {
     if (!fila) return;
     while (fila->head != NULL) {
-        Comando* temp = fila->head;
+        Comando *temp = fila->head;
         fila->head = fila->head->prox;
         freeComando(temp);
     }
@@ -251,7 +255,8 @@ void process_sleep(BCP *processo) {
     // removemos o processo de sua posição na lista
     if (processo == head_lista_processos) //se o processo está no começo da lista global
         head_lista_processos = processo->prox; // alteramos o começo da lista
-    else { // procuramos a posição correta
+    else {
+        // procuramos a posição correta
         BCP *aux = head_lista_processos;
         BCP *anterior = NULL;
 

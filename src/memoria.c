@@ -1,7 +1,11 @@
 #include "include/memoria.h"
 
 void inicializarRAM() {
-    if (RAM) return; // se a RAM já foi inicializada, retorna
+    pthread_mutex_lock(&mutex_RAM);
+    if (RAM) {
+        pthread_mutex_unlock(&mutex_RAM);
+        return; // se a RAM já foi inicializada, retorna
+    }
     RAM = malloc(sizeof(Memoria));
     RAM->memoria = malloc(NUMERO_PAGINAS * sizeof(Pagina));
     for (int i = 0; i < NUMERO_PAGINAS; i++) {
@@ -9,12 +13,18 @@ void inicializarRAM() {
         RAM->memoria[i].conteudo = NULL; // essa página não aponta para ninguém
     }
     RAM->n_paginas_ocupadas = 0; // Inicializa a contagem de páginas ocupadas
+    pthread_mutex_unlock(&mutex_RAM);
 }
 
 void freeRAM() {
-    if (!RAM) return;
+    pthread_mutex_lock(&mutex_RAM);
+    if (!RAM) {
+        pthread_mutex_unlock(&mutex_RAM);
+        return;
+    }
     free(RAM->memoria);
     free(RAM);
+    pthread_mutex_unlock(&mutex_RAM);
 }
 
 void carregarPaginasNecessarias(BCP *processo) {
@@ -30,7 +40,8 @@ void carregarPaginasNecessarias(BCP *processo) {
 
             if (pagina->conteudo == NULL) //se a página estava vaia
                 RAM->n_paginas_ocupadas++; // aumentamos o número de páginas ocupadas na memória
-            else { // se não, remove a referência do processo que utilizava a página sendo substituída
+            else {
+                // se não, remove a referência do processo que utilizava a página sendo substituída
                 BCP *conteudo_velho = pagina->conteudo;
 
                 for (int j = 0; j < conteudo_velho->n_paginas_usadas; j++) {
@@ -77,7 +88,8 @@ void descarregarPaginas(BCP *processo) {
     for (int i = 0; i < processo->n_paginas_usadas; i++) {
         Pagina *pag = processo->paginas_usadas[i];
 
-        if (pag) { // se a página está carregada
+        if (pag) {
+            // se a página está carregada
             pag->conteudo = NULL;
             processo->paginas_usadas[i] = NULL;
             RAM->n_paginas_ocupadas--;

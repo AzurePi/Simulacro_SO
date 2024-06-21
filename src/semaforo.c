@@ -24,7 +24,7 @@ void freeListaEsperaBCP(Fila_Espera_BCP *lista) {
     Espera_BCP *aux = lista->head;
 
     while (aux != NULL) {
-        Espera_BCP* prox = aux->prox;
+        Espera_BCP *prox = aux->prox;
         free(aux);
         aux = prox;
     }
@@ -147,14 +147,14 @@ void inserirSemaforoGlobal(Semaforo *semaforo) {
 void freeListaSemaforo(Lista_Semaforos *semaforos) {
     if (!semaforos) return;
     while (semaforos->head != NULL) {
-        No_Semaforo* temp = semaforos->head;
+        No_Semaforo *temp = semaforos->head;
         semaforos->head = semaforos->head->prox;
         freeNoSemaforo(temp);
     }
     free(semaforos);
 }
 
-Semaforo *retrieveSemaforo(char nome) {
+Semaforo *retrieveSemaforo(const char nome) {
     pthread_mutex_lock(&mutex_semaforos_globais);
     const No_Semaforo *aux = semaforos_existentes->head;
     while (aux) {
@@ -193,7 +193,7 @@ void removeSemaforoGlobal(No_Semaforo *semaforo) {
 void sem_queue(Fila_Espera_BCP *lista, BCP *processo) {
     if (!lista || !processo) return; // se os parâmetros são ponteiros nulos
 
-    Espera_BCP *new = malloc((sizeof(Espera_BCP)));
+    Espera_BCP *new = malloc(sizeof(Espera_BCP));
     if (!new) return; // se a alocação de memória falhou
 
     new->processo = processo;
@@ -202,7 +202,8 @@ void sem_queue(Fila_Espera_BCP *lista, BCP *processo) {
     if (lista->head == NULL) {
         lista->head = new;
         lista->tail = new;
-    } else {
+    }
+    else {
         lista->tail->prox = new;
         lista->tail = new;
     }
