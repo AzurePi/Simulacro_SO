@@ -158,13 +158,43 @@ void *semaphoreV(void *args_semaforo) {
     return NULL;
 }
 
-void *DiskRequest(void *args) { return NULL; }
+void *DiskRequest(void *args) { 
+    current_track = args->track;
+    printf("Starting disk I/O on track %d\n", args->track);
+    
+    DiskArgs* diskArgs = (DiskArgs*)args;
 
-void *DiskFinish(void *args) { return NULL; }
+    pthread_mutex_lock(&mutex_disk_queue);
+    enqueue_disk(&disk_queue, diskArgs);
+    if (!disk_busy) {
+        disk_busy = true;
+        DiskArgs* next_request = dequeue_disk(&disk_queue);
+        start_disk_io(next_request);
+        free(next_request);
+    }
+    pthread_mutex_unlock(&mutex_disk_queue);
 
-void *PrintRequest(void *args) { return NULL; }
+    return NULL;
+}
 
-void *PrintFinish(void *args) { return NULL; }
+void *DiskFinish(void *args) { 
+    printf("Finishing disk I/O on track %d\n", current_track);
+    pthread_mutex_lock(&mutex_disk_queue);
+    if (disk_queue.head) {
+        DiskArgs* next_request = dequeue_disk(&disk_queue);
+        start_disk_io(next_request);
+        free(next_request);
+    } else {
+        disk_busy = false;
+    }
+    pthread_mutex_unlock(&mutex_disk_queue);
+
+    return NULL;
+}
+
+void print_disk_queue(DiskQueue* queue){
+    
+}
 
 void *memLoadReq(void *args) {
     BCP *processo = args;
