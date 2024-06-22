@@ -158,6 +158,7 @@ void *semaphoreV(void *args_semaforo) {
     return NULL;
 }
 
+//Chamada para inicio E/S
 void *DiskRequest(void *args) { 
     current_track = args->track;
     printf("Starting disk I/O on track %d\n", args->track);
@@ -177,6 +178,7 @@ void *DiskRequest(void *args) {
     return NULL;
 }
 
+//Finalização da E/S
 void *DiskFinish(void *args) { 
     printf("Finishing disk I/O on track %d\n", current_track);
     pthread_mutex_lock(&mutex_disk_queue);
@@ -193,7 +195,87 @@ void *DiskFinish(void *args) {
 }
 
 void print_disk_queue(DiskQueue* queue){
+    DiskNode* node = queue->head;
+    printf("Disk queue: ");
+    while (node) {
+        printf("(%d) -> ", node->args->track);
+        node = node->next;
+    }
+    printf("NULL\n");
+}
+
+//Adiciona na fila de E/S pelo algoritmo Elevator
+void enqueue_disk(DiskQueue* queue, DiskArgs* args){
+    DiskNode* new_node = (DiskNode*)malloc(sizeof(DiskNode));
+    new_node->args = args;
+    new_node->next = NULL;
+
+    if (!queue->head) {
+        queue->head = queue->tail = new_node;
+    } else {
+        DiskNode* current = queue->head;
+        DiskNode* previous = NULL;
+
+        while (current && ((direction_up && current->args->track < args->track) || 
+                           (!direction_up && current->args->track > args->track))) {
+            previous = current;
+            current = current->next;
+        }
+
+        if (previous) {
+            previous->next = new_node;
+        } else {
+            queue->head = new_node;
+        }
+        new_node->next = current;
+        if (!current) {
+            queue->tail = new_node;
+        }
+    }
+
+    print_disk_queue(queue);
+}
+
+//Remove a E/S que vai ser executada e escolhe a próxima
+DiskArgs* dequeue_disk(DiskQueue* queue){
+    if (!queue->head) return NULL;
     
+        DiskNode* selected = NULL;
+        DiskNode* current = queue->head;
+        DiskNode* previous = NULL;
+        DiskNode* prev_selected = NULL;
+    
+        while (current) {
+            if ((direction_up && current->args->track >= current_track) || 
+                (!direction_up && current->args->track <= current_track)) {
+                if (!selected || 
+                    (direction_up && current->args->track < selected->args->track) ||
+                    (!direction_up && current->args->track > selected->args->track)) {
+                    selected = current;
+                    prev_selected = previous;
+                }
+            }
+            previous = current;
+            current = current->next;
+        }
+    
+        if (!selected) {
+            direction_up = !direction_up;
+            return dequeue_disk(queue);
+        }
+    
+        if (prev_selected) {
+            prev_selected->next = selected->next;
+        } else {
+            queue->head = selected->next;
+        }
+        if (!selected->next) {
+            queue->tail = prev_selected;
+        }
+    
+        DiskArgs* args = selected->args;
+        free(selected);
+        return args;
 }
 
 void *memLoadReq(void *args) {
