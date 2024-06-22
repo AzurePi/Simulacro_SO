@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 // Definição de Macros -------------------------------------------------------------------------------------------------
 
@@ -48,6 +49,34 @@ typedef struct {
     BCP *processo;
 } InterruptArgs;
 
+//struct usada para para saber que trilha/parte do disco cada processo está utilizando
+typedef struct {
+    BCP* processo;
+    int track;
+} DiskArgs;
+
+//Usado para criar uma lista de informações sobre E/S
+typedef struct DiskNode {
+    DiskArgs* args;
+    struct DiskNode* next;
+} DiskNode;
+
+//Cria um alista de acessos a disco por E/S
+typedef struct {
+    DiskNode* head;
+    DiskNode* tail;
+} DiskQueue;
+
+pthread_mutex_t mutex_disk_queue = PTHREAD_MUTEX_INITIALIZER;
+
+DiskQueue disk_queue = {NULL, NULL}; //Declara a fila de E/S inicialmente como vazia
+
+bool disk_busy = false; //Variável que indica se algum processo está acessando o disco ou ele está livre
+
+int current_track = 0; // trilha atual do braço do disco
+
+bool direction_up = true; // direção inicial do braço do disco
+
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // função auxiliar para criar e despachar uma thread com uma função
@@ -64,18 +93,6 @@ void *semaphoreP(void *args_semaforo);
 
 // Tratamento de desbloqueio de processo
 void *semaphoreV(void *args_semaforo);
-
-// Chamada de operação de E/S para disco
-void *DiskRequest(void *args);
-
-// Sinalização de final de E/S para disco
-void *DiskFinish(void *args);
-
-// Chamada de operação de E/S para impressão
-void *PrintRequest(void *args);
-
-// Sinalização de final de E/S para impressão
-void *PrintFinish(void *args);
 
 // Chamada de operação de carregamento na memória
 void *memLoadReq(void *args);
@@ -94,5 +111,20 @@ void *processCreate(void *filename);
 
 // chamada para terminar a existência de um processo no BCP
 void *processFinish(void *args_BCP);
+
+//Adiciona um novo pedido de acesso ao disco par E/S, ordenando pela direção do cabeçote de leitura (algoritmo do Elevador)
+void enqueue_disk(DiskQueue* queue, DiskArgs* args);
+
+//Remove e retorna o pedido da E/S da Fila e seleciona o próximo baseado no algoritmo do Elevador
+DiskArgs* dequeue_disk(DiskQueue* queue);
+
+// Chamada de operação de E/S para disco
+void *DiskRequest(void *args);
+
+// Sinalização de final de E/S para disco
+void *DiskFinish(void *args);
+
+//Printa a fila de E/S a ser executada
+void print_disk_queue(DiskQueue* queue);
 
 #endif //SIMULACRO_SO_SYSCALLS_H
