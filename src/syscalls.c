@@ -74,6 +74,10 @@ bool sysCall(const short func, void *args) {
     return result;
 }
 
+pthread_mutex_t mutex_fs_queue = PTHREAD_MUTEX_INITIALIZER;
+FSQueue fs_queue = {NULL, NULL};
+bool fs_busy = false;
+
 void *processInterrupt(void *args) {
     const InterruptArgs *intArgs = (InterruptArgs *)args;
     const INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
@@ -221,9 +225,49 @@ void *memLoadFinish(void *args) {
  */
 
 
-void *fsRequest(void *args) { return NULL; }
+void *fsRequest(void *args) {
+    FSArgs* fsArgs = (FSArgs*)args;
 
-void *fsFinish(void *args) { return NULL; }
+    // Coloca a operação do sistema de arquivos na fila
+    enqueue_fs(&fs_queue, fsArgs);
+
+    // Verifica se o disco está ocupado
+    pthread_mutex_lock(&mutex_disk_queue);
+    if (!disk_busy) {
+        disk_busy = true;
+        DiskArgs* diskArgs = dequeue_disk(&disk_queue);
+        pthread_mutex_unlock(&mutex_disk_queue);
+
+        // Inicia a operação de disco
+        DiskRequest(diskArgs);
+        free(diskArgs);
+    } else {
+        pthread_mutex_unlock(&mutex_disk_queue);
+    }
+
+    return NULL;
+}
+
+void *fsFinish(void *args) {
+    // Finaliza a operação do sistema de arquivos
+    // (Implementação de finalização do sistema de arquivos)
+
+    // Verifica se há mais operações no sistema de arquivos
+    FSArgs* next_fs_args = dequeue_fs(&fs_queue);
+    if (next_fs_args) {
+        fsRequest(next_fs_args); // Inicia a próxima operação no sistema de arquivos
+        free(next_fs_args);
+    } else {
+        // Libera o disco se não houver mais operações
+        pthread_mutex_lock(&mutex_disk_queue);
+        if (disk_queue.head == NULL) {
+            disk_busy = false;
+        }
+        pthread_mutex_unlock(&mutex_disk_queue);
+    }
+
+    return NULL;
+}
 
 void *processCreate(void *filename) {
     char *arquivo = filename;
@@ -297,3 +341,44 @@ void *processFinish(void *args_BCP) {
 
     return NULL;
 }
+
+void enqueue_fs(FSQueue* queue, FSArgs* args) { //enfileiramento para o sistema de arquivos
+        FSNode* new_node = (FSNode*)malloc(sizeof(FSNode));
+        new_node->args = args;
+        new_node->next = NULL;
+
+        pthread_mutex_lock(&mutex_fs_queue);
+
+        if (!queue->head) {
+            queue->head = queue->tail = new_node;
+        } else {
+            queue->tail->next = new_node;
+            queue->tail = new_node;
+        }
+
+        pthread_mutex_unlock(&mutex_fs_queue);
+}
+
+FSArgs* dequeue_fs(FSQueue* queue) { //desenfileiramento para o sistema de arquivos
+    pthread_mutex_lock(&mutex_fs_queue);
+
+    if (!queue->head) {
+        pthread_mutex_unlock(&mutex_fs_queue);
+        return NULL;
+    }
+
+    FSNode* front = queue->head;
+    FSArgs* args = front->args;
+    queue->head = front->next;
+
+    if (!queue->head) {
+        queue->tail = NULL;
+    }
+
+    free(front);
+    pthread_mutex_unlock(&mutex_fs_queue);
+
+    return args;
+}
+
+
