@@ -47,22 +47,29 @@ void processarComandos(BCP *processo) {
                 t = quantum - tempo_executado;
 
             atual->parametro -= (int)t; // retiramos o tempo que já foi executado do parâmetro
-            if (atual->parametro <= 0) {
-                // se após isso, terminamos a execução, apagamos o comando
+            if (atual->parametro <= 0) { // se após isso, terminamos a execução, apagamos o comando
                 atual = atual->prox; // passamos para o próximo comando da lista
                 removerComando(processo->comandos); // remove o comando da lista de comandos
             }
             break;
         }
         case READ: {
-            t = 100;
-            atual = atual->prox; // passamos para o próximo comando da lista
+            t = 200;
+
+            DiskArgs disk_args = {processo, atual->parametro};
+            sysCall(fs_request, &disk_args); // requer acesso ao disco
+
+            atual = NULL; // interrompemos a execução
             removerComando(processo->comandos); // remove o comando da lista de comandos
             break;
         }
         case WRITE: {
-            t = 100;
-            atual = atual->prox; // passamos para o próximo comando da lista
+            t = 200;
+
+            DiskArgs disk_args = {processo, atual->parametro};
+            syscall(fs_request, &disk_args);
+
+            atual = NULL; // interrompemos a execução
             removerComando(processo->comandos); // remove o comando da lista de comandos
             break;
         }

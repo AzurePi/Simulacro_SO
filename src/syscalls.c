@@ -27,66 +27,64 @@ bool sysCall(const short func, void *args) {
 
         pthread_t t;
 
-            pthread_create(&t, &a, semaphoreP, args);
-            pthread_join(t, (void **) res);
-            result = *res; // indicamos se o processo precisa ou não ser bloqueado pelo semáforo
-            free(res);
-            pthread_attr_destroy(&a);
-            break;
-        }
-        case semaphore_V:
-            create_and_detach(semaphoreV, args);
-            break;
-        case disk_request:
-            create_and_detach(DiskRequest, args);
-            break;
-        case disk_finish:
-            create_and_detach(DiskFinish, args);
-            break;
-        case print_request:
-            create_and_detach(PrintRequest, args);
-            break;
-        case print_finish:
-            create_and_detach(PrintFinish, args);
-            break;
-        case mem_load_req:
-            create_and_detach(memLoadReq, args);
-            break;
-        case mem_load_finish:
-            create_and_detach(memLoadFinish, args);
-            break;
-        case fs_request:
-            create_and_detach(fsRequest, args);
-            break;
-        case fs_finish:
-            create_and_detach(fsFinish, args);
-            break;
-        case process_create:
-            create_and_detach(processCreate, args);
-            break;
-        case process_finish:
-            create_and_detach(processFinish, args);
-            break;
-        default:
-            result = false;
-            break;
+        pthread_create(&t, &a, semaphoreP, args);
+        pthread_join(t, (void **)res);
+        result = *res; // indicamos se o processo precisa ou não ser bloqueado pelo semáforo
+        free(res);
+        pthread_attr_destroy(&a);
+        break;
+    }
+    case semaphore_V:
+        create_and_detach(semaphoreV, args);
+        break;
+    case disk_request:
+        create_and_detach(DiskRequest, args);
+        break;
+    case disk_finish:
+        create_and_detach(DiskFinish, args);
+        break;
+    case print_request:
+        create_and_detach(PrintRequest, args);
+        break;
+    case print_finish:
+        create_and_detach(PrintFinish, args);
+        break;
+    case mem_load_req:
+        create_and_detach(memLoadReq, args);
+        break;
+    case mem_load_finish:
+        create_and_detach(memLoadFinish, args);
+        break;
+    case fs_request:
+        create_and_detach(fsRequest, args);
+        break;
+    case fs_finish:
+        create_and_detach(fsFinish, args);
+        break;
+    case process_create:
+        create_and_detach(processCreate, args);
+        break;
+    case process_finish:
+        create_and_detach(processFinish, args);
+        break;
+    default:
+        result = false;
+        break;
     }
     return result;
 }
 
 void *processInterrupt(void *args) {
-    const InterruptArgs *intArgs = (InterruptArgs*)args;
+    const InterruptArgs *intArgs = (InterruptArgs *)args;
     const INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
     BCP *proc = intArgs->processo;
 
     switch (tipo_interrupcao) {
-    case FINAL_EXECUCAO: {
-        // interrupção pelo final da execução de um processo
+    case FINAL_EXECUCAO: { // interrupção pelo final da execução de um processo
 
         if (proc->comandos == NULL || proc->comandos->head == NULL) // se todos os comandos já foram executados
             sysCall(process_finish, proc); // finaliza o processo
-        else {
-            // se ainda há comandos para executar
+        else { // se ainda há comandos para executar
             pthread_mutex_lock(&mutex_lista_processos);
             proc->estado = PRONTO; // atualiza o estado do processo atual para PRONTO
             pthread_mutex_unlock(&mutex_lista_processos);
@@ -97,13 +95,17 @@ void *processInterrupt(void *args) {
 
         break;
     }
-    case PROCESS_CREATE: {
-        // interrupção pela criação de um novo processo
+    case PROCESS_CREATE: { // interrupção pela criação de um novo processo
         inserirBCP(proc); // adiciona o novo processo na lista global de processos
         break;
     }
-    case TERMINO_E_S: {
-        // interrupção pelo término de uma operação de E/S
+    case INICIO_E_S: {
+        pthread_mutex_lock(&mutex_lista_processos);
+        proc->estado = BLOQUEADO;
+        pthread_mutex_unlock(&mutex_lista_processos);
+        break;
+    }
+    case TERMINO_E_S: { // interrupção pelo término de uma operação de E/S
         pthread_mutex_lock(&mutex_lista_processos);
         proc->estado = PRONTO; // atualiza o estado do processo para PRONTO
         pthread_mutex_unlock(&mutex_lista_processos);
@@ -117,7 +119,7 @@ void *processInterrupt(void *args) {
 }
 
 void *semaphoreP(void *args_semaforo) {
-    const SemaphorePArgs *sem_args = (SemaphorePArgs*)args_semaforo;
+    const SemaphorePArgs *sem_args = (SemaphorePArgs *)args_semaforo;
     Semaforo *semaforo = sem_args->semaforo;
     BCP *proc = sem_args->proc;
 
@@ -158,19 +160,19 @@ void *semaphoreV(void *args_semaforo) {
     return NULL;
 }
 
-//Chamada para inicio E/S
-void *DiskRequest(void *args) { 
-    current_track = args->track;
-    printf("Starting disk I/O on track %d\n", args->track);
-    
-    DiskArgs* diskArgs = (DiskArgs*)args;
+void *DiskRequest(void *args) {
+    const DiskArgs *disk_args = args;
+    current_track = disk_args->track;
+
+    pthread_mutex_lock(&mutex_IO);
+    printf("Starting disk I/O on track %d\n", current_track);
+    pthread_mutex_unlock(&mutex_IO);
 
     pthread_mutex_lock(&mutex_disk_queue);
-    enqueue_disk(&disk_queue, diskArgs);
+    enqueue_disk(disk_queue, disk_args);
     if (!disk_busy) {
         disk_busy = true;
-        DiskArgs* next_request = dequeue_disk(&disk_queue);
-        start_disk_io(next_request);
+        DiskArgs *next_request = dequeue_disk(disk_queue);
         free(next_request);
     }
     pthread_mutex_unlock(&mutex_disk_queue);
@@ -178,105 +180,25 @@ void *DiskRequest(void *args) {
     return NULL;
 }
 
-//Finalização da E/S
-void *DiskFinish(void *args) { 
+void *DiskFinish(void *args) {
+    pthread_mutex_lock(&mutex_IO);
     printf("Finishing disk I/O on track %d\n", current_track);
+    pthread_mutex_unlock(&mutex_IO);
+
     pthread_mutex_lock(&mutex_disk_queue);
-    if (disk_queue.head) {
-        DiskArgs* next_request = dequeue_disk(&disk_queue);
-        start_disk_io(next_request);
+    if (disk_queue->head) {
+        DiskArgs *next_request = dequeue_disk(disk_queue);
         free(next_request);
-    } else {
-        disk_busy = false;
     }
+    else { disk_busy = false; }
     pthread_mutex_unlock(&mutex_disk_queue);
 
     return NULL;
 }
 
-void print_disk_queue(DiskQueue* queue){
-    DiskNode* node = queue->head;
-    printf("Disk queue: ");
-    while (node) {
-        printf("(%d) -> ", node->args->track);
-        node = node->next;
-    }
-    printf("NULL\n");
-}
+void *PrintRequest(void *args) { return NULL; }
 
-//Adiciona na fila de E/S pelo algoritmo Elevator
-void enqueue_disk(DiskQueue* queue, DiskArgs* args){
-    DiskNode* new_node = (DiskNode*)malloc(sizeof(DiskNode));
-    new_node->args = args;
-    new_node->next = NULL;
-
-    if (!queue->head) {
-        queue->head = queue->tail = new_node;
-    } else {
-        DiskNode* current = queue->head;
-        DiskNode* previous = NULL;
-
-        while (current && ((direction_up && current->args->track < args->track) || 
-                           (!direction_up && current->args->track > args->track))) {
-            previous = current;
-            current = current->next;
-        }
-
-        if (previous) {
-            previous->next = new_node;
-        } else {
-            queue->head = new_node;
-        }
-        new_node->next = current;
-        if (!current) {
-            queue->tail = new_node;
-        }
-    }
-
-    print_disk_queue(queue);
-}
-
-//Remove a E/S que vai ser executada e escolhe a próxima
-DiskArgs* dequeue_disk(DiskQueue* queue){
-    if (!queue->head) return NULL;
-    
-        DiskNode* selected = NULL;
-        DiskNode* current = queue->head;
-        DiskNode* previous = NULL;
-        DiskNode* prev_selected = NULL;
-    
-        while (current) {
-            if ((direction_up && current->args->track >= current_track) || 
-                (!direction_up && current->args->track <= current_track)) {
-                if (!selected || 
-                    (direction_up && current->args->track < selected->args->track) ||
-                    (!direction_up && current->args->track > selected->args->track)) {
-                    selected = current;
-                    prev_selected = previous;
-                }
-            }
-            previous = current;
-            current = current->next;
-        }
-    
-        if (!selected) {
-            direction_up = !direction_up;
-            return dequeue_disk(queue);
-        }
-    
-        if (prev_selected) {
-            prev_selected->next = selected->next;
-        } else {
-            queue->head = selected->next;
-        }
-        if (!selected->next) {
-            queue->tail = prev_selected;
-        }
-    
-        DiskArgs* args = selected->args;
-        free(selected);
-        return args;
-}
+void *PrintFinish(void *args) { return NULL; }
 
 void *memLoadReq(void *args) {
     BCP *processo = args;
@@ -289,6 +211,15 @@ void *memLoadFinish(void *args) {
     descarregarPaginas(processo);
     return NULL;
 }
+
+/*
+ * TODO: adicionar isso no fsRequest
+ *
+ *   InterruptArgs interrupt_args = {INICIO_E_S, processo};
+ *   sysCall(process_interrupt, &interrupt_args);
+ *
+ */
+
 
 void *fsRequest(void *args) { return NULL; }
 
@@ -307,14 +238,16 @@ void *processCreate(void *filename) {
             args->processo = processo;
 
             sysCall(process_interrupt, args);
-        } else {
+        }
+        else {
             pthread_mutex_lock(&mutex_IO);
             printf(ERROR "não foi possível criar o processo do programa %s" CLEAR, arquivo);
             fflush(stdout);
             sleep(2);
             pthread_mutex_unlock(&mutex_IO);
         }
-    } else {
+    }
+    else {
         pthread_mutex_lock(&mutex_IO);
         printf(ERROR "arquivo %s do programa sintético não pôde ser aberto" CLEAR, arquivo);
         fflush(stdout);

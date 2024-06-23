@@ -14,6 +14,7 @@ int main() {
     initializeGlobals();
 
     create_and_detach(CPU, NULL); // criamos uma thread para execução da CPU em segundo plano
+    create_and_detach(disco, NULL); // criamos uma thread para execução do disco em segundo plano
 
     // criamos uma thread para a exibição do interface -----------------------------------------------------------------
     pthread_attr_t atrib;
@@ -29,6 +30,7 @@ int main() {
 
     // mostramos ao usuário quanto tempo a execução dos processos demorou na simulação e a lista final de processos
     printf("\nTempo total de execução do simulador: " BOLD ITALIC "%ld" CLEAR " ut\n", relogio);
+    limpar_buffer();
 
     finalizeGlobals();
 

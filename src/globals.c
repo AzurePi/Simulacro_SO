@@ -13,6 +13,12 @@ pthread_mutex_t mutex_lista_processos;
 pthread_mutex_t mutex_semaforos_globais;
 unsigned long int relogio;
 
+pthread_mutex_t mutex_disk_queue;
+DiskQueue *disk_queue;
+bool disk_busy;
+int current_track;
+bool direction_up;
+
 // Implementação de funções --------------------------------------------------------------------------------------------
 
 void initializeGlobals() {
@@ -21,6 +27,13 @@ void initializeGlobals() {
     semaforos_existentes = novaListaSemaforos();
     inicializarRAM();
     encerrar = false;
+
+    pthread_mutex_init(&mutex_disk_queue, NULL);
+    disk_queue = newQueue();
+    disk_busy = false;
+    current_track = 0;
+    direction_up = true;
+
     pthread_mutex_init(&mutex_IO, NULL);
     pthread_mutex_init(&mutex_RAM, NULL);
     pthread_mutex_init(&mutex_lista_processos, NULL);
