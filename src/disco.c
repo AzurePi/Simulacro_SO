@@ -11,56 +11,12 @@ void *discoElevador() {
     return NULL;
 }
 
-void *newFsQueue() {
-    FSQueue *new = malloc(sizeof(FSQueue));
-    if (!new) { return NULL; }
-    new->head = NULL;
-    new->tail = NULL;
-    return new;
-}
-
 void *newDiskQueue() {
     DiskQueue *new = malloc(sizeof(DiskQueue));
     if (!new) { return NULL; }
     new->head = NULL;
     new->tail = NULL;
     return new;
-}
-
-void enqueue_fs(FSQueue *queue, FSArgs *args) {
-    FSNode *new_node = malloc(sizeof(FSNode));
-    new_node->args = args;
-    new_node->next = NULL;
-
-    pthread_mutex_lock(&mutex_fs_queue);
-
-    if (!queue->head) { queue->head = queue->tail = new_node; }
-    else {
-        queue->tail->next = new_node;
-        queue->tail = new_node;
-    }
-
-    pthread_mutex_unlock(&mutex_fs_queue);
-}
-
-FSArgs *dequeue_fs(FSQueue *queue) {
-    pthread_mutex_lock(&mutex_fs_queue);
-
-    if (!queue->head) {
-        pthread_mutex_unlock(&mutex_fs_queue);
-        return NULL;
-    }
-
-    FSNode *front = queue->head;
-    FSArgs *args = front->args;
-    queue->head = front->next;
-
-    if (!queue->head) { queue->tail = NULL; }
-
-    free(front);
-    pthread_mutex_unlock(&mutex_fs_queue);
-
-    return args;
 }
 
 void enqueue_disk(DiskArgs *args) {
@@ -136,6 +92,7 @@ DiskArgs *dequeue_disk() {
 }
 
 void print_disk_queue() {
+    pthread_mutex_lock(&mutex_disk_queue);
     const DiskNode *node = disk_queue->head;
     printf("Disk queue: ");
     while (node) {
@@ -143,4 +100,5 @@ void print_disk_queue() {
         node = node->next;
     }
     printf("NULL\n");
+    pthread_mutex_unlock(&mutex_disk_queue);
 }

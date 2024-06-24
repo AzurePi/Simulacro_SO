@@ -12,6 +12,8 @@ void *interface() {
         "╚════════════════════════════════════════╝";
     char op;
 
+    printf(CLEAR);
+
     do {
         pthread_mutex_lock(&mutex_IO); // bloqueia o acesso ao terminal
 

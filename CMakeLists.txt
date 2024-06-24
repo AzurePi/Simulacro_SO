@@ -34,4 +34,11 @@ set(HEADERS
 
 add_executable(Simulacro_SO ${SOURCES} ${HEADERS})
 
+# Add a post-build command to pause after building
+if (WIN32)
+    add_custom_command(TARGET Simulacro_SO POST_BUILD
+            COMMAND cmd /c pause
+    )
+endif ()
+
 target_link_libraries(Simulacro_SO m)

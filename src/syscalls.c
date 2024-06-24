@@ -101,13 +101,15 @@ void *processInterrupt(void *args) {
     }
     case INICIO_E_S: {
         pthread_mutex_lock(&mutex_lista_processos);
-        proc->estado = BLOQUEADO;
+        if (proc->estado != TERMINADO)
+            proc->estado = BLOQUEADO; // bloqueia o processo
         pthread_mutex_unlock(&mutex_lista_processos);
         break;
     }
     case TERMINO_E_S: { // interrupção pelo término de uma operação de E/S
         pthread_mutex_lock(&mutex_lista_processos);
-        proc->estado = PRONTO; // atualiza o estado do processo para PRONTO
+        if (proc->estado != TERMINADO)
+            proc->estado = PRONTO; // libera o processo para ser executado
         pthread_mutex_unlock(&mutex_lista_processos);
         break;
     }
@@ -165,7 +167,7 @@ void *DiskRequest(void *args) {
     current_track = disk_args->track;
 
     pthread_mutex_lock(&mutex_IO);
-    printf("Starting disk I/O on track %d\n", current_track);
+    //printf("Starting disk I/O on track %d\n", current_track);
     pthread_mutex_unlock(&mutex_IO);
 
     enqueue_disk(disk_args);
@@ -175,7 +177,7 @@ void *DiskRequest(void *args) {
 
 void *DiskFinish(void *args) {
     pthread_mutex_lock(&mutex_IO);
-    printf("Finishing disk I/O on track %d\n", current_track);
+    //printf("Finishing disk I/O on track %d\n", current_track);
     pthread_mutex_unlock(&mutex_IO);
 
     sysCall(fs_finish, args);
@@ -218,7 +220,7 @@ void *fsRequest(void *args) {
 void *fsFinish(void *args) {
     DiskArgs *disk_args = args;
 
-    // interrupção para termino de E/S
+    // interrupção por término de E/S
     InterruptArgs *interrupt_args = malloc(sizeof(InterruptArgs));
     interrupt_args->tipo_interrupcao = TERMINO_E_S;
     interrupt_args->processo = disk_args->processo;

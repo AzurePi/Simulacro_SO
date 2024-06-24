@@ -31,7 +31,7 @@
 
 // definições de códigos ANSI para customização do terminal
 
-#define CLEAR "\033[0m"
+#define CLEAR "\033[0m\33[48;5;242m"
 #define BOLD "\033[1m"
 #define FAINT "\033[2m"
 #define ITALIC "\033[3m"
@@ -40,11 +40,11 @@
 #define NOT_ITALIC "\033[23m"
 #define NOT_UNDERLINE "\033[24m"
 
-#define RED "\033[31m"
-#define BLUE "\033[34m"
+#define RED "\033[38;5;52m"
+#define BLUE "\033[38;5;20m"
 #define BRIGHT_YELLOW "\033[93m"
 
-#define ERROR ITALIC RED "ERRO: "
+#define ERROR ITALIC RED "\a\tERRO: "
 #define INPUT ITALIC BRIGHT_YELLOW
 
 // repetição dos macros de memoria.h

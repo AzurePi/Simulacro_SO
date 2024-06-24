@@ -33,6 +33,7 @@ int main() {
     limpar_buffer();
 
     finalizeGlobals();
+    printf("\033[0m");
 
     return 0;
 }

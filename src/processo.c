@@ -1,5 +1,7 @@
 #include "include/processo.h"
 
+#include <ctype.h>
+
 BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
@@ -115,7 +117,7 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
 
     //enquanto não chegamos no fim da linha e há caracteres para ler e não ultrapassamos o máximo de 10 semáforos
     while ((s = (char)fgetc(programa)) != '\n' && s != EOF && i < 10) {
-        if (s != ' ')
+        if (isalpha(s))
             semaforos[i++] = s; //guardamos o s e passamos para a próxima posição do vetor
     }
     semaforos[i] = '\0'; //finaliza a string

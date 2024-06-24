@@ -11,20 +11,6 @@
 // declarações avançadas para evitar declaração circular
 typedef struct bcp BCP;
 
-typedef struct {
-    // Definir estrutura para operações do sistema de arquivos, se necessário
-} FSArgs;
-
-typedef struct FSNode {
-    FSArgs *args;
-    struct FSNode *next;
-} FSNode;
-
-typedef struct fs_queue {
-    FSNode *head;
-    FSNode *tail;
-} FSQueue;
-
 // usada para para saber que trilha/parte do disco cada processo está utilizando
 typedef struct {
     BCP *processo;
@@ -49,16 +35,7 @@ typedef struct disk_queue {
 void *discoElevador();
 
 //
-void *newFsQueue();
-
-//
 void *newDiskQueue();
-
-// Enfileiramento para o sistema de arquivos
-void enqueue_fs(FSQueue *queue, FSArgs *args);
-
-// Desenfileiramento para o sistema de arquivos
-FSArgs *dequeue_fs(FSQueue *queue);
 
 // Adiciona um novo pedido de acesso ao disco par E/S, ordenando pela direção do cabeçote de leitura (algoritmo do Elevador)
 void enqueue_disk(DiskArgs *args);

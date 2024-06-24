@@ -19,10 +19,6 @@ bool disk_busy;
 volatile int current_track;
 bool direction_up;
 
-pthread_mutex_t mutex_fs_queue;
-FSQueue *fs_queue;
-bool fs_busy = false;
-
 // Implementação de funções --------------------------------------------------------------------------------------------
 
 void initializeGlobals() {
@@ -33,9 +29,7 @@ void initializeGlobals() {
 
     inicializarRAM();
 
-    fs_queue = newFsQueue();
     disk_queue = newDiskQueue();
-
     disk_busy = false;
     current_track = 0;
     direction_up = true;
@@ -45,14 +39,12 @@ void initializeGlobals() {
     pthread_mutex_init(&mutex_lista_processos, NULL);
     pthread_mutex_init(&mutex_semaforos_globais, NULL);
     pthread_mutex_init(&mutex_disk_queue, NULL);
-    pthread_mutex_init(&mutex_fs_queue, NULL);
 
     encerrar = false;
     relogio = 0;
 }
 
 void finalizeGlobals() {
-    pthread_mutex_destroy(&mutex_fs_queue);
     pthread_mutex_destroy(&mutex_disk_queue);
     pthread_mutex_destroy(&mutex_semaforos_globais);
     pthread_mutex_destroy(&mutex_lista_processos);
