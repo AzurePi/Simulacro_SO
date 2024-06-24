@@ -50,35 +50,6 @@ typedef struct {
     BCP *processo;
 } InterruptArgs;
 
-typedef struct {
-    BCP* processo;
-    int track;
-} DiskArgs;
-
-typedef struct disk_node {
-    DiskArgs* args;
-    struct DiskNode* next;
-} disk_node;
-
-typedef struct {
-    DiskNode* head;
-    DiskNode* tail;
-};
-
-typedef struct {
-    // Definir estrutura para operações do sistema de arquivos, se necessário
-} FSArgs;
-
-typedef struct FSNode {
-    FSArgs* args;
-    struct FSNode* next;
-} FSNode;
-
-typedef struct {
-    FSNode* head;
-    FSNode* tail;
-} FSQueue;
-
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // função auxiliar para criar e despachar uma thread com uma função
@@ -126,7 +97,4 @@ void *PrintRequest(void *args);
 // Sinalização de final de E/S para impressão
 void *PrintFinish(void *args);
 
-void *enqueue_fs(void *queue, void *args);
-
-void *dequeue_fs(void *queue);
 #endif //SIMULACRO_SO_SYSCALLS_H

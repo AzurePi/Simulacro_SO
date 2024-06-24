@@ -34,12 +34,7 @@ void processarComandos(BCP *processo) {
     while (atual && tempo_executado < quantum) {
         long int t; // tempo que esse comando leva para ser executado
 
-        /*
-         * consideramos, por enquanto, que a leitura/escrita no disco e escrita no terminal levam 100 ut
-         * posteriormente, esse tempo será influenciado por DiskRequest(), DiskFinish(), PrintRequest() e PrintFinish()
-         *
-         * consideramos que todas as operações, exceto EXEC, são atômicas
-         */
+        // consideramos que todas as operações, exceto EXEC, são atômicas
         switch (atual->opcode) {
         case EXEC: {
             t = atual->parametro;
@@ -56,8 +51,12 @@ void processarComandos(BCP *processo) {
         case READ: {
             t = 200;
 
-            DiskArgs disk_args = {processo, atual->parametro};
-            sysCall(fs_request, &disk_args); // requer acesso ao disco
+            // criamos uma struct provisória para passar os argumentos para sysCall
+            DiskArgs *disk_args = malloc(sizeof(DiskArgs));
+            disk_args->processo = processo;
+            disk_args->track = atual->parametro;
+
+            sysCall(fs_request, disk_args);
 
             atual = NULL; // interrompemos a execução
             removerComando(processo->comandos); // remove o comando da lista de comandos
@@ -66,8 +65,12 @@ void processarComandos(BCP *processo) {
         case WRITE: {
             t = 200;
 
-            DiskArgs disk_args = {processo, atual->parametro};
-            syscall(fs_request, &disk_args);
+            // criamos uma struct provisória para passar os argumentos para sysCall
+            DiskArgs *disk_args = malloc(sizeof(DiskArgs));
+            disk_args->processo = processo;
+            disk_args->track = atual->parametro;
+
+            sysCall(fs_request, disk_args);
 
             atual = NULL; // interrompemos a execução
             removerComando(processo->comandos); // remove o comando da lista de comandos
@@ -78,9 +81,11 @@ void processarComandos(BCP *processo) {
             Semaforo *sem = retrieveSemaforo(atual->parametro); // encontramos o semáforo sendo chamado
 
             // criamos uma struct provisória para passar os argumentos para sysCall
-            SemaphorePArgs args = {.semaforo = sem, .proc = processo};
+            SemaphorePArgs *args = malloc(sizeof(SemaphorePArgs));
+            args->semaforo = sem;
+            args->proc = processo;
 
-            if (sysCall(semaphore_P, &args)) // se o semáforo permite a execução
+            if (sysCall(semaphore_P, args)) // se o semáforo permite a execução
                 atual = atual->prox; // passamos para o próximo comando
             else // se o semáforo bloqueou a execução
                 atual = NULL; // interrompemos a execução

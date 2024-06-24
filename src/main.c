@@ -14,7 +14,7 @@ int main() {
     initializeGlobals();
 
     create_and_detach(CPU, NULL); // criamos uma thread para execução da CPU em segundo plano
-    create_and_detach(disco, NULL); // criamos uma thread para execução do disco em segundo plano
+    create_and_detach(discoElevador, NULL); // criamos uma thread para execução do disco em segundo plano
 
     // criamos uma thread para a exibição do interface -----------------------------------------------------------------
     pthread_attr_t atrib;
