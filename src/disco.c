@@ -1,29 +1,77 @@
 #include "include/disco.h"
 
-void *disco() {
-    while (!encerrar) {}
+void *discoElevador() {
+    while (!encerrar) {
+        DiskArgs *args = dequeue_disk();
+        if (args) {
+            usleep(5000000); // delay de 500ms para simular o acesso
+            sysCall(disk_finish, args);
+        }
+    }
     return NULL;
 }
 
-void *newQueue() {
-    DiskQueue *new = malloc(sizeof(DiskQueue));
-    if (!new) return NULL;
-
+void *newFsQueue() {
+    FSQueue *new = malloc(sizeof(FSQueue));
+    if (!new) { return NULL; }
     new->head = NULL;
     new->tail = NULL;
-
     return new;
 }
 
-void enqueue_disk(DiskQueue *queue, DiskArgs *args) {
+void *newDiskQueue() {
+    DiskQueue *new = malloc(sizeof(DiskQueue));
+    if (!new) { return NULL; }
+    new->head = NULL;
+    new->tail = NULL;
+    return new;
+}
+
+void enqueue_fs(FSQueue *queue, FSArgs *args) {
+    FSNode *new_node = malloc(sizeof(FSNode));
+    new_node->args = args;
+    new_node->next = NULL;
+
+    pthread_mutex_lock(&mutex_fs_queue);
+
+    if (!queue->head) { queue->head = queue->tail = new_node; }
+    else {
+        queue->tail->next = new_node;
+        queue->tail = new_node;
+    }
+
+    pthread_mutex_unlock(&mutex_fs_queue);
+}
+
+FSArgs *dequeue_fs(FSQueue *queue) {
+    pthread_mutex_lock(&mutex_fs_queue);
+
+    if (!queue->head) {
+        pthread_mutex_unlock(&mutex_fs_queue);
+        return NULL;
+    }
+
+    FSNode *front = queue->head;
+    FSArgs *args = front->args;
+    queue->head = front->next;
+
+    if (!queue->head) { queue->tail = NULL; }
+
+    free(front);
+    pthread_mutex_unlock(&mutex_fs_queue);
+
+    return args;
+}
+
+void enqueue_disk(DiskArgs *args) {
     DiskNode *new_node = malloc(sizeof(DiskNode));
     new_node->args = args;
     new_node->next = NULL;
 
     pthread_mutex_lock(&mutex_disk_queue);
-    if (!queue->head) { queue->head = queue->tail = new_node; }
+    if (!disk_queue->head) { disk_queue->head = disk_queue->tail = new_node; }
     else {
-        DiskNode *current = queue->head;
+        DiskNode *current = disk_queue->head;
         DiskNode *previous = NULL;
 
         while (current && ((direction_up && current->args->track < args->track) ||
@@ -33,50 +81,53 @@ void enqueue_disk(DiskQueue *queue, DiskArgs *args) {
         }
 
         if (previous) { previous->next = new_node; }
-        else { queue->head = new_node; }
+        else { disk_queue->head = new_node; }
         new_node->next = current;
-        if (!current) { queue->tail = new_node; }
+        if (!current) { disk_queue->tail = new_node; }
     }
     pthread_mutex_unlock(&mutex_disk_queue);
 
-    print_disk_queue(queue);
+    //print_disk_queue();
 }
 
-DiskArgs *dequeue_disk(DiskQueue *queue) {
+DiskArgs *dequeue_disk() {
     pthread_mutex_lock(&mutex_disk_queue);
-    if (!queue->head) {
+    if (!disk_queue->head) {
         pthread_mutex_unlock(&mutex_disk_queue);
         return NULL;
     }
 
     DiskNode *selected = NULL;
-    DiskNode *current = queue->head;
-    DiskNode *previous = NULL;
+    DiskNode *aux = disk_queue->head;
+    DiskNode *prev = NULL;
     DiskNode *prev_selected = NULL;
 
-    while (current) {
-        if ((direction_up && current->args->track >= current_track) ||
-            (!direction_up && current->args->track <= current_track)) {
+    // busca o nó mais próximo da trilha atual na direção do elevador
+    while (aux) {
+        if ((direction_up && aux->args->track >= current_track) ||
+            (!direction_up && aux->args->track <= current_track)) {
             if (!selected ||
-                (direction_up && current->args->track < selected->args->track) ||
-                (!direction_up && current->args->track > selected->args->track)) {
-                selected = current;
-                prev_selected = previous;
+                (direction_up && aux->args->track < selected->args->track) ||
+                (!direction_up && aux->args->track > selected->args->track)) {
+                selected = aux;
+                prev_selected = prev;
             }
         }
-        previous = current;
-        current = current->next;
+        prev = aux;
+        aux = aux->next;
     }
 
-    if (!selected) {
-        direction_up = !direction_up;
+    if (!selected) { // se não encontramos nenhum nó
+        direction_up = !direction_up; // invertemos a direção da busca
         pthread_mutex_unlock(&mutex_disk_queue);
-        return dequeue_disk(queue);
+        return dequeue_disk(); // procuramos recursivamente
     }
 
+    // removemos o nó selecionado da lista
     if (prev_selected) { prev_selected->next = selected->next; }
-    else { queue->head = selected->next; }
-    if (!selected->next) { queue->tail = prev_selected; }
+    else { disk_queue->head = selected->next; }
+
+    if (!selected->next) { disk_queue->tail = prev_selected; }
 
     DiskArgs *args = selected->args;
     free(selected);
@@ -84,8 +135,8 @@ DiskArgs *dequeue_disk(DiskQueue *queue) {
     return args;
 }
 
-void print_disk_queue(DiskQueue *queue) {
-    const DiskNode *node = queue->head;
+void print_disk_queue() {
+    const DiskNode *node = disk_queue->head;
     printf("Disk queue: ");
     while (node) {
         printf("(%d) -> ", node->args->track);
