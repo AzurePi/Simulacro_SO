@@ -50,6 +50,18 @@ typedef struct {
     BCP *processo;
 } InterruptArgs;
 
+//struct usada para os nós processos de E/S do disco serem printados na tela
+typedef struct {
+    BCP *processo;
+    struct filaES *prox;
+}noES;
+
+//struct que será a fila de processos E/S a serem printados
+typedef struct{
+    noES *head;
+    noES *tail;
+}filaES;
+
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // função auxiliar para criar e despachar uma thread com uma função
