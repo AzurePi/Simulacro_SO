@@ -36,6 +36,10 @@ extern bool direction_up; // direção inicial do braço do disco
 extern unsigned long int relogio; // contador de tempo de execução simulada
 extern InterruptArgs interrompe;
 
+//TODO: é isso mesmo pedro?
+extern  noES no;
+extern filaES fila;
+
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // Inicialização das variáveis globais.
