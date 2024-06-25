@@ -109,4 +109,13 @@ void *PrintRequest(void *args);
 // Sinalização de final de E/S para impressão
 void *PrintFinish(void *args);
 
+//Inicializa fila E/S
+filaES *iniciaFila();
+
+//Cria o nó com os processos
+noES *criaNo(BCP *processo);
+
+//Insere o nó criado na fila
+void inserirFila(noES *noAdd);
+
 #endif //SIMULACRO_SO_SYSCALLS_H
