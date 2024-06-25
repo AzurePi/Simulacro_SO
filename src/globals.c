@@ -19,6 +19,8 @@ bool disk_busy;
 volatile int current_track;
 bool direction_up;
 
+filaES *screen_queue;
+
 // Implementação de funções --------------------------------------------------------------------------------------------
 
 void initializeGlobals() {
@@ -33,6 +35,8 @@ void initializeGlobals() {
     disk_busy = false;
     current_track = 0;
     direction_up = true;
+
+    screen_queue = newScreenQueue();
 
     pthread_mutex_init(&mutex_IO, NULL);
     pthread_mutex_init(&mutex_RAM, NULL);

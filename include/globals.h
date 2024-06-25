@@ -15,7 +15,7 @@ typedef struct lista_semaforos Lista_Semaforos;
 typedef struct memoria Memoria;
 typedef struct disk_queue DiskQueue;
 typedef struct noES no;
-typedef struct filaES fila;
+typedef struct fila_es filaES;
 
 // Variáveis Globais ---------------------------------------------------------------------------------------------------
 
@@ -25,6 +25,7 @@ extern volatile BCP *executando_agora; // ponteiro para o processo atualmente em
 extern Lista_Semaforos *semaforos_existentes; // cabeça da lista global de todos os semáforos do simulador
 extern Memoria *RAM; // simulação da memória
 extern DiskQueue *disk_queue; //fila de entrada e saída do disco
+extern filaES *screen_queue; // fila para impressão na tela simulada
 extern pthread_mutex_t mutex_IO; // mutex para acesso ao terminal
 extern pthread_mutex_t mutex_RAM; // mutex para acesso à memória simulada
 extern pthread_mutex_t mutex_lista_processos; // mutex para acesso à lista global de processos
@@ -34,11 +35,6 @@ extern bool disk_busy; // se algum processo está acessando o disco ou ele está
 extern volatile int current_track; // trilha atual do braço do disco
 extern bool direction_up; // direção inicial do braço do disco
 extern unsigned long int relogio; // contador de tempo de execução simulada
-extern InterruptArgs interrompe;
-
-//TODO: é isso mesmo pedro?
-extern  noES no;
-extern filaES fila;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 

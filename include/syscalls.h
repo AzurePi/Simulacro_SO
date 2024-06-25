@@ -51,16 +51,16 @@ typedef struct {
 } InterruptArgs;
 
 //struct usada para os nós processos de E/S do disco serem printados na tela
-typedef struct {
+typedef struct no_es {
     BCP *processo;
-    struct filaES *prox;
-}noES;
+    struct no_es *prox;
+} noES;
 
 //struct que será a fila de processos E/S a serem printados
-typedef struct{
+typedef struct fila_es {
     noES *head;
     noES *tail;
-}filaES;
+} filaES;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ void *PrintRequest(void *args);
 void *PrintFinish(void *args);
 
 //Inicializa fila E/S
-filaES *iniciaFila();
+filaES *newScreenQueue();
 
 //Cria o nó com os processos
 noES *criaNo(BCP *processo);
