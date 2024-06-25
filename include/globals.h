@@ -14,6 +14,7 @@ typedef struct bcp BCP;
 typedef struct lista_semaforos Lista_Semaforos;
 typedef struct memoria Memoria;
 typedef struct disk_queue DiskQueue;
+typedef struct interrompe InterruptArgs;
 
 // Variáveis Globais ---------------------------------------------------------------------------------------------------
 
