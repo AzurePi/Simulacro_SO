@@ -14,7 +14,6 @@ typedef struct bcp BCP;
 typedef struct lista_semaforos Lista_Semaforos;
 typedef struct memoria Memoria;
 typedef struct disk_queue DiskQueue;
-typedef struct interrompe InterruptArgs;
 
 // Variáveis Globais ---------------------------------------------------------------------------------------------------
 
@@ -33,6 +32,7 @@ extern bool disk_busy; // se algum processo está acessando o disco ou ele está
 extern volatile int current_track; // trilha atual do braço do disco
 extern bool direction_up; // direção inicial do braço do disco
 extern unsigned long int relogio; // contador de tempo de execução simulada
+extern InterruptArgs interrompe;
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
