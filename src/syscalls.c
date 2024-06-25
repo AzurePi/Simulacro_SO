@@ -185,7 +185,42 @@ void *DiskFinish(void *args) {
     return NULL;
 }
 
-void *PrintRequest(void *args) { return NULL; }
+
+noES *criaNo(BCP *processo){
+    noES auxNo = malloc(sizeof(noES));
+    auxNo.processo = processo;
+    auxNo.prox = NULL;
+    return auxNo;
+}
+
+void inserirFila(noES *noAdd){ 
+    if(!fila.head){//Não tem nada na fila
+      fila.tail = fila.head = noAdd;
+      fila.head.prox = fila.tail.prox =  NULL;    
+    }else if(fila.tail == fila.head){//Só tem 1 item
+      fila.head.prox = fila.tail;
+      fila.head = noAdd;
+    }else{//Mais de 1 - Tail só vai mudar quando retirar ex: 1 - 2 - 3 - 4
+      fila.head.prox = fila.head; //Recebe o que tava na cabeça. Ex: 5 -1 - 2 -3 -4
+      fila.head = noAdd;
+    }    
+}
+
+void *PrintRequest(void *args) { 
+    // interrupção por início de E/S
+    BCP *bcp = args
+    InterruptArgs *interrupcao= malloc(sizeof(InterruptArgs));
+    interrupcao->tipo_interrupcao = INICIO_E_S;
+    interrupcao->processo = bcp;
+
+    syscall(process_interrupt,interrupcao);
+    
+    no = criaNo(interrupcao.processo);
+    //Adiciona na lista
+    inserirFila(no);
+    
+    
+}
 
 void *PrintFinish(void *args) { return NULL; }
 
