@@ -1,6 +1,6 @@
 #include "include/cpu.h"
 
-void *CPU() {
+void *cpu() {
     while (!encerrar) {
         BCP *executar = buscaBCPExecutar(); // encontra o próximo processo pronto com a maior prioridade
 
@@ -18,8 +18,10 @@ void *CPU() {
         processarComandos(executar); // executa os comandos
 
         // quando terminou o processamento, interrompemos o processo
-        InterruptArgs intArgs = {.tipo_interrupcao = FINAL_EXECUCAO, .processo = executar};
-        sysCall(process_interrupt, &intArgs);
+        InterruptArgs *intArgs = malloc(sizeof(InterruptArgs));
+        intArgs->tipo_interrupcao = FINAL_EXECUCAO;
+        intArgs->processo = executar;
+        sysCall(process_interrupt, intArgs);
     }
     return NULL;
 }
@@ -54,7 +56,7 @@ void processarComandos(BCP *processo) {
             // criamos uma struct provisória para passar os argumentos para sysCall
             DiskArgs *disk_args = malloc(sizeof(DiskArgs));
             disk_args->processo = processo;
-            disk_args->track = atual->parametro;
+            disk_args->trilha = atual->parametro;
 
             sysCall(fs_request, disk_args);
 
@@ -68,7 +70,7 @@ void processarComandos(BCP *processo) {
             // criamos uma struct provisória para passar os argumentos para sysCall
             DiskArgs *disk_args = malloc(sizeof(DiskArgs));
             disk_args->processo = processo;
-            disk_args->track = atual->parametro;
+            disk_args->trilha = atual->parametro;
 
             sysCall(fs_request, disk_args);
 

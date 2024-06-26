@@ -15,8 +15,7 @@ bool sysCall(const short func, void *args) {
     bool result = true; // usado para indicar o status da operação (geralmente, será true)
 
     switch (func) {
-    case process_interrupt:
-        create_and_detach(processInterrupt, args);
+    case process_interrupt: create_and_detach(processInterrupt, args);
         break;
     case semaphore_P: {
         bool *res = malloc(sizeof(bool));
@@ -34,48 +33,36 @@ bool sysCall(const short func, void *args) {
         pthread_attr_destroy(&a);
         break;
     }
-    case semaphore_V:
-        create_and_detach(semaphoreV, args);
+    case semaphore_V: create_and_detach(semaphoreV, args);
         break;
-    case disk_request:
-        create_and_detach(DiskRequest, args);
+    case disk_request: create_and_detach(DiskRequest, args);
         break;
-    case disk_finish:
-        create_and_detach(DiskFinish, args);
+    case disk_finish: create_and_detach(DiskFinish, args);
         break;
-    case print_request:
-        create_and_detach(PrintRequest, args);
+    case print_request: create_and_detach(PrintRequest, args);
         break;
-    case print_finish:
-        create_and_detach(PrintFinish, args);
+    case print_finish: create_and_detach(PrintFinish, args);
         break;
-    case mem_load_req:
-        create_and_detach(memLoadReq, args);
+    case mem_load_req: create_and_detach(memLoadReq, args);
         break;
-    case mem_load_finish:
-        create_and_detach(memLoadFinish, args);
+    case mem_load_finish: create_and_detach(memLoadFinish, args);
         break;
-    case fs_request:
-        create_and_detach(fsRequest, args);
+    case fs_request: create_and_detach(fsRequest, args);
         break;
-    case fs_finish:
-        create_and_detach(fsFinish, args);
+    case fs_finish: create_and_detach(fsFinish, args);
         break;
-    case process_create:
-        create_and_detach(processCreate, args);
+    case process_create: create_and_detach(processCreate, args);
         break;
-    case process_finish:
-        create_and_detach(processFinish, args);
+    case process_finish: create_and_detach(processFinish, args);
         break;
-    default:
-        result = false;
+    default: result = false;
         break;
     }
     return result;
 }
 
 void *processInterrupt(void *args) {
-    const InterruptArgs *intArgs = (InterruptArgs *)args;
+    const InterruptArgs *intArgs = args;
     const INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
     BCP *proc = intArgs->processo;
 
@@ -113,15 +100,18 @@ void *processInterrupt(void *args) {
         pthread_mutex_unlock(&mutex_lista_processos);
         break;
     }
-    default:
-        puts(ERROR "Tipo de interrupção desconhecida\n" CLEAR);
+    default: pthread_mutex_lock(&mutex_IO);
+        puts(ERROR "Tipo de interrupção desconhecida" CLEAR);
+        pthread_mutex_unlock(&mutex_IO);
         break;
     }
+
+    free(args);
     return NULL;
 }
 
-void *semaphoreP(void *args_semaforo) {
-    const SemaphorePArgs *sem_args = (SemaphorePArgs *)args_semaforo;
+void *semaphoreP(void *args) {
+    const SemaphorePArgs *sem_args = args;
     Semaforo *semaforo = sem_args->semaforo;
     BCP *proc = sem_args->proc;
 
@@ -139,6 +129,9 @@ void *semaphoreP(void *args_semaforo) {
     pthread_mutex_unlock(&semaforo->mutex_lock);
     bool *result = malloc(sizeof(bool));
     *result = true; // avisa que o processo pode prosseguir
+
+    free(args);
+
     return result;
 }
 
@@ -164,11 +157,13 @@ void *semaphoreV(void *args_semaforo) {
 
 void *DiskRequest(void *args) {
     DiskArgs *disk_args = args;
-    current_track = disk_args->track;
+    current_track = disk_args->trilha;
 
+    /*
     pthread_mutex_lock(&mutex_IO);
-    //printf("Starting disk I/O on track %d\n", current_track);
+    printf("Starting disk I/O on track %d\n", current_track);
     pthread_mutex_unlock(&mutex_IO);
+    */
 
     enqueue_disk(disk_args);
 
@@ -176,61 +171,15 @@ void *DiskRequest(void *args) {
 }
 
 void *DiskFinish(void *args) {
+    /*
     pthread_mutex_lock(&mutex_IO);
-    //printf("Finishing disk I/O on track %d\n", current_track);
+    printf("Finishing disk I/O on track %d\n", current_track);
     pthread_mutex_unlock(&mutex_IO);
+    */
 
     sysCall(fs_finish, args);
 
     return NULL;
-}
-
-noES *criaNo(BCP *processo) {
-    noES *auxNo = malloc(sizeof(noES));
-    auxNo->processo = processo;
-    auxNo->prox = NULL;
-    return auxNo;
-}
-
-void iniciaFila() {
-    screen_queue = malloc(sizeof(filaES));
-    screen_queue.head = NULL;
-    screen_queue.tail = NULL;
-}
-
-void inserirFila(noES *noAdd) {
-    if (!noAdd) return;
-
-    if (!screen_queue->head) { //Não tem nada na fila
-        screen_queue->tail = noAdd;
-        screen_queue->head = noAdd;
-        screen_queue->head->prox = NULL;
-        screen_queue->tail->prox = NULL;
-    }
-    else if (screen_queue->tail == screen_queue->head) { // Só tem 1 item
-        screen_queue->head->prox = screen_queue->tail;
-        screen_queue->head = noAdd;
-    }
-    else { //Mais de 1 - Tail só vai mudar quando retirar ex: 1 - 2 - 3 - 4
-        screen_queue->head->prox = screen_queue->head; //Recebe o que tava na cabeça. Ex: 5 -1 - 2 -3 -4
-        screen_queue->head = noAdd;
-    }
-}
-
-void removeFila() {
-    filaES *aux;
-    filaES *anterior;
-    if (!screen_queue) return;
-    
-    aux = screen_queue.head;
-    while(aux.prox != NULL){
-        anterior = aux;
-        aux = aux.prox;
-    }
-    //encontrou o tail
-    anterior.prox = NULL;
-    screen_queue.tail = anterior;
-    free(aux);
 }
 
 void *PrintRequest(void *args) {
@@ -242,23 +191,23 @@ void *PrintRequest(void *args) {
 
     sysCall(process_interrupt, interrupcao);
 
-    noES *no = criaNo(processo);
+    NoTela *no = criaNoTela(processo);
     inserirFila(no);
 
     return NULL;
 }
 
 void *PrintFinish(void *args) {
-    // interrupção por fim de E/S
     BCP *processo = args;
+
+    // interrupção por fim de E/S
     InterruptArgs *interrupcao = malloc(sizeof(InterruptArgs));
     interrupcao->tipo_interrupcao = TERMINO_E_S;
     interrupcao->processo = processo;
 
     sysCall(process_interrupt, interrupcao);
 
-    removeFila();
-    
+    return NULL;
 }
 
 void *memLoadReq(void *args) {

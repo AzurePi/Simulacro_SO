@@ -16,7 +16,7 @@
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // Permanece em execução até o encerramento do programa, procurando o próximo processo a executar
-void *CPU();
+void *cpu();
 
 // Processa os comandos de um dado processo com um limite de tempo proporcional a sua prioridade.
 void processarComandos(BCP *processo);

@@ -2,59 +2,66 @@
 
 // Variáveis globais ---------------------------------------------------------------------------------------------------
 
+volatile bool encerrar;
+unsigned long int relogio;
+
 BCP *head_lista_processos;
 volatile BCP *executando_agora;
 Lista_Semaforos *semaforos_existentes;
-Memoria *RAM;
-volatile bool encerrar;
-pthread_mutex_t mutex_IO;
-pthread_mutex_t mutex_RAM;
 pthread_mutex_t mutex_lista_processos;
 pthread_mutex_t mutex_semaforos_globais;
-unsigned long int relogio;
 
-pthread_mutex_t mutex_disk_queue;
-DiskQueue *disk_queue;
+Memoria *RAM;
+pthread_mutex_t mutex_RAM;
+
+pthread_mutex_t mutex_IO;
+
+FilaDisco *disk_queue;
 bool disk_busy;
-volatile int current_track;
 bool direction_up;
+volatile int current_track;
+pthread_mutex_t mutex_disk_queue;
 
-filaES *screen_queue;
+FilaTela *screen_queue;
+pthread_mutex_t mutex_screen_queue;
 
 // Implementação de funções --------------------------------------------------------------------------------------------
 
 void initializeGlobals() {
-    head_lista_processos = NULL;
-    executando_agora = NULL;
-
-    semaforos_existentes = novaListaSemaforos();
-
-    inicializarRAM();
-
-    disk_queue = newDiskQueue();
-    disk_busy = false;
-    current_track = 0;
-    direction_up = true;
-
-    screen_queue = newScreenQueue();
-
-    pthread_mutex_init(&mutex_IO, NULL);
-    pthread_mutex_init(&mutex_RAM, NULL);
-    pthread_mutex_init(&mutex_lista_processos, NULL);
-    pthread_mutex_init(&mutex_semaforos_globais, NULL);
-    pthread_mutex_init(&mutex_disk_queue, NULL);
-
     encerrar = false;
     relogio = 0;
+
+    head_lista_processos = NULL;
+    executando_agora = NULL;
+    semaforos_existentes = novaListaSemaforos();
+    pthread_mutex_init(&mutex_lista_processos, NULL);
+    pthread_mutex_init(&mutex_semaforos_globais, NULL);
+
+    inicializarRAM();
+    pthread_mutex_init(&mutex_RAM, NULL);
+
+    pthread_mutex_init(&mutex_IO, NULL);
+
+    inicializarDiskQueue();
+    disk_busy = false;
+    direction_up = true;
+    current_track = 0;
+    pthread_mutex_init(&mutex_disk_queue, NULL);
+
+    inicializarScreenQueue();
+    pthread_mutex_init(&mutex_screen_queue, NULL);
 }
 
 void finalizeGlobals() {
+    pthread_mutex_destroy(&mutex_screen_queue);
     pthread_mutex_destroy(&mutex_disk_queue);
+    pthread_mutex_destroy(&mutex_IO);
+    pthread_mutex_destroy(&mutex_RAM);
     pthread_mutex_destroy(&mutex_semaforos_globais);
     pthread_mutex_destroy(&mutex_lista_processos);
-    pthread_mutex_destroy(&mutex_RAM);
-    pthread_mutex_destroy(&mutex_IO);
+
     freeRAM();
     freeListaSemaforo(semaforos_existentes);
     freeListaBCP(head_lista_processos);
+    freeScreenQueue();
 }

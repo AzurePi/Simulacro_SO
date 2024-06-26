@@ -19,6 +19,7 @@ set(SOURCES
         ${SOURCE_DIR}/semaforo.c
         ${SOURCE_DIR}/syscalls.c
         ${SOURCE_DIR}/disco.c
+        ${SOURCE_DIR}/tela.c
 )
 
 set(HEADERS
@@ -30,6 +31,7 @@ set(HEADERS
         ${HEADERS_DIR}/semaforo.h
         ${HEADERS_DIR}/syscalls.h
         ${HEADERS_DIR}/disco.h
+        ${HEADERS_DIR}/tela.h
 )
 
 add_executable(Simulacro_SO ${SOURCES} ${HEADERS})

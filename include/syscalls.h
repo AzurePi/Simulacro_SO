@@ -6,6 +6,7 @@
 #include "processo.h"
 #include "globals.h"
 #include "disco.h"
+#include "tela.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -50,18 +51,6 @@ typedef struct {
     BCP *processo;
 } InterruptArgs;
 
-//struct usada para os nós processos de E/S do disco serem printados na tela
-typedef struct no_es {
-    BCP *processo;
-    struct no_es *prox;
-} noES;
-
-//struct que será a fila de processos E/S a serem printados
-typedef struct fila_es {
-    noES *head;
-    noES *tail;
-} filaES;
-
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
 // função auxiliar para criar e despachar uma thread com uma função
@@ -74,7 +63,7 @@ bool sysCall(short func, void *args);
 void *processInterrupt(void *args);
 
 // Tratamento de bloqueio de processo
-void *semaphoreP(void *args_semaforo);
+void *semaphoreP(void *args);
 
 // Tratamento de desbloqueio de processo
 void *semaphoreV(void *args_semaforo);
@@ -108,21 +97,5 @@ void *PrintRequest(void *args);
 
 // Sinalização de final de E/S para impressão
 void *PrintFinish(void *args);
-
-//Inicializa fila E/S
-filaES *newScreenQueue();
-
-//Cria o nó com os processos
-noES *criaNo(BCP *processo);
-
-//Insere o nó criado na fila
-void inserirFila(noES *noAdd);
-
-//Declara a fila inicialmente vazia
-void iniciaFila();
-
-//Remove a E/S que foi realizada do fim da fila
-void removeFila();
-
 
 #endif //SIMULACRO_SO_SYSCALLS_H
