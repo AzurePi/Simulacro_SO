@@ -192,6 +192,12 @@ noES *criaNo(BCP *processo) {
     return auxNo;
 }
 
+void iniciaFila() {
+    screen_queue = malloc(sizeof(filaES));
+    screen_queue.head = NULL;
+    screen_queue.tail = NULL;
+}
+
 void inserirFila(noES *noAdd) {
     if (!noAdd) return;
 
@@ -211,6 +217,22 @@ void inserirFila(noES *noAdd) {
     }
 }
 
+void removeFila() {
+    filaES *aux;
+    filaES *anterior;
+    if (!screen_queue) return;
+    
+    aux = screen_queue.head;
+    while(aux.prox != NULL){
+        anterior = aux;
+        aux = aux.prox;
+    }
+    //encontrou o tail
+    anterior.prox = NULL;
+    screen_queue.tail = anterior;
+    free(aux);
+}
+
 void *PrintRequest(void *args) {
     // interrupção por início de E/S
     BCP *processo = args;
@@ -226,7 +248,18 @@ void *PrintRequest(void *args) {
     return NULL;
 }
 
-void *PrintFinish(void *args) { return NULL; }
+void *PrintFinish(void *args) {
+    // interrupção por fim de E/S
+    BCP *processo = args;
+    InterruptArgs *interrupcao = malloc(sizeof(InterruptArgs));
+    interrupcao->tipo_interrupcao = TERMINO_E_S;
+    interrupcao->processo = processo;
+
+    sysCall(process_interrupt, interrupcao);
+
+    removeFila();
+    
+}
 
 void *memLoadReq(void *args) {
     BCP *processo = args;
