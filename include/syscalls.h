@@ -121,4 +121,8 @@ void inserirFila(noES *noAdd);
 //Declara a fila inicialmente vazia
 void iniciaFila();
 
+//Remove a E/S que foi realizada do fim da fila
+void removeFila();
+
+
 #endif //SIMULACRO_SO_SYSCALLS_H
