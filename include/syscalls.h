@@ -118,4 +118,7 @@ noES *criaNo(BCP *processo);
 //Insere o nó criado na fila
 void inserirFila(noES *noAdd);
 
+//Declara a fila inicialmente vazia
+void iniciaFila();
+
 #endif //SIMULACRO_SO_SYSCALLS_H
