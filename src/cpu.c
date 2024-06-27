@@ -5,7 +5,8 @@ void *cpu() {
         BCP *executar = buscaBCPExecutar(); // encontra o próximo processo pronto com a maior prioridade
 
         // se não encontramos um processo para executar, pulamos para a próxima iteração
-        if (!executar) continue;
+        if (!executar)
+            continue;
 
         //se há um processo para executar
         pthread_mutex_lock(&mutex_lista_processos);
@@ -27,14 +28,15 @@ void *cpu() {
 }
 
 void processarComandos(BCP *processo) {
-    if (!processo) return;
+    if (!processo)
+        return;
 
-    const long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
+    long int quantum = QUANTUM / processo->prioridade; // quantum do processo, proporcional à prioridade
     long int tempo_executado = 0; // o tempo que o processo já está executando
     Comando *atual = processo->comandos->head;
 
     while (atual && tempo_executado < quantum) {
-        long int t; // tempo que esse comando leva para ser executado
+        long int t = 0; // tempo que esse comando leva para ser executado
 
         // consideramos que todas as operações, exceto EXEC, são atômicas
         switch (atual->opcode) {
@@ -51,12 +53,13 @@ void processarComandos(BCP *processo) {
             break;
         }
         case READ: {
-            t = 200;
+            // o tempo de execução só será contado quando for a vez do processo na fila, e vai depender do algoritmo do elevador
 
             // criamos uma struct provisória para passar os argumentos para sysCall
             DiskArgs *disk_args = malloc(sizeof(DiskArgs));
             disk_args->processo = processo;
             disk_args->trilha = atual->parametro;
+            disk_args->t = 0;
 
             sysCall(fs_request, disk_args);
 
@@ -65,12 +68,13 @@ void processarComandos(BCP *processo) {
             break;
         }
         case WRITE: {
-            t = 200;
+            // o tempo de execução só será contado quando for a vez do processo na fila, e vai depender do algoritmo do elevador
 
             // criamos uma struct provisória para passar os argumentos para sysCall
             DiskArgs *disk_args = malloc(sizeof(DiskArgs));
             disk_args->processo = processo;
             disk_args->trilha = atual->parametro;
+            disk_args->t = 0;
 
             sysCall(fs_request, disk_args);
 
@@ -99,24 +103,31 @@ void processarComandos(BCP *processo) {
             Semaforo *sem = retrieveSemaforo(atual->parametro);
 
             sysCall(semaphore_V, sem);
+
             atual = atual->prox; // passamos para o próximo comando da lista
             removerComando(processo->comandos); // remove o comando da lista de comandos
             break;
         }
         case PRINT: {
-            t = 100;
-            atual = atual->prox; // passamos para o próximo comando da lista
-            removerComando(processo->comandos);
+            TelaArgs *args = malloc(sizeof(TelaArgs));
+            args->processo = processo;
+            args->t = atual->parametro; // o tempo de execução só será contado quando for a vez desse processo na fila
+
+            sysCall(print_request, args);
+
+            atual = NULL; // interrompemos a execução
+            removerComando(processo->comandos); // removemos o comando da lista de comandos
             break;
         }
-        default:
-            t = 0;
+        default: pthread_mutex_lock(&mutex_IO);
+            printf(ERROR "comando não identificado no processo \"%s\"\n" CLEAR, processo->nome);
+            pthread_mutex_unlock(&mutex_IO);
             break;
         }
 
         // atualiza o relógio com o tempo do processamento
         relogio += t;
         tempo_executado += t;
-        sleep(1);
+        sleep(1); //delay de 1s
     }
 }

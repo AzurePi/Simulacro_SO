@@ -6,19 +6,23 @@ BCP *novoBCP() {
     BCP *new = malloc(sizeof(BCP));
     if (!new) {
         pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "falha na alocação de memória do BCP" CLEAR);
+        puts(ERROR "falha na alocação de memória do processo" CLEAR);
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
         return NULL;
     }
     new->semaforos = novaListaSemaforos();
     new->comandos = novaFilaComandos();
-    if (!new->comandos) return NULL;
+    if (!new->comandos) {
+        free(new);
+        return NULL;
+    }
     return new;
 }
 
 void inserirBCP(BCP *new) {
-    if (!new) return;
+    if (!new)
+        return;
 
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
     if (!head_lista_processos || head_lista_processos->prioridade < new->prioridade) {
@@ -38,7 +42,8 @@ void inserirBCP(BCP *new) {
 }
 
 void inserirBCPFinal(BCP *processo) {
-    if (!processo) return; // se não há processo para inserir
+    if (!processo)
+        return; // se não há processo para inserir
 
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
     if (!head_lista_processos) {
@@ -58,10 +63,8 @@ void inserirBCPFinal(BCP *processo) {
 
 BCP *buscaBCPExecutar() {
     pthread_mutex_lock(&mutex_lista_processos); // bloqueia o acesso à lista de processos
-
     if (!head_lista_processos) {
-        // se a lista de processos está vazia
-        pthread_mutex_unlock(&mutex_lista_processos);
+        pthread_mutex_unlock(&mutex_lista_processos); // desbloqueia o acesso à lista de processos
         return NULL;
     }
 
@@ -79,13 +82,15 @@ BCP *buscaBCPExecutar() {
 }
 
 void freeBCP(BCP *bcp) {
-    if (!bcp) return;
+    if (!bcp)
+        return;
     freeFilaComandos(bcp->comandos);
     free(bcp);
 }
 
 void freeListaBCP(BCP *bcp_head) {
-    if (!bcp_head) return;
+    if (!bcp_head)
+        return;
     while (bcp_head) {
         BCP *temp = bcp_head;
         bcp_head = bcp_head->prox;
@@ -94,7 +99,8 @@ void freeListaBCP(BCP *bcp_head) {
 }
 
 bool lerCabecalho(FILE *programa, BCP *bcp) {
-    if (!programa || !bcp) return false;
+    if (!programa || !bcp)
+        return false;
 
     if (fscanf(programa, "%60s\n", bcp->nome) != 1 ||
         fscanf(programa, "%d\n", &bcp->id_seg) != 1 ||
@@ -109,7 +115,8 @@ bool lerCabecalho(FILE *programa, BCP *bcp) {
 }
 
 void lerSemaforos(FILE *programa, BCP *bcp) {
-    if (!programa || !bcp) return;
+    if (!programa || !bcp)
+        return;
 
     char semaforos[11]; //não uma string, mas um vetor de caracteres
     char s;
@@ -130,7 +137,8 @@ void lerSemaforos(FILE *programa, BCP *bcp) {
 }
 
 bool lerComandos(FILE *programa, Fila_Comandos *fila) {
-    if (!programa || !fila) return false;
+    if (!programa || !fila)
+        return false;
 
     char buffer[11];
 
@@ -152,11 +160,16 @@ bool lerComandos(FILE *programa, Fila_Comandos *fila) {
             if (sscanf(buffer, "%s %s", buffer_operacao, buffer_parametro) != 2)
                 return false; // erro ao analisar a string do comando
 
-            if (strcmp(buffer_operacao, "exec") == 0) opcode = EXEC;
-            else if (strcmp(buffer_operacao, "read") == 0) opcode = READ;
-            else if (strcmp(buffer_operacao, "write") == 0) opcode = WRITE;
-            else if (strcmp(buffer_operacao, "print") == 0) opcode = PRINT;
-            else return false;
+            if (strcmp(buffer_operacao, "exec") == 0)
+                opcode = EXEC;
+            else if (strcmp(buffer_operacao, "read") == 0)
+                opcode = READ;
+            else if (strcmp(buffer_operacao, "write") == 0)
+                opcode = WRITE;
+            else if (strcmp(buffer_operacao, "print") == 0)
+                opcode = PRINT;
+            else
+                return false;
 
             parametro = atoi(buffer_parametro);
         }
@@ -172,10 +185,12 @@ bool lerComandos(FILE *programa, Fila_Comandos *fila) {
 }
 
 BCP *lerProgramaSintetico(FILE *programa) {
-    if (!programa) return NULL; // se não há programa para ler, retorna NULL
+    if (!programa)
+        return NULL; // se não há programa para ler, retorna NULL
 
     BCP *processo = novoBCP();
-    if (!processo) return NULL; // se um novo BCP não pôde ser criado, retorna NULL
+    if (!processo)
+        return NULL; // se um novo BCP não pôde ser criado, retorna NULL
 
     // lê os campos no programa sintético; se houver erro na leitura, informa que há problema no arquivo
     if (!lerCabecalho(programa, processo))
@@ -197,7 +212,8 @@ BCP *lerProgramaSintetico(FILE *programa) {
 
 Comando *novoComando(OPCODE opcode, int parametro) {
     Comando *new = malloc(sizeof(Comando));
-    if (!new) return NULL; // se a alocação de memória falhou
+    if (!new)
+        return NULL; // se a alocação de memória falhou
     new->opcode = opcode;
     new->parametro = parametro;
     new->prox = NULL;
@@ -205,20 +221,23 @@ Comando *novoComando(OPCODE opcode, int parametro) {
 }
 
 void freeComando(Comando *comando) {
-    if (!comando) return;
+    if (!comando)
+        return;
     free(comando);
 }
 
 Fila_Comandos *novaFilaComandos() {
     Fila_Comandos *new = malloc(sizeof(Fila_Comandos));
-    if (!new) return NULL; // se a alocação de memória falhou
+    if (!new)
+        return NULL; // se a alocação de memória falhou
     new->head = NULL;
     new->tail = NULL;
     return new;
 }
 
 void inserirComando(Comando *comando, Fila_Comandos *fila) {
-    if (!fila || !comando) return; // se os parâmetros são ponteiros nulos
+    if (!fila || !comando)
+        return; // se os parâmetros são ponteiros nulos
 
     if (!fila->head) {
         fila->head = comando;
@@ -231,8 +250,10 @@ void inserirComando(Comando *comando, Fila_Comandos *fila) {
 }
 
 void removerComando(Fila_Comandos *fila) {
-    if (!fila) return; //se não há fila
-    if (!fila->head) return; // se a fila está vazia
+    if (!fila)
+        return; //se não há fila
+    if (!fila->head)
+        return; // se a fila está vazia
 
     Comando *aux = fila->head;
     fila->head = fila->head->prox;
@@ -240,7 +261,8 @@ void removerComando(Fila_Comandos *fila) {
 }
 
 void freeFilaComandos(Fila_Comandos *fila) {
-    if (!fila) return;
+    if (!fila)
+        return;
     while (fila->head != NULL) {
         Comando *temp = fila->head;
         fila->head = fila->head->prox;
@@ -250,7 +272,9 @@ void freeFilaComandos(Fila_Comandos *fila) {
 }
 
 void process_sleep(BCP *processo) {
-    if (!processo) return; // se o processo passado não existe
+    if (!processo) // se o processo passado não existe
+        return;
+
     pthread_mutex_lock(&mutex_lista_processos);
     processo->estado = BLOQUEADO;
 
@@ -267,7 +291,11 @@ void process_sleep(BCP *processo) {
             aux = aux->prox;
         }
 
-        if (aux == NULL) return; // o processo não estava na lista
+        if (aux == NULL) {
+            pthread_mutex_unlock(&mutex_lista_processos);
+            return; // o processo não estava na lista
+        }
+
 
         if (anterior != NULL)
             anterior->prox = aux->prox;
@@ -277,6 +305,7 @@ void process_sleep(BCP *processo) {
 }
 
 void process_wakeup(BCP *processo) {
-    if (!processo) return;
+    if (!processo)
+        return;
     processo->estado = PRONTO;
 }

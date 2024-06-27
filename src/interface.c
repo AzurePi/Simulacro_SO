@@ -8,6 +8,7 @@ void *interface() {
         "║ [1] Novo processo                      ║\n"
         "║ [2] Ver informações dos processos      ║\n"
         "║ [3] Ver informações da memória         ║\n"
+        "║ [ ] Atualizar                          ║\n"
         "║ [0] Encerrar                           ║\n"
         "╚════════════════════════════════════════╝";
     char op;
@@ -23,10 +24,11 @@ void *interface() {
         pthread_mutex_lock(&mutex_lista_processos); // bloqueia acesso à lista de processos
         printf("\n\t" UNDERLINE "Processando agora:" CLEAR " ");
         if (executando_agora)
-            printf("%s (%d)\n", executando_agora->nome, executando_agora->id_seg);
+            printf(ITALIC "%s (%d)\n" NOT_ITALIC, executando_agora->nome, executando_agora->id_seg);
         else
             puts(ITALIC "nada" NOT_ITALIC);
         pthread_mutex_unlock(&mutex_lista_processos); // libera acesso à lista de processos
+        printf("\tRelógio do sistema: %lu\n", relogio);
 
         printf("\nSelecione a operação: " INPUT);
         scanf(" %c", &op);
@@ -35,8 +37,7 @@ void *interface() {
         pthread_mutex_unlock(&mutex_IO); // desbloqueia acesso ao terminal
 
         switch (op) {
-        case '0':
-            pthread_mutex_lock(&mutex_IO);
+        case '0': pthread_mutex_lock(&mutex_IO);
             puts("Encerrando programa...");
             pthread_mutex_unlock(&mutex_IO);
             encerrar = true;
@@ -54,28 +55,24 @@ void *interface() {
             // passamos uma cópia, para evitar que filename se perca no fim do bloco do case
             char *filename_copy = strdup(filename);
             sysCall(process_create, filename_copy);
+            sleep(1);
         }
         break;
-        case '2':
-            pthread_mutex_lock(&mutex_IO);
+        case '2': pthread_mutex_lock(&mutex_IO);
             informacaoProcessos();
             pthread_mutex_unlock(&mutex_IO);
+            sleep(1);
             break;
-        case '3':
-            pthread_mutex_lock(&mutex_IO);
+        case '3': pthread_mutex_lock(&mutex_IO);
             informacaoMemoria();
             pthread_mutex_unlock(&mutex_IO);
+            sleep(1);
             break;
         default:
-            pthread_mutex_lock(&mutex_IO);
-            puts(ERROR "Opção inválida!" CLEAR);
-            fflush(stdout);
-            sleep(1);
-            pthread_mutex_unlock(&mutex_IO);
             break;
         }
-        sleep(1);
-    } while (!encerrar);
+    }
+    while (!encerrar);
 
     return NULL;
 }
@@ -93,11 +90,11 @@ void informacaoProcessos() {
         while (atual) {
             char linha[128];
             snprintf(linha, sizeof(linha),
-                     "\n%s (%d), Prioridade: %d   " BOLD "%s" NOT_BOLD_NOR_FAINT,
+                     "\n%s (%d), Prioridade: %d   " BOLD BLUE "%s" CLEAR,
                      atual->nome, atual->id_seg, atual->prioridade, estados[atual->estado]);
 
-            const size_t linha_len = strlen(linha);
-            const size_t new_size = strlen(buffer) + linha_len + 1;
+            size_t linha_len = strlen(linha);
+            size_t new_size = strlen(buffer) + linha_len + 1;
 
             if (new_size > buffer_size) {
                 buffer_size = new_size;
@@ -111,6 +108,7 @@ void informacaoProcessos() {
         free(buffer);
     }
 
+    /*
     printf("\nLista de Semáforos sendo utilizados: " BLUE);
     pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
     No_Semaforo *aux = semaforos_existentes->head;
@@ -141,6 +139,7 @@ void informacaoProcessos() {
         free(buffer);
     }
     pthread_mutex_unlock(&mutex_semaforos_globais); //libera acesso à lista de semáforos
+    */
 
     press_any_key_to_continue();
 }
@@ -153,8 +152,8 @@ void informacaoMemoria() {
         return;
     }
 
-    const int paginas_ocupadas = RAM->n_paginas_ocupadas;
-    const double taxa_ocupacao = (double)paginas_ocupadas / NUMERO_PAGINAS * 100.0;
+    int paginas_ocupadas = RAM->n_paginas_ocupadas;
+    double taxa_ocupacao = (double)paginas_ocupadas / NUMERO_PAGINAS * 100.0;
 
     printf("\nTaxa de ocupação da memória: " BLUE "%.2f%% (%d/%d)" CLEAR "\n",
            taxa_ocupacao, paginas_ocupadas, NUMERO_PAGINAS);
@@ -166,7 +165,8 @@ void informacaoMemoria() {
 }
 
 BCP *mensagemErroBCP(const char *mensagem, BCP *processo) {
-    if (!mensagem || !processo) return NULL;
+    if (!mensagem || !processo)
+        return NULL;
     pthread_mutex_lock(&mutex_IO);
     printf(ERROR "%s" CLEAR "\n", mensagem);
     fflush(stdout);

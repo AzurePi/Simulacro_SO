@@ -5,6 +5,8 @@
 #include "interface.h"
 #include "globals.h"
 #include "cpu.h"
+#include "disco.h"
+#include "tela.h"
 
 #include <malloc.h>
 #include <stdbool.h>

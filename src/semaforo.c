@@ -165,7 +165,7 @@ void freeListaSemaforo(Lista_Semaforos *semaforos) {
 
 Semaforo *retrieveSemaforo(const char nome) {
     pthread_mutex_lock(&mutex_semaforos_globais);
-    const No_Semaforo *aux = semaforos_existentes->head;
+    No_Semaforo *aux = semaforos_existentes->head;
     while (aux) {
         if (aux->semaforo->nome == nome) {
             pthread_mutex_unlock(&mutex_semaforos_globais);

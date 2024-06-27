@@ -11,13 +11,19 @@
 // declarações avançadas para evitar declaração circular
 typedef struct bcp BCP;
 
-//Nó de um processo na fila de escrita na tela
-typedef struct no_tela {
+// Informação de um processo e por quanto tempo ele irá imprimir na tela
+typedef struct tela_args {
     BCP *processo;
+    int t;
+} TelaArgs;
+
+// Nó de um processo na fila de requisição de escrita na tela
+typedef struct no_tela {
+    TelaArgs *proc;
     struct no_tela *prox;
 } NoTela;
 
-// Fila de saída da tela
+// Fila de requisições de impressão na tela
 typedef struct fila_tela {
     NoTela *head;
     NoTela *tail;
@@ -25,19 +31,22 @@ typedef struct fila_tela {
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
-// Inicializa uma fila global vazia de requisição dde acesso à tela
+// Permanece em execução até o fim da simulação para processar impressões na tela
+void *tela();
+
+// Inicializa uma fila global vazia de requisição de acesso à tela
 void inicializarScreenQueue();
 
 // Libera a memória alocada para a fila global de requisição de acesso à tela
 void freeScreenQueue();
 
-// Cria o nó de requisição à tela para um processo processos
-NoTela *criaNoTela(BCP *processo);
+// Cria um nó de requisição à tela para um processo
+NoTela *criaNoTela(TelaArgs *proc);
 
-// Insere um nó de requisição á tela na fila global
+// Insere um nó de requisição de acesso à tela na fila global
 void inserirFila(NoTela *no);
 
-// Remove um nó de requisição à tela da fila global
+// Remove e retorna um nó de requisição de acesso à tela da fila global
 NoTela *removeFila();
 
 #endif //TELA_H

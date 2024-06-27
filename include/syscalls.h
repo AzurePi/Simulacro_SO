@@ -66,7 +66,7 @@ void *processInterrupt(void *args);
 void *semaphoreP(void *args);
 
 // Tratamento de desbloqueio de processo
-void *semaphoreV(void *args_semaforo);
+void *semaphoreV(void *args);
 
 // Chamada de operação de carregamento na memória
 void *memLoadReq(void *args);
@@ -80,10 +80,10 @@ void *fsRequest(void *args);
 // Sinalização de final de operação no sistema de arquivos
 void *fsFinish(void *args);
 
-// chamada para iniciar a criação de um processo no BCP
+// Chamada para iniciar a criação de um processo no BCP
 void *processCreate(void *filename);
 
-// chamada para terminar a existência de um processo no BCP
+// Chamada para terminar a existência de um processo no BCP
 void *processFinish(void *args_BCP);
 
 // Chamada de operação de E/S para disco

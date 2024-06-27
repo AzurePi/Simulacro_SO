@@ -4,9 +4,12 @@ void *tela() {
     while (!encerrar) {
         NoTela *no = removeFila();
         if (no) {
-            usleep(10000000); // delay de 1s para simular a impressão
-            sysCall(print_finish, no->processo);
+            relogio += no->proc->t; // passamos o tempo necessário para impressão na tela
+            sysCall(print_finish, no->proc->processo);
+            free(no->proc);
+            free(no);
         }
+        sleep(3); // delay de 3s
     }
     return NULL;
 }
@@ -25,21 +28,22 @@ void freeScreenQueue() {
     if (!screen_queue)
         return;
 
+    pthread_mutex_lock(&mutex_screen_queue);
     while (screen_queue->head) {
         NoTela *aux = screen_queue->head;
         screen_queue->head = aux->prox;
         free(aux);
     }
-
     free(screen_queue);
+    pthread_mutex_unlock(&mutex_screen_queue);
 }
 
-NoTela *criaNoTela(BCP *processo) {
+NoTela *criaNoTela(TelaArgs *proc) {
     NoTela *new = malloc(sizeof(NoTela));
     if (!new)
         return NULL;
 
-    new->processo = processo;
+    new->proc = proc;
     new->prox = NULL;
     return new;
 }

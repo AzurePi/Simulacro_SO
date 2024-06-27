@@ -62,8 +62,8 @@ bool sysCall(const short func, void *args) {
 }
 
 void *processInterrupt(void *args) {
-    const InterruptArgs *intArgs = args;
-    const INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
+    InterruptArgs *intArgs = args;
+    INTERRUPCAO tipo_interrupcao = intArgs->tipo_interrupcao;
     BCP *proc = intArgs->processo;
 
     switch (tipo_interrupcao) {
@@ -76,8 +76,10 @@ void *processInterrupt(void *args) {
             proc->estado = PRONTO; // atualiza o estado do processo atual para PRONTO
             pthread_mutex_unlock(&mutex_lista_processos);
         }
+
         pthread_mutex_lock(&mutex_lista_processos);
-        executando_agora = NULL; // dizemos que nenhum processo está sendo executado agora
+        if (proc == executando_agora)
+            executando_agora = NULL; // dizemos que nenhum processo está sendo executado agora
         pthread_mutex_unlock(&mutex_lista_processos);
 
         break;
@@ -88,20 +90,24 @@ void *processInterrupt(void *args) {
     }
     case INICIO_E_S: {
         pthread_mutex_lock(&mutex_lista_processos);
-        if (proc->estado != TERMINADO)
+        if (proc->estado != TERMINADO) {
             proc->estado = BLOQUEADO; // bloqueia o processo
+            if (proc == executando_agora)
+                executando_agora = NULL;
+        }
         pthread_mutex_unlock(&mutex_lista_processos);
         break;
     }
     case TERMINO_E_S: { // interrupção pelo término de uma operação de E/S
         pthread_mutex_lock(&mutex_lista_processos);
-        if (proc->estado != TERMINADO)
+        if (proc->estado != TERMINADO) {
             proc->estado = PRONTO; // libera o processo para ser executado
+        }
         pthread_mutex_unlock(&mutex_lista_processos);
         break;
     }
     default: pthread_mutex_lock(&mutex_IO);
-        puts(ERROR "Tipo de interrupção desconhecida" CLEAR);
+        printf(ERROR "Tipo de interrupção desconhecida causada pelo processo %s\n" CLEAR, proc->nome);
         pthread_mutex_unlock(&mutex_IO);
         break;
     }
@@ -111,32 +117,34 @@ void *processInterrupt(void *args) {
 }
 
 void *semaphoreP(void *args) {
-    const SemaphorePArgs *sem_args = args;
+    SemaphorePArgs *sem_args = args;
     Semaforo *semaforo = sem_args->semaforo;
     BCP *proc = sem_args->proc;
+
+    bool *result = malloc(sizeof(bool));
+    if (!result)
+        return NULL;
 
     pthread_mutex_lock(&semaforo->mutex_lock);
     semaforo->v--;
     if (semaforo->v < 0) {
         process_sleep(proc); // o processo é bloqueado
         sem_queue(semaforo->waiting_list, proc); // o processo é posto na lista de espera desse semáforo
+        *result = false;
         pthread_mutex_unlock(&semaforo->mutex_lock);
 
-        bool *result = malloc(sizeof(bool));
-        *result = false; // avisa que o processo foi bloqueado
+        free(args);
         return result;
     }
-    pthread_mutex_unlock(&semaforo->mutex_lock);
-    bool *result = malloc(sizeof(bool));
     *result = true; // avisa que o processo pode prosseguir
+    pthread_mutex_unlock(&semaforo->mutex_lock);
 
     free(args);
-
     return result;
 }
 
-void *semaphoreV(void *args_semaforo) {
-    Semaforo *semaph = args_semaforo;
+void *semaphoreV(void *args) {
+    Semaforo *semaph = args;
 
     pthread_mutex_lock(&semaph->mutex_lock);
     semaph->v++;
@@ -157,41 +165,25 @@ void *semaphoreV(void *args_semaforo) {
 
 void *DiskRequest(void *args) {
     DiskArgs *disk_args = args;
-    current_track = disk_args->trilha;
-
-    /*
-    pthread_mutex_lock(&mutex_IO);
-    printf("Starting disk I/O on track %d\n", current_track);
-    pthread_mutex_unlock(&mutex_IO);
-    */
-
     enqueue_disk(disk_args);
-
     return NULL;
 }
 
 void *DiskFinish(void *args) {
-    /*
-    pthread_mutex_lock(&mutex_IO);
-    printf("Finishing disk I/O on track %d\n", current_track);
-    pthread_mutex_unlock(&mutex_IO);
-    */
-
     sysCall(fs_finish, args);
-
     return NULL;
 }
 
 void *PrintRequest(void *args) {
     // interrupção por início de E/S
-    BCP *processo = args;
+    TelaArgs *tela_args= args;
     InterruptArgs *interrupcao = malloc(sizeof(InterruptArgs));
     interrupcao->tipo_interrupcao = INICIO_E_S;
-    interrupcao->processo = processo;
+    interrupcao->processo = tela_args->processo;
 
     sysCall(process_interrupt, interrupcao);
 
-    NoTela *no = criaNoTela(processo);
+    NoTela *no = criaNoTela(tela_args);
     inserirFila(no);
 
     return NULL;
@@ -267,7 +259,7 @@ void *processCreate(void *filename) {
         }
         else {
             pthread_mutex_lock(&mutex_IO);
-            printf(ERROR "não foi possível criar o processo do programa %s" CLEAR, arquivo);
+            printf(ERROR "não foi possível criar o processo do programa %s\n" CLEAR, arquivo);
             fflush(stdout);
             sleep(2);
             pthread_mutex_unlock(&mutex_IO);
@@ -275,7 +267,7 @@ void *processCreate(void *filename) {
     }
     else {
         pthread_mutex_lock(&mutex_IO);
-        printf(ERROR "arquivo %s do programa sintético não pôde ser aberto" CLEAR, arquivo);
+        printf(ERROR "arquivo de programa sintético \"%s\" não pôde ser aberto\n" CLEAR, arquivo);
         fflush(stdout);
         sleep(2);
         pthread_mutex_unlock(&mutex_IO);
@@ -286,36 +278,23 @@ void *processCreate(void *filename) {
 }
 
 void *processFinish(void *args_BCP) {
-    BCP *process = args_BCP;
+    BCP *processo = args_BCP;
 
     pthread_mutex_lock(&mutex_lista_processos);
-    process->estado = TERMINADO;
+    processo->estado = TERMINADO;
     pthread_mutex_unlock(&mutex_lista_processos);
 
-    sysCall(mem_load_finish, process); // descarrega o processo da memória
+    sysCall(mem_load_finish, processo); // descarrega o processo da memória
 
     // percorre a lista de semáforos associada ao processo
     pthread_mutex_lock(&mutex_semaforos_globais); // bloqueia acesso à lista de semáforos
-    const No_Semaforo *no_sem = process->semaforos->head;
+    No_Semaforo *no_sem = processo->semaforos->head;
     while (no_sem) {
-        const No_Semaforo *next = no_sem->prox;
+        No_Semaforo *next = no_sem->prox;
 
         pthread_mutex_lock(&no_sem->semaforo->mutex_lock); // bloqueia acesso a esse semáforo
         no_sem->semaforo->refcount--; // decrementa a quantidade de referências
         pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
-
-        /* TODO: algo aqui não funciona direito para deletar os semáforos
-        // se não há mais processos associados ao semáforo
-        if (no_sem->semaforo->refcount == 0) {
-            pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
-            pthread_mutex_unlock(
-                    &mutex_semaforos_globais); // desbloqueia o acesso à lista de semáforos (para evitar deadlock)
-            removeSemaforoGlobal(no_sem); // remove o nó do semáforo da lista global
-            pthread_mutex_lock(
-                    &mutex_semaforos_globais); // re-bloqueia o acesso à lista de semáforos para continuar o loop
-        }
-        pthread_mutex_unlock(&no_sem->semaforo->mutex_lock); // desbloqueia o acesso a esse semáforo
-        */
 
         no_sem = next;
     }

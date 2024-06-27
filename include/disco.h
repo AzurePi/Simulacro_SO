@@ -11,19 +11,20 @@
 // declarações avançadas para evitar declaração circular
 typedef struct bcp BCP;
 
-// Informação de um processo e qual trilha ele está tentando acessar
+// Informação de um processo tnetando acessar o disco
 typedef struct {
     BCP *processo;
-    int trilha;
+    int trilha; //trilha tentando ser acessada
+    int t; //tempo decorrido no acesso ao disco
 } DiskArgs;
 
-// Nó de requisição se acesso a disco
+// Nó da fila de requisição de acesso a disco
 typedef struct no_disco {
     DiskArgs *args;
     struct no_disco *next;
 } NoDisco;
 
-// Cria uma lista (ordenada por trilha) de requisição de acesso a disco
+// Lista de requisição de acesso a disco
 typedef struct disk_queue {
     NoDisco *head;
     NoDisco *tail;
@@ -31,16 +32,19 @@ typedef struct disk_queue {
 
 // Protótipos de Funções -----------------------------------------------------------------------------------------------
 
-// Laço que dura toda a execução da simulação para processar acesso ao disco
+// Permanece em execução até o encerramento do programa para processar acesso ao disco
 void *discoElevador();
 
-// Inicializa uma nova fila para requisições ao disco
+// Inicializa uma nova fila global para requisições ao disco
 void inicializarDiskQueue();
 
-// Adiciona um novo pedido de acesso ao disco par E/S, ordenando pela direção do cabeçote de leitura (algoritmo do Elevador)
+// Libera a memória alocada para a fila global de requisições ao disco
+void freeDiskQueue();
+
+// Adiciona um novo pedido de acesso ao disco par E/S, ordenando pela trilha em relação á direção do cabeçote de leitura (algoritmo do elevador)
 void enqueue_disk(DiskArgs *args);
 
-// Remove e retorna o pedido da E/S da Fila e seleciona o próximo baseado no algoritmo do Elevador
-DiskArgs *dequeue_disk();
+// Remove e retorna a próxima requisição de acesso ao disco
+DiskArgs *dequeue_disk(int t);
 
 #endif //DISCO_H
